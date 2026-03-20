@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}Sinais Vitais — HealthData Hub{% endblock %}
+{% block topbar_title %}Sinais Vitais{% endblock %}
+{% block nav_vitals %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2>Sinais Vitais</h2>
+    <p>Registre e acompanhe suas medições</p>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start">
+
+  <!-- Formulário -->
+  <div class="card">
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:20px">➕ Nova medição</h3>
+    <form method="post" action="{% url 'vital_create' %}">
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="form-group">
+        <label>{{ field.label }}</label>
+        {{ field }}
+        {{ field.errors }}
+      </div>
+      {% endfor %}
+      <button type="submit" class="btn btn-primary btn-block">Salvar medição</button>
+    </form>
+  </div>
+
+  <!-- Histórico -->
+  <div class="card">
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:20px">📊 Histórico</h3>
+    {% if vitals %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Pressão</th>
+            <th>BPM</th>
+            <th>Peso</th>
+            <th>Temp.</th>
+            <th>SpO₂</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in vitals %}
+          <tr>
+            <td style="font-weight:600;white-space:nowrap">{{ v.date|date:"d/m/Y" }}</td>
+            <td>{{ v.blood_pressure|default:"—" }}</td>
+            <td>{{ v.heart_rate|default:"—" }}</td>
+            <td>{% if v.weight %}{{ v.weight }} kg{% else %}—{% endif %}</td>
+            <td>{% if v.temperature %}{{ v.temperature }}°C{% else %}—{% endif %}</td>
+            <td>{% if v.oxygen_saturation %}{{ v.oxygen_saturation }}%{% else %}—{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">❤️</div>
+      <p>Nenhuma medição registrada ainda.</p>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

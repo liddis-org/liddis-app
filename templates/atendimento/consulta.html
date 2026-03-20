@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}Registrar Consulta — HealthData Hub{% endblock %}
+{% block topbar_title %}Registrar Consulta{% endblock %}
+
+{% block extra_css %}
+<style>
+.patient-card{
+  background:linear-gradient(135deg,var(--primary) 0%,#1d4ed8 100%);
+  color:#fff;border-radius:var(--radius);padding:20px 24px;
+  display:flex;align-items:center;gap:20px;margin-bottom:24px;
+}
+.patient-avatar{
+  width:60px;height:60px;background:rgba(255,255,255,.2);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:26px;font-weight:800;flex-shrink:0;
+}
+.patient-info h3{font-size:18px;font-weight:800;margin-bottom:4px}
+.patient-info p{font-size:13px;opacity:.85}
+.session-badge{
+  margin-left:auto;text-align:right;font-size:12px;opacity:.8;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Dados do Paciente -->
+<div class="patient-card">
+  <div class="patient-avatar">{{ patient.username|first|upper }}</div>
+  <div class="patient-info">
+    <h3>{{ patient.display_name }}</h3>
+    <p>
+      {{ patient.email }}
+      {% if patient.date_of_birth %} · {{ patient.age }} anos{% endif %}
+      {% if patient.phone %} · {{ patient.phone }}{% endif %}
+    </p>
+    {% if patient.bio %}
+      <p style="margin-top:4px;opacity:.8;font-size:12px">{{ patient.bio|truncatechars:100 }}</p>
+    {% endif %}
+  </div>
+  <div class="session-badge">
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px">Sessão ativa</div>
+    <div style="font-family:'Courier New',monospace;font-size:13px;font-weight:700;margin-top:2px">
+      {{ session.token_display }}
+    </div>
+  </div>
+</div>
+
+<!-- Formulário de Consulta -->
+<div class="card">
+  <h3 style="font-size:16px;font-weight:700;margin-bottom:20px">📝 Registrar Consulta</h3>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Data da Consulta *</label>
+        {{ form.date }}
+        {% if form.date.errors %}<ul class="errorlist">{% for e in form.date.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+      <div class="form-group">
+        <label>Especialidade *</label>
+        {{ form.specialty }}
+        {% if form.specialty.errors %}<ul class="errorlist">{% for e in form.specialty.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Nome do Profissional</label>
+      {{ form.professional_name }}
+    </div>
+
+    <div class="form-group">
+      <label>Diagnóstico</label>
+      {{ form.diagnosis }}
+      {% if form.diagnosis.errors %}<ul class="errorlist">{% for e in form.diagnosis.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+
+    <div class="form-group">
+      <label>Anotações / Evolução Clínica</label>
+      {{ form.notes }}
+    </div>
+
+    <div class="form-group">
+      <label>Prescrição / Medicamentos</label>
+      {{ form.prescription }}
+    </div>
+
+    <hr class="divider">
+
+    <div style="display:flex;gap:12px;justify-content:flex-end">
+      <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancelar</a>
+      <button type="submit" class="btn btn-primary">✅ Salvar Consulta</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

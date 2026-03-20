@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>LIDDIS — Documentação do Sistema</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap');
+
+:root{
+  --bg:#070e1a;
+  --surface:#0d1b2e;
+  --surface-2:#112038;
+  --surface-3:#152642;
+  --teal:#00d4ff;
+  --teal-glow:rgba(0,212,255,.12);
+  --green:#4ade80;
+  --green-dark:#22c55e;
+  --green-glow:rgba(74,222,128,.1);
+  --border:rgba(0,212,255,.1);
+  --border-soft:rgba(255,255,255,.06);
+  --text:#e8f4ff;
+  --muted:#6b8caa;
+  --muted-2:#4a6a85;
+  --danger:#f87171;
+  --warning:#fbbf24;
+  --radius:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--bg);color:var(--text);
+  display:flex;min-height:100vh;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:radial-gradient(rgba(0,212,255,.06) 1px, transparent 1px);
+  background-size:28px 28px;pointer-events:none;z-index:0;
+}
+
+/* ── SIDEBAR ── */
+#sidebar{
+  width:280px;min-width:280px;background:var(--surface);
+  border-right:1px solid var(--border);
+  position:fixed;top:0;left:0;height:100vh;
+  overflow-y:auto;z-index:100;display:flex;flex-direction:column;
+}
+#sidebar::-webkit-scrollbar{width:3px}
+#sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+.sb-logo{
+  padding:24px 20px 18px;
+  border-bottom:1px solid var(--border-soft);
+  display:flex;align-items:center;gap:12px;
+}
+.sb-logo svg{width:40px;height:40px;flex-shrink:0}
+.sb-logo-text h1{font-size:16px;font-weight:900;color:#fff;letter-spacing:2px}
+.sb-logo-text p{font-size:10px;color:var(--green);font-weight:600;letter-spacing:.3px;margin-top:2px}
+
+.sb-nav{padding:12px 12px;flex:1}
+.sb-section{
+  font-size:9px;font-weight:700;color:var(--muted-2);
+  letter-spacing:1.5px;text-transform:uppercase;
+  padding:14px 10px 6px;
+}
+.sb-link{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 12px;border-radius:8px;
+  color:var(--muted);text-decoration:none;
+  font-size:12px;font-weight:500;transition:all .15s;
+  margin-bottom:1px;
+}
+.sb-link:hover{background:var(--surface-3);color:var(--text)}
+.sb-link.active{background:var(--teal-glow);color:var(--teal);border:1px solid var(--border)}
+.sb-link .tag{
+  margin-left:auto;font-size:9px;font-weight:700;
+  padding:1px 7px;border-radius:10px;
+}
+.tag-py{background:rgba(74,222,128,.1);color:var(--green)}
+.tag-html{background:rgba(0,212,255,.1);color:var(--teal)}
+.tag-config{background:rgba(251,191,36,.1);color:var(--warning)}
+
+.sb-footer{
+  padding:14px 16px;border-top:1px solid var(--border-soft);
+  font-size:11px;color:var(--muted-2);
+}
+
+/* ── MAIN ── */
+#main{margin-left:280px;flex:1;position:relative;z-index:1}
+
+/* Topbar */
+.topbar{
+  background:rgba(13,27,46,.85);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border-soft);
+  padding:0 40px;height:52px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:50;
+}
+.topbar-title{font-size:13px;font-weight:700;color:var(--text)}
+.topbar-badge{
+  display:flex;align-items:center;gap:8px;
+  font-size:11px;color:var(--muted);
+}
+.version{
+  background:var(--teal-glow);color:var(--teal);
+  border:1px solid var(--border);
+  border-radius:20px;padding:2px 10px;
+  font-size:10px;font-weight:700;letter-spacing:.5px;
+}
+.status-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 6px var(--green);
+}
+
+.page{padding:40px;max-width:900px}
+
+/* Hero */
+.hero{
+  background:linear-gradient(135deg,var(--surface) 0%,#0a1e36 100%);
+  border:1px solid var(--border);
+  border-radius:16px;padding:48px;
+  margin-bottom:40px;
+  position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;
+  width:400px;height:400px;
+  background:radial-gradient(circle,rgba(0,212,255,.08) 0%,transparent 70%);
+  top:-100px;right:-100px;
+}
+.hero-body{position:relative;z-index:1}
+.hero-body svg{width:72px;height:72px;margin-bottom:20px}
+.hero-body h1{font-size:40px;font-weight:900;color:#fff;letter-spacing:3px;margin-bottom:8px}
+.hero-body .hero-tag{font-size:14px;color:var(--muted);margin-bottom:4px}
+.hero-body .hero-tag strong{color:var(--green)}
+.hero-body p{font-size:14px;color:var(--muted-2);margin-top:16px;line-height:1.7;max-width:560px}
+.hero-meta{
+  margin-top:28px;display:flex;gap:16px;flex-wrap:wrap;
+}
+.meta-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--surface-2);border:1px solid var(--border-soft);
+  border-radius:20px;padding:5px 14px;font-size:12px;color:var(--muted);
+}
+.meta-pill strong{color:var(--text)}
+
+/* Sections */
+.section{margin-bottom:48px}
+.section-header{
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:24px;padding-bottom:16px;
+  border-bottom:1px solid var(--border-soft);
+}
+.section-icon{
+  width:38px;height:38px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;background:var(--surface-2);
+  border:1px solid var(--border-soft);flex-shrink:0;
+}
+.section-header h2{font-size:18px;font-weight:800;color:var(--text)}
+.section-header p{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* File cards */
+.file-grid{display:flex;flex-direction:column;gap:12px}
+.file-card{
+  background:var(--surface);
+  border:1px solid var(--border-soft);
+  border-radius:var(--radius);
+  overflow:hidden;
+  transition:border-color .15s;
+}
+.file-card:hover{border-color:var(--border)}
+.file-card-header{
+  display:flex;align-items:center;gap:14px;
+  padding:16px 20px;cursor:pointer;
+  user-select:none;
+}
+.file-card-header:hover{background:var(--surface-2)}
+.file-icon{
+  width:34px;height:34px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;flex-shrink:0;
+}
+.fi-py{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.15)}
+.fi-html{background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.15)}
+.fi-config{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.15)}
+.fi-txt{background:rgba(148,163,184,.08);border:1px solid rgba(148,163,184,.1)}
+
+.file-meta{flex:1}
+.file-name{font-size:13px;font-weight:700;color:var(--text);font-family:'JetBrains Mono',monospace}
+.file-path{font-size:11px;color:var(--muted-2);margin-top:2px;font-family:'JetBrains Mono',monospace}
+.file-tags{display:flex;gap:6px;margin-left:auto;flex-shrink:0}
+.ftag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px}
+.ftag-green{background:rgba(74,222,128,.1);color:var(--green)}
+.ftag-teal{background:rgba(0,212,255,.1);color:var(--teal)}
+.ftag-yellow{background:rgba(251,191,36,.1);color:var(--warning)}
+.ftag-gray{background:var(--surface-2);color:var(--muted)}
+.ftag-red{background:rgba(248,113,113,.1);color:var(--danger)}
+
+.file-card-body{
+  border-top:1px solid var(--border-soft);
+  padding:0 20px;max-height:0;overflow:hidden;
+  transition:max-height .3s ease, padding .3s;
+}
+.file-card-body.open{max-height:800px;padding:20px}
+
+.file-desc{font-size:13px;color:var(--muted-2);line-height:1.75;margin-bottom:16px}
+
+.resp-list{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.resp-item{
+  display:flex;align-items:flex-start;gap:10px;
+  font-size:12px;color:var(--muted);
+  background:var(--surface-2);
+  border-radius:7px;padding:8px 12px;
+}
+.resp-item::before{content:'→';color:var(--teal);font-weight:700;flex-shrink:0;margin-top:1px}
+
+code{
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;background:var(--surface-3);
+  color:var(--teal);padding:1px 6px;border-radius:4px;
+}
+pre{
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px;background:var(--surface-2);
+  color:#a8c8e8;padding:14px 16px;border-radius:8px;
+  overflow-x:auto;line-height:1.6;margin-top:10px;
+  border:1px solid var(--border-soft);
+}
+pre .kw{color:var(--teal)}
+pre .fn{color:var(--green)}
+pre .str{color:#fbbf24}
+pre .cm{color:var(--muted-2)}
+
+/* Flow diagram */
+.flow{
+  background:var(--surface-2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:24px;margin-bottom:16px;
+}
+.flow h3{font-size:13px;font-weight:700;color:var(--text);margin-bottom:16px}
+.flow-steps{display:flex;flex-direction:column;gap:0}
+.flow-step{
+  display:flex;align-items:flex-start;gap:14px;
+  padding:12px 0;border-bottom:1px solid var(--border-soft);
+}
+.flow-step:last-child{border-bottom:none}
+.step-num{
+  width:26px;height:26px;border-radius:50%;
+  background:var(--teal-glow);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;color:var(--teal);flex-shrink:0;
+  margin-top:1px;
+}
+.step-body h4{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+.step-body p{font-size:12px;color:var(--muted-2);line-height:1.6}
+
+/* URL table */
+.url-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:10px}
+.url-table th{
+  background:var(--surface-2);padding:8px 12px;text-align:left;
+  font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.8px;border-bottom:1px solid var(--border-soft);
+}
+.url-table td{padding:9px 12px;border-bottom:1px solid var(--border-soft);vertical-align:middle}
+.url-table tr:last-child td{border-bottom:none}
+.url-table tr:hover td{background:var(--surface-2)}
+.method{
+  font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;
+  padding:2px 8px;border-radius:5px;
+}
+.m-get{background:rgba(74,222,128,.1);color:var(--green)}
+.m-post{background:rgba(0,212,255,.1);color:var(--teal)}
+.m-any{background:rgba(251,191,36,.1);color:var(--warning)}
+
+/* Model table */
+.model-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:10px}
+.model-table th{background:var(--surface-2);padding:7px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid var(--border-soft)}
+.model-table td{padding:8px 12px;border-bottom:1px solid var(--border-soft);vertical-align:top;font-family:'JetBrains Mono',monospace;font-size:11px}
+.model-table tr:hover td{background:var(--surface-2)}
+.model-table td:first-child{color:var(--green)}
+.model-table td:nth-child(2){color:var(--teal)}
+
+/* Divider */
+hr.section-div{border:none;border-top:1px solid var(--border-soft);margin:40px 0}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sb-logo">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#00d4ff"/>
+          <stop offset="100%" stop-color="#4ade80"/>
+        </linearGradient>
+      </defs>
+      <rect width="100" height="100" rx="18" fill="#0d1b2e"/>
+      <path d="M50 8 L92 50 L50 92 L8 50 Z" fill="url(#lg)" opacity=".9"/>
+      <rect x="45" y="28" width="10" height="44" rx="4" fill="#070e1a"/>
+      <rect x="28" y="45" width="44" height="10" rx="4" fill="#070e1a"/>
+    </svg>
+    <div class="sb-logo-text">
+      <h1>LIDDIS</h1>
+      <p>Documentação do Sistema</p>
+    </div>
+  </div>
+  <div class="sb-nav">
+    <div class="sb-section">Visão Geral</div>
+    <a class="sb-link active" href="#overview">⬡ Introdução</a>
+    <a class="sb-link" href="#stack">⚙ Stack Técnica</a>
+    <a class="sb-link" href="#fluxo">🔑 Fluxo de Atendimento</a>
+    <a class="sb-link" href="#urls">🔗 Rotas da Aplicação</a>
+
+    <div class="sb-section">Configuração</div>
+    <a class="sb-link" href="#config-settings">config/settings.py <span class="tag tag-config">config</span></a>
+    <a class="sb-link" href="#config-urls">config/urls.py <span class="tag tag-config">config</span></a>
+    <a class="sb-link" href="#manage">manage.py <span class="tag tag-py">py</span></a>
+    <a class="sb-link" href="#requirements">requirements.txt <span class="tag tag-config">txt</span></a>
+
+    <div class="sb-section">App: users</div>
+    <a class="sb-link" href="#users-models">users/models.py <span class="tag tag-py">py</span></a>
+    <a class="sb-link" href="#users-views">users/views.py <span class="tag tag-py">py</span></a>
+    <a class="sb-link" href="#users-forms">users/forms.py <span class="tag tag-py">py</span></a>
+    <a class="sb-link" href="#users-serializers">users/serializers.py <span class="tag tag-py">py</span></a>
+    <a class="sb-link" href="#users-urls">users/urls.py <span class="tag tag-py">py</span></a>
+    <a class="sb-link" href="#users-admin">users/admin.py <span class="tag tag-py">py</span></a>
+
+    <div class="sb-section">App: consultations</div>
+    <a class="sb-link" href="#cons-models">consultations/models.py <span class="tag tag-py">py</span></a>
+    <a class="sb-link" href="#cons-views">consultations/views.py <span class="tag tag-py">py</span></a>
+    <a class="sb-link" href="#cons-forms">consultations/forms.py <span class="tag tag-py">py</span></a>
+    <a class="sb-link" href="#cons-urls">consultations/urls.py <span class="tag tag-py">py</span></a>
+    <a class="sb-link" href="#cons-admin">consultations/admin.py <span class="tag tag-py">py</span></a>
+
+    <div class="sb-section">Templates</div>
+    <a class="sb-link" href="#tpl-base">base.html <span class="tag tag-html">html</span></a>
+    <a class="sb-link" href="#tpl-auth">Login / Cadastro <span class="tag tag-html">html</span></a>
+    <a class="sb-link" href="#tpl-dashboard">dashboard.html <span class="tag tag-html">html</span></a>
+    <a class="sb-link" href="#tpl-atendimento">Atendimento <span class="tag tag-html">html</span></a>
+    <a class="sb-link" href="#tpl-consultations">Consultas <span class="tag tag-html">html</span></a>
+  </div>
+  <div class="sb-footer">
+    v1.0.0 · Django 5.2 · Python 3.10<br>
+    <span style="color:var(--muted-2);font-size:10px">LIDDIS — Inteligência Clínica</span>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div id="main">
+  <div class="topbar">
+    <span class="topbar-title">Documentação Técnica do Sistema</span>
+    <div class="topbar-badge">
+      <div class="status-dot"></div>
+      <span>Sistema ativo</span>
+      <span class="version">v1.0.0</span>
+    </div>
+  </div>
+
+  <div class="page">
+
+    <!-- HERO -->
+    <div class="hero" id="overview">
+      <div class="hero-body">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="hg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#00d4ff"/>
+              <stop offset="100%" stop-color="#4ade80"/>
+            </linearGradient>
+          </defs>
+          <rect width="100" height="100" rx="20" fill="rgba(13,27,46,.8)"/>
+          <path d="M50 8 L92 50 L50 92 L8 50 Z" fill="url(#hg)" opacity=".9"/>
+          <rect x="45" y="28" width="10" height="44" rx="4" fill="#070e1a"/>
+          <rect x="28" y="45" width="44" height="10" rx="4" fill="#070e1a"/>
+        </svg>
+        <h1>LIDDIS</h1>
+        <div class="hero-tag">Transformando Dados em <strong>Inteligência Clínica</strong></div>
+        <p>
+          Plataforma web para gestão de saúde pessoal e integração entre pacientes e profissionais de saúde.
+          Permite o registro de consultas, sinais vitais e prontuários vinculados via token seguro de atendimento.
+        </p>
+        <div class="hero-meta">
+          <div class="meta-pill">🐍 <strong>Python 3.10</strong></div>
+          <div class="meta-pill">⚙ <strong>Django 5.2</strong></div>
+          <div class="meta-pill">🔐 <strong>JWT + Session Auth</strong></div>
+          <div class="meta-pill">🗄 <strong>SQLite → PostgreSQL</strong></div>
+          <div class="meta-pill">📡 <strong>REST Framework</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STACK -->
+    <div class="section" id="stack">
+      <div class="section-header">
+        <div class="section-icon">⚙</div>
+        <div>
+          <h2>Stack Técnica</h2>
+          <p>Tecnologias e bibliotecas do projeto</p>
+        </div>
+      </div>
+      <div class="file-grid">
+        <div class="file-card">
+          <div class="file-card-header" onclick="toggle(this)">
+            <div class="file-icon fi-config">📦</div>
+            <div class="file-meta">
+              <div class="file-name">requirements.txt</div>
+              <div class="file-path">Dependências do projeto</div>
+            </div>
+          </div>
+          <div class="file-card-body">
+            <div class="resp-list">
+              <div class="resp-item"><code>Django 5.2</code> — framework web principal</div>
+              <div class="resp-item"><code>djangorestframework</code> — API REST para o futuro frontend</div>
+              <div class="resp-item"><code>djangorestframework-simplejwt</code> — autenticação JWT para a API</div>
+              <div class="resp-item"><code>django-cors-headers</code> — permite requisições do frontend React</div>
+              <div class="resp-item"><code>psycopg2-binary</code> — driver PostgreSQL (pronto para migrar do SQLite)</div>
+              <div class="resp-item"><code>python-decouple</code> — carrega variáveis do arquivo <code>.env</code></div>
+            </div>
+            <p style="font-size:12px;color:var(--muted-2)">Instalar com: <code>pip install -r requirements.txt</code></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FLUXO DE ATENDIMENTO -->
+    <div class="section" id="fluxo">
+      <div class="section-header">
+        <div class="section-icon">🔑</div>
+        <div>
+          <h2>Fluxo de Atendimento por Token</h2>
+          <p>Como funciona a sessão segura entre paciente e profissional</p>
+        </div>
+      </div>
+
+      <div class="flow">
+        <h3>Lado do Paciente</h3>
+        <div class="flow-steps">
+          <div class="flow-step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h4>Acessa "Iniciar Atendimento"</h4>
+              <p>No dashboard ou sidebar, o paciente clica em <strong>Iniciar Atendimento</strong> → <code>/consultas/atendimento/iniciar/</code></p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h4>Token UUID é gerado</h4>
+              <p>O sistema cria uma <code>ConsultationSession</code> com status <code>pending</code>, token UUID único e validade de <strong>2 horas</strong>. Sessões antigas são canceladas.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h4>Mostra o código na tela</h4>
+              <p>O paciente vê o código completo (UUID) e o exibe ao profissional de saúde fisicamente.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow">
+        <h3>Lado do Profissional (Médico, Enfermeiro, etc.)</h3>
+        <div class="flow-steps">
+          <div class="flow-step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h4>Acessa "Atender Paciente"</h4>
+              <p>No dashboard do profissional → <code>/consultas/atendimento/entrar/</code></p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h4>Insere o token</h4>
+              <p>Cola o UUID recebido do paciente. O sistema valida: token existe, status é <code>pending</code> e não está expirado.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h4>Acessa dados e registra a consulta</h4>
+              <p>Vê o perfil básico do paciente (nome, idade, e-mail) e preenche diagnóstico, prescrição e anotações.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <h4>Sessão é encerrada automaticamente</h4>
+              <p>Ao salvar, a consulta é vinculada ao paciente, a sessão muda para <code>closed</code> e o token não pode mais ser reutilizado.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- URLS -->
+    <div class="section" id="urls">
+      <div class="section-header">
+        <div class="section-icon">🔗</div>
+        <div>
+          <h2>Rotas da Aplicação</h2>
+          <p>Todas as URLs disponíveis no sistema</p>
+        </div>
+      </div>
+      <table class="url-table">
+        <thead>
+          <tr><th>URL</th><th>Método</th><th>Nome</th><th>Descrição</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>/</code></td><td><span class="method m-get">GET</span></td><td><code>api_root</code></td><td>Status JSON da API</td></tr>
+          <tr><td><code>/login/</code></td><td><span class="method m-any">ANY</span></td><td><code>login</code></td><td>Tela de login</td></tr>
+          <tr><td><code>/logout/</code></td><td><span class="method m-post">POST</span></td><td><code>logout</code></td><td>Encerrar sessão</td></tr>
+          <tr><td><code>/register/</code></td><td><span class="method m-any">ANY</span></td><td><code>register</code></td><td>Cadastro de novo usuário</td></tr>
+          <tr><td><code>/dashboard/</code></td><td><span class="method m-get">GET</span></td><td><code>dashboard</code></td><td>Dashboard (paciente ou profissional)</td></tr>
+          <tr><td><code>/perfil/</code></td><td><span class="method m-any">ANY</span></td><td><code>profile</code></td><td>Edição de perfil do usuário</td></tr>
+          <tr><td><code>/consultas/</code></td><td><span class="method m-get">GET</span></td><td><code>consultation_list</code></td><td>Lista de consultas do paciente</td></tr>
+          <tr><td><code>/consultas/nova/</code></td><td><span class="method m-any">ANY</span></td><td><code>consultation_create</code></td><td>Nova consulta manual</td></tr>
+          <tr><td><code>/consultas/&lt;pk&gt;/</code></td><td><span class="method m-get">GET</span></td><td><code>consultation_detail</code></td><td>Detalhe da consulta</td></tr>
+          <tr><td><code>/consultas/sinais-vitais/</code></td><td><span class="method m-any">ANY</span></td><td><code>vitals</code></td><td>Registro de sinais vitais</td></tr>
+          <tr><td><code>/consultas/atendimento/iniciar/</code></td><td><span class="method m-any">ANY</span></td><td><code>iniciar_atendimento</code></td><td>Paciente gera token</td></tr>
+          <tr><td><code>/consultas/atendimento/entrar/</code></td><td><span class="method m-any">ANY</span></td><td><code>entrar_atendimento</code></td><td>Profissional insere token</td></tr>
+          <tr><td><code>/consultas/atendimento/&lt;uuid&gt;/consulta/</code></td><td><span class="method m-any">ANY</span></td><td><code>atendimento_consulta</code></td><td>Profissional registra consulta</td></tr>
+          <tr><td><code>/admin/</code></td><td><span class="method m-any">ANY</span></td><td>—</td><td>Painel administrativo Django</td></tr>
+          <tr><td><code>/api/auth/token/</code></td><td><span class="method m-post">POST</span></td><td><code>token_obtain_pair</code></td><td>Obter JWT</td></tr>
+          <tr><td><code>/api/auth/token/refresh/</code></td><td><span class="method m-post">POST</span></td><td><code>token_refresh</code></td><td>Renovar JWT</td></tr>
+          <tr><td><code>/api-register/</code></td><td><span class="method m-post">POST</span></td><td><code>api_register</code></td><td>Cadastro via API REST</td></tr>
+          <tr><td><code>/me/</code></td><td><span class="method m-any">ANY</span></td><td><code>me</code></td><td>Dados do usuário autenticado (API)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr class="section-div"/>
+
+    <!-- CONFIG -->
+    <div class="section" id="config-settings">
+      <div class="section-header">
+        <div class="section-icon">⚙</div>
+        <div><h2>config/settings.py</h2><p>Configurações centrais do Django</p></div>
+      </div>
+      <div class="file-grid">
+        <div class="file-card">
+          <div class="file-card-header" onclick="toggle(this)">
+            <div class="file-icon fi-config">⚙</div>
+            <div class="file-meta">
+              <div class="file-name">settings.py</div>
+              <div class="file-path">config/settings.py</div>
+            </div>
+            <div class="file-tags"><span class="ftag ftag-yellow">Crítico</span></div>
+          </div>
+          <div class="file-card-body">
+            <p class="file-desc">
+              Arquivo central de configuração do Django. Define banco de dados, apps instalados, autenticação, middlewares e variáveis de segurança carregadas do arquivo <code>.env</code> via <code>python-decouple</code>.
+            </p>
+            <div class="resp-list">
+              <div class="resp-item"><strong>SECRET_KEY</strong> — chave criptográfica lida do <code>.env</code>, nunca exposta no código</div>
+              <div class="resp-item"><strong>DEBUG</strong> — <code>True</code> em desenvolvimento, <code>False</code> em produção</div>
+              <div class="resp-item"><strong>AUTH_USER_MODEL</strong> — aponta para <code>users.CustomUser</code> (modelo de usuário customizado)</div>
+              <div class="resp-item"><strong>DATABASES</strong> — SQLite por padrão; variáveis prontas para PostgreSQL</div>
+              <div class="resp-item"><strong>AUTHENTICATION_BACKENDS</strong> — define <code>ModelBackend</code> explicitamente para evitar ambiguidade</div>
+              <div class="resp-item"><strong>INSTALLED_APPS</strong> — inclui <code>users</code>, <code>consultations</code>, <code>rest_framework</code>, <code>corsheaders</code></div>
+              <div class="resp-item"><strong>Sessões</strong> — <code>SESSION_COOKIE_HTTPONLY=True</code>, <code>CSRF_COOKIE_HTTPONLY=True</code> por segurança</div>
+            </div>
+            <p style="font-size:12px;color:var(--muted-2)">⚠ Para trocar para PostgreSQL: defina <code>DB_ENGINE</code>, <code>DB_NAME</code>, <code>DB_USER</code>, <code>DB_PASSWORD</code>, <code>DB_HOST</code>, <code>DB_PORT</code> no <code>.env</code></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS MODELS -->
+    <div class="section" id="users-models">
+      <div class="section-header">
+        <div class="section-icon">👤</div>
+        <div><h2>users/models.py</h2><p>Modelo de usuário customizado</p></div>
+      </div>
+      <div class="file-grid">
+        <div class="file-card">
+          <div class="file-card-header" onclick="toggle(this)">
+            <div class="file-icon fi-py">🐍</div>
+            <div class="file-meta">
+              <div class="file-name">models.py</div>
+              <div class="file-path">users/models.py</div>
+            </div>
+            <div class="file-tags"><span class="ftag ftag-green">Model</span><span class="ftag ftag-red">Core</span></div>
+          </div>
+          <div class="file-card-body">
+            <p class="file-desc">Define <code>CustomUser</code>, que estende o <code>AbstractUser</code> do Django adicionando campos específicos do domínio de saúde e controle de perfil por tipo (role).</p>
+            <table class="model-table">
+              <thead><tr><th>Campo</th><th>Tipo</th><th>Descrição</th></tr></thead>
+              <tbody>
+                <tr><td>role</td><td>CharField</td><td>PATIENT, DOCTOR, NURSE, NUTRITIONIST, PHYSIO, ADMIN</td></tr>
+                <tr><td>phone</td><td>CharField</td><td>Telefone de contato (opcional)</td></tr>
+                <tr><td>date_of_birth</td><td>DateField</td><td>Data de nascimento (usado para calcular idade)</td></tr>
+                <tr><td>bio</td><td>TextField</td><td>Descrição do profissional ou histórico do paciente</td></tr>
+                <tr><td>email</td><td>EmailField</td><td>E-mail único — usado como identificador secundário</td></tr>
+                <tr><td>updated_at</td><td>DateTimeField</td><td>Atualizado automaticamente a cada save()</td></tr>
+              </tbody>
+            </table>
+            <div class="resp-list" style="margin-top:14px">
+              <div class="resp-item"><code>display_name</code> — property: retorna nome completo ou username</div>
+              <div class="resp-item"><code>age</code> — property: calcula idade a partir de <code>date_of_birth</code></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS VIEWS -->
+    <div class="section" id="users-views">
+      <div class="section-header">
+        <div class="section-icon">👁</div>
+        <div><h2>users/views.py</h2><p>Views de autenticação e dashboard</p></div>
+      </div>
+      <div class="file-grid">
+        <div class="file-card">
+          <div class="file-card-header" onclick="toggle(this)">
+            <div class="file-icon fi-py">🐍</div>
+            <div class="file-meta">
+              <div class="file-name">views.py</div>
+              <div class="file-path">users/views.py</div>
+            </div>
+            <div class="file-tags"><span class="ftag ftag-teal">View</span></div>
+          </div>
+          <div class="file-card-body">
+            <div class="resp-list">
+              <div class="resp-item"><strong>RegisterAPIView</strong> — endpoint REST para criar usuário via API (<code>POST /api-register/</code>)</div>
+              <div class="resp-item"><strong>MeView</strong> — endpoint REST para ver/editar dados do próprio usuário autenticado (<code>/me/</code>)</div>
+              <div class="resp-item"><strong>RegisterWebView</strong> — cadastro via formulário web; evita duplo cadastro se usuário já estiver logado</div>
+              <div class="resp-item"><strong>dashboard()</strong> — renderiza dashboard diferente para paciente (histórico) ou profissional (atendimentos realizados)</div>
+              <div class="resp-item"><strong>profile()</strong> — exibe e salva o formulário de edição de perfil</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS FORMS -->
+    <div class="section" id="users-forms">
+      <div class="section-header">
+        <div class="section-icon">📝</div>
+        <div><h2>users/forms.py</h2><p>Formulários de cadastro e perfil</p></div>
+      </div>
+      <div class="file-grid">
+        <div class="file-card">
+          <div class="file-card-header" onclick="toggle(this)">
+            <div class="file-icon fi-py">🐍</div>
+            <div class="file-meta">
+              <div class="file-name">forms.py</div>
+              <div class="file-path">users/forms.py</div>
+            </div>
+            <div class="file-tags"><span class="ftag ftag-green">Form</span></div>
+          </div>
+          <div class="file-card-body">
+            <div class="resp-list">
+              <div class="resp-item"><strong>RegisterForm</strong> — herda <code>UserCreationForm</code>; adiciona <code>first_name</code>, <code>last_name</code>, <code>email</code>, <code>role</code>; valida e-mail único</div>
+              <div class="resp-item"><strong>ProfileForm</strong> — permite editar nome, e-mail, telefone, data de nascimento, role e bio</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONSULTATIONS MODELS -->
+    <div class="section" id="cons-models">
+      <div class="section-header">
+        <div class="section-icon">📋</div>
+        <div><h2>consultations/models.py</h2><p>Modelos de consulta, sinais vitais e sessão de atendimento</p></div>
+      </div>
+      <div class="file-grid">
+
+        <div class="file-card">
+          <div class="file-card-header" onclick="toggle(this)">
+            <div class="file-icon fi-py">📋</div>
+            <div class="file-meta">
+              <div class="file-name">Consultation</div>
+              <div class="file-path">consultations/models.py · class Consultation</div>
+            </div>
+            <div class="file-tags"><span class="ftag ftag-green">Model</span></div>
+          </div>
+          <div class="file-card-body">
+            <p class="file-desc">Registro de uma consulta médica vinculada a um paciente. Pode ser criado manualmente pelo paciente ou automaticamente via fluxo de token.</p>
+            <table class="model-table">
+              <thead><tr><th>Campo</th><th>Tipo</th><th>Descrição</th></tr></thead>
+              <tbody>
+                <tr><td>patient</td><td>FK→User</td><td>Paciente a quem pertence a consulta</td></tr>
+                <tr><td>date</td><td>DateField</td><td>Data da consulta</td></tr>
+                <tr><td>professional_name</td><td>CharField</td><td>Nome do profissional que atendeu</td></tr>
+                <tr><td>specialty</td><td>CharField</td><td>Especialidade (clínico, cardiologia, etc.)</td></tr>
+                <tr><td>diagnosis</td><td>TextField</td><td>Diagnóstico</td></tr>
+                <tr><td>notes</td><td>TextField</td><td>Anotações e evolução clínica</td></tr>
+                <tr><td>prescription</td><td>TextField</td><td>Prescrição e medicamentos</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="file-card">
+          <div class="file-card-header" onclick="toggle(this)">
+            <div class="file-icon fi-py">📊</div>
+            <div class="file-meta">
+              <div class="file-name">VitalSign</div>
+              <div class="file-path">consultations/models.py · class VitalSign</div>
+            </div>
+            <div class="file-tags"><span class="ftag ftag-green">Model</span></div>
+          </div>
+          <div class="file-card-body">
+            <p class="file-desc">Registro de sinais vitais do paciente (pressão, batimentos, peso, temperatura, saturação). Inserido diretamente pelo paciente no sistema.</p>
+            <table class="model-table">
+              <thead><tr><th>Campo</th><th>Tipo</th><th>Descrição</th></tr></thead>
+              <tbody>
+                <tr><td>patient</td><td>FK→User</td><td>Paciente</td></tr>
+                <tr><td>blood_pressure</td><td>CharField</td><td>Pressão arterial (ex: 120/80)</td></tr>
+                <tr><td>heart_rate</td><td>IntegerField</td><td>Frequência cardíaca (bpm)</td></tr>
+                <tr><td>weight</td><td>DecimalField</td><td>Peso em kg</td></tr>
+                <tr><td>temperature</td><td>DecimalField</td><td>Temperatura em °C</td></tr>
+                <tr><td>oxygen_saturation</td><td>IntegerField</td><td>Saturação de O₂ em %</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="file-card">
+          <div class="file-card-header" onclick="toggle(this)">
+            <div class="file-icon fi-py">🔑</div>
+            <div class="file-meta">
+              <div class="file-name">ConsultationSession</div>
+              <div class="file-path">consultations/models.py · class ConsultationSession</div>
+            </div>
+            <div class="file-tags"><span class="ftag ftag-green">Model</span><span class="ftag ftag-teal">Segurança</span></div>
+          </div>
+          <div class="file-card-body">
+            <p class="file-desc">
+              Controla o ciclo de vida de uma sessão de atendimento via token UUID. Um paciente gera o token, um profissional o consome.
+              Após o uso, a sessão é encerrada e o token não pode ser reutilizado.
+            </p>
+            <table class="model-table">
+              <thead><tr><th>Campo</th><th>Tipo</th><th>Descrição</th></tr></thead>
+              <tbody>
+                <tr><td>token</td><td>UUIDField</td><td>Identificador único, gerado automaticamente, não editável</td></tr>
+                <tr><td>patient</td><td>FK→User</td><td>Paciente que gerou o token</td></tr>
+                <tr><td>professional</td><td>FK→User (null)</td><td>Profissional que usou o token (preenchido ao entrar)</td></tr>
+                <tr><td>consultation</td><td>OneToOne→Consultation (null)</td><td>Consulta gerada ao final do atendimento</td></tr>
+                <tr><td>status</td><td>CharField</td><td>pending / active / closed / expired</td></tr>
+                <tr><td>expires_at</td><td>DateTimeField</td><td>Token expira 2h após criação</td></tr>
+              </tbody>
+            </table>
+            <div class="resp-list" style="margin-top:14px">
+              <div class="resp-item"><code>is_expired</code> — property: True se <code>now() > expires_at</code></div>
+              <div class="resp-item"><code>is_valid</code> — property: True se <code>pending</code> e não expirado</div>
+              <div class="resp-item"><code>token_display</code> — property: primeiros 8 caracteres em maiúsculo (exibição)</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CONSULTATIONS VIEWS -->
+    <div class="section" id="cons-views">
+      <div class="section-header">
+        <div class="section-icon">👁</div>
+        <div><h2>consultations/views.py</h2><p>Views de consultas, sinais vitais e fluxo de atendimento</p></div>
+      </div>
+      <div class="file-grid">
+        <div class="file-card">
+          <div class="file-card-header" onclick="toggle(this)">
+            <div class="file-icon fi-py">🐍</div>
+            <div class="file-meta">
+              <div class="file-name">views.py</div>
+              <div class="file-path">consultations/views.py</div>
+            </div>
+            <div class="file-tags"><span class="ftag ftag-teal">View</span></div>
+          </div>
+          <div class="file-card-body">
+            <div class="resp-list">
+              <div class="resp-item"><strong>ConsultationListView</strong> — lista consultas do paciente logado</div>
+              <div class="resp-item"><strong>ConsultationCreateView</strong> — formulário de nova consulta (manual pelo paciente)</div>
+              <div class="resp-item"><strong>ConsultationUpdateView</strong> — edição de consulta (apenas do próprio paciente)</div>
+              <div class="resp-item"><strong>ConsultationDetailView</strong> — detalhe de uma consulta</div>
+              <div class="resp-item"><strong>ConsultationDeleteView</strong> — exclusão com confirmação</div>
+              <div class="resp-item"><strong>VitalSignListView</strong> — lista e formulário de sinais vitais</div>
+              <div class="resp-item"><strong>VitalSignCreateView</strong> — salva novo sinal vital</div>
+              <div class="resp-item"><strong>iniciar_atendimento()</strong> — PACIENTE: cancela sessões antigas e cria novo token</div>
+              <div class="resp-item"><strong>entrar_atendimento()</strong> — PROFISSIONAL: valida token e ativa a sessão</div>
+              <div class="resp-item"><strong>atendimento_consulta()</strong> — PROFISSIONAL: exibe dados do paciente + salva consulta</div>
+              <div class="resp-item"><strong>cancelar_sessao()</strong> — PACIENTE: cancela token antes de ser usado</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEMPLATES -->
+    <div class="section" id="tpl-base">
+      <div class="section-header">
+        <div class="section-icon">🎨</div>
+        <div><h2>Templates</h2><p>Interface visual baseada na identidade LIDDIS</p></div>
+      </div>
+      <div class="file-grid">
+
+        <div class="file-card">
+          <div class="file-card-header" onclick="toggle(this)">
+            <div class="file-icon fi-html">🎨</div>
+            <div class="file-meta">
+              <div class="file-name">base.html</div>
+              <div class="file-path">templates/base.html</div>
+            </div>
+            <div class="file-tags"><span class="ftag ftag-red">Base</span></div>
+          </div>
+          <div class="file-card-body">
+            <p class="file-desc">Template pai herdado por todas as páginas internas (após login). Define o layout completo com sidebar LIDDIS, topbar, sistema de cores escuro e design system CSS.</p>
+            <div class="resp-list">
+              <div class="resp-item">Sidebar responsiva ao <code>user.role</code> — paciente vê consultas e sinais vitais; profissional vê "Atender Paciente"</div>
+              <div class="resp-item">Variáveis CSS LIDDIS: <code>--teal</code>, <code>--green</code>, <code>--bg</code>, <code>--surface</code>, etc.</div>
+              <div class="resp-item">Logo SVG inline com gradiente teal→verde</div>
+              <div class="resp-item">Dot pattern background via <code>body::before</code></div>
+              <div class="resp-item">Sistema de classes utilitárias: <code>.btn</code>, <code>.card</code>, <code>.badge</code>, <code>.alert</code>, <code>.input</code>, <code>.stat-card</code></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="file-card" id="tpl-auth">
+          <div class="file-card-header" onclick="toggle(this)">
+            <div class="file-icon fi-html">🔐</div>
+            <div class="file-meta">
+              <div class="file-name">login.html / register.html</div>
+              <div class="file-path">templates/users/</div>
+            </div>
+            <div class="file-tags"><span class="ftag ftag-teal">Auth</span></div>
+          </div>
+          <div class="file-card-body">
+            <p class="file-desc">Páginas standalone (não herdam base.html) com a identidade visual LIDDIS completa — fundo escuro, dot pattern, logo SVG, gradiente teal→verde, tipografia Inter.</p>
+            <div class="resp-list">
+              <div class="resp-item"><strong>login.html</strong> — campos username e password, link para cadastro</div>
+              <div class="resp-item"><strong>register.html</strong> — campos de nome, e-mail, username, role e senha; link para login</div>
+              <div class="resp-item"><strong>already_logged.html</strong> — exibido quando usuário já logado tenta acessar <code>/register/</code></div>
+              <div class="resp-item"><strong>profile.html</strong> — edição de perfil com avatar, role badge e dados do usuário</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="file-card" id="tpl-dashboard">
+          <div class="file-card-header" onclick="toggle(this)">
+            <div class="file-icon fi-html">⬡</div>
+            <div class="file-meta">
+              <div class="file-name">dashboard.html</div>
+              <div class="file-path">templates/dashboard.html</div>
+            </div>
+            <div class="file-tags"><span class="ftag ftag-teal">View</span></div>
+          </div>
+          <div class="file-card-body">
+            <p class="file-desc">Dashboard diferenciado por role via variável <code>is_professional</code> passada pela view.</p>
+            <div class="resp-list">
+              <div class="resp-item"><strong>Paciente:</strong> cards de estatísticas (consultas, pressão, peso), card "Iniciar Atendimento" e tabela de consultas recentes</div>
+              <div class="resp-item"><strong>Profissional:</strong> card de atendimento por token, total de atendimentos realizados e tabela de atendimentos recentes</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="file-card" id="tpl-atendimento">
+          <div class="file-card-header" onclick="toggle(this)">
+            <div class="file-icon fi-html">🔑</div>
+            <div class="file-meta">
+              <div class="file-name">Fluxo de Atendimento</div>
+              <div class="file-path">templates/atendimento/</div>
+            </div>
+            <div class="file-tags"><span class="ftag ftag-green">Token</span></div>
+          </div>
+          <div class="file-card-body">
+            <div class="resp-list">
+              <div class="resp-item"><strong>iniciar.html</strong> — página do paciente com explicação e botão para gerar código</div>
+              <div class="resp-item"><strong>token_gerado.html</strong> — exibe o UUID completo em destaque azul, instruções e botão cancelar</div>
+              <div class="resp-item"><strong>entrar.html</strong> — campo para o profissional colar o token UUID recebido do paciente</div>
+              <div class="resp-item"><strong>consulta.html</strong> — card com dados do paciente (nome, idade, e-mail) + formulário de consulta médica</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="file-card" id="tpl-consultations">
+          <div class="file-card-header" onclick="toggle(this)">
+            <div class="file-icon fi-html">📋</div>
+            <div class="file-meta">
+              <div class="file-name">Consultas & Sinais Vitais</div>
+              <div class="file-path">templates/consultations/</div>
+            </div>
+            <div class="file-tags"><span class="ftag ftag-gray">Data</span></div>
+          </div>
+          <div class="file-card-body">
+            <div class="resp-list">
+              <div class="resp-item"><strong>list.html</strong> — tabela com todas as consultas do paciente, filtros e link para detalhes</div>
+              <div class="resp-item"><strong>form.html</strong> — formulário reutilizado para criar e editar consultas (título dinâmico via contexto)</div>
+              <div class="resp-item"><strong>detail.html</strong> — detalhe completo de uma consulta com diagnóstico, prescrição e anotações</div>
+              <div class="resp-item"><strong>confirm_delete.html</strong> — confirmação antes de excluir uma consulta</div>
+              <div class="resp-item"><strong>vitals.html</strong> — lista de sinais vitais + formulário inline para adicionar novo</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <hr class="section-div"/>
+
+    <!-- PROXIMOS PASSOS -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon">🚀</div>
+        <div><h2>Próximos Passos</h2><p>Evoluções planejadas para o sistema</p></div>
+      </div>
+      <div class="file-grid">
+        <div style="background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius);padding:20px">
+          <div class="resp-list">
+            <div class="resp-item"><strong>PostgreSQL</strong> — configurar <code>.env</code> com <code>DB_ENGINE=django.db.backends.postgresql</code> e rodar <code>migrate</code></div>
+            <div class="resp-item"><strong>Redis + Celery</strong> — tarefas assíncronas: expiração automática de tokens, envio de e-mail de resumo pós-consulta</div>
+            <div class="resp-item"><strong>Frontend React</strong> — consumir a API REST já disponível em <code>/api/</code> com JWT</div>
+            <div class="resp-item"><strong>Prontuário eletrônico</strong> — histórico unificado do paciente por profissional, com gráficos de sinais vitais</div>
+            <div class="resp-item"><strong>Agendamento</strong> — sistema de agenda para profissionais com slots de horário</div>
+            <div class="resp-item"><strong>2FA / autenticação forte</strong> — TOTP para profissionais que acessam dados sensíveis</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- .page -->
+</div><!-- #main -->
+
+<script>
+function toggle(header){
+  const body = header.nextElementSibling;
+  body.classList.toggle('open');
+}
+// Highlight active sidebar link on scroll
+const links = document.querySelectorAll('.sb-link');
+const sections = [];
+links.forEach(l=>{
+  if(l.getAttribute('href').startsWith('#')){
+    const el = document.querySelector(l.getAttribute('href'));
+    if(el) sections.push({link:l, el});
+  }
+});
+window.addEventListener('scroll',()=>{
+  let current = sections[0];
+  sections.forEach(s=>{
+    if(s.el.getBoundingClientRect().top < 120) current = s;
+  });
+  links.forEach(l=>l.classList.remove('active'));
+  if(current) current.link.classList.add('active');
+},{passive:true});
+</script>
+</body>
+</html>

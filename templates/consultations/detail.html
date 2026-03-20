@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Consulta — HealthData Hub{% endblock %}
+{% block topbar_title %}Detalhe da Consulta{% endblock %}
+{% block nav_consultations %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2>Consulta — {{ consultation.date|date:"d/m/Y" }}</h2>
+    <p>{{ consultation.professional_name }} · {{ consultation.get_specialty_display }}</p>
+  </div>
+  <div style="display:flex;gap:10px">
+    <a href="{% url 'consultation_update' consultation.pk %}" class="btn btn-secondary">✏️ Editar</a>
+    <a href="{% url 'consultation_list' %}" class="btn btn-secondary">← Voltar</a>
+  </div>
+</div>
+
+<div style="display:grid;gap:16px;max-width:720px">
+
+  <div class="card">
+    <h3 style="font-size:14px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.6px;margin-bottom:16px">Informações gerais</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div>
+        <div style="font-size:12px;color:#64748b;margin-bottom:3px">Data</div>
+        <div style="font-weight:600">{{ consultation.date|date:"d/m/Y" }}</div>
+      </div>
+      <div>
+        <div style="font-size:12px;color:#64748b;margin-bottom:3px">Especialidade</div>
+        <span class="badge badge-blue">{{ consultation.get_specialty_display }}</span>
+      </div>
+      <div>
+        <div style="font-size:12px;color:#64748b;margin-bottom:3px">Profissional</div>
+        <div style="font-weight:600">{{ consultation.professional_name }}</div>
+      </div>
+      <div>
+        <div style="font-size:12px;color:#64748b;margin-bottom:3px">Registrado em</div>
+        <div>{{ consultation.created_at|date:"d/m/Y H:i" }}</div>
+      </div>
+    </div>
+  </div>
+
+  {% if consultation.diagnosis %}
+  <div class="card">
+    <h3 style="font-size:14px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">🩺 Diagnóstico</h3>
+    <p style="line-height:1.7;white-space:pre-wrap">{{ consultation.diagnosis }}</p>
+  </div>
+  {% endif %}
+
+  {% if consultation.notes %}
+  <div class="card">
+    <h3 style="font-size:14px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">📝 Anotações</h3>
+    <p style="line-height:1.7;white-space:pre-wrap">{{ consultation.notes }}</p>
+  </div>
+  {% endif %}
+
+  {% if consultation.prescription %}
+  <div class="card" style="border-left:4px solid #f59e0b">
+    <h3 style="font-size:14px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">💊 Prescrição / Medicamentos</h3>
+    <p style="line-height:1.8;white-space:pre-wrap;font-family:monospace;font-size:13px">{{ consultation.prescription }}</p>
+  </div>
+  {% endif %}
+
+  <div style="display:flex;gap:10px">
+    <a href="{% url 'consultation_update' consultation.pk %}" class="btn btn-primary">✏️ Editar consulta</a>
+    <a href="{% url 'consultation_delete' consultation.pk %}" class="btn btn-danger">🗑 Excluir</a>
+  </div>
+</div>
+{% endblock %}

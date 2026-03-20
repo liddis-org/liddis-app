@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Já conectado — HealthData Hub</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f1f5f9;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:#fff;border-radius:16px;padding:48px 40px;width:100%;max-width:420px;box-shadow:0 4px 24px rgba(0,0,0,.08);text-align:center}
+.icon{font-size:52px;margin-bottom:20px}
+h1{font-size:20px;font-weight:800;color:#1e293b;margin-bottom:8px}
+p{font-size:14px;color:#64748b;margin-bottom:28px;line-height:1.6}
+.user-badge{display:inline-flex;align-items:center;gap:10px;background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:10px;padding:10px 18px;margin-bottom:28px}
+.avatar{width:36px;height:36px;background:#2563eb;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px}
+.user-info{text-align:left}
+.user-info strong{display:block;font-size:14px;color:#1e293b}
+.user-info span{font-size:12px;color:#2563eb}
+.btn{display:block;width:100%;padding:12px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;border:none;text-decoration:none;transition:all .15s;margin-bottom:10px}
+.btn-primary{background:#2563eb;color:#fff}
+.btn-primary:hover{background:#1d4ed8}
+.btn-outline{background:#fff;color:#ef4444;border:1.5px solid #fecaca}
+.btn-outline:hover{background:#fef2f2}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="icon">👤</div>
+  <h1>Você já está conectado</h1>
+  <p>Sua conta está ativa. O que deseja fazer?</p>
+
+  <div class="user-badge">
+    <div class="avatar">{{ user.username|first|upper }}</div>
+    <div class="user-info">
+      <strong>{{ user.display_name }}</strong>
+      <span>{{ user.get_role_display }}</span>
+    </div>
+  </div>
+
+  <a href="{% url 'dashboard' %}" class="btn btn-primary">Ir ao Dashboard</a>
+
+  <form method="post" action="{% url 'logout' %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-outline">Sair e criar nova conta</button>
+  </form>
+</div>
+</body>
+</html>

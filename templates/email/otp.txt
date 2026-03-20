@@ -1,0 +1,20 @@
+LIDDIS — Inteligência Clínica
+================================
+
+Olá, {{ first_name }}!
+
+Seu código de verificação {{ channel }} é:
+
+  {{ code }}
+
+Válido por 10 minutos.
+
+⚠ NÃO compartilhe este código com ninguém.
+Nós nunca pediremos seu código por telefone ou mensagem.
+
+Se você não solicitou este código, ignore este e-mail.
+Sua conta permanece segura.
+
+---
+LIDDIS — Soluções Inteligentes em Saúde
+Este é um e-mail automático, não responda.

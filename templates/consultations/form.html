@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}{{ titulo }} — HealthData Hub{% endblock %}
+{% block topbar_title %}{{ titulo }}{% endblock %}
+{% block nav_consultations %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2>{{ titulo }}</h2>
+    <p>Preencha os dados da consulta</p>
+  </div>
+  <a href="{% url 'consultation_list' %}" class="btn btn-secondary">← Voltar</a>
+</div>
+
+<div class="card" style="max-width:720px">
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Data da consulta *</label>
+        {{ form.date }}
+        {{ form.date.errors }}
+      </div>
+      <div class="form-group">
+        <label>Especialidade *</label>
+        {{ form.specialty }}
+        {{ form.specialty.errors }}
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Nome do profissional *</label>
+      {{ form.professional_name }}
+      {{ form.professional_name.errors }}
+    </div>
+
+    <div class="form-group">
+      <label>Diagnóstico</label>
+      {{ form.diagnosis }}
+      {{ form.diagnosis.errors }}
+    </div>
+
+    <div class="form-group">
+      <label>Anotações / Evolução clínica</label>
+      {{ form.notes }}
+      {{ form.notes.errors }}
+    </div>
+
+    <div class="form-group">
+      <label>Prescrição / Medicamentos</label>
+      {{ form.prescription }}
+      <span class="form-help">Liste os medicamentos prescritos com dosagem e frequência.</span>
+      {{ form.prescription.errors }}
+    </div>
+
+    <hr class="divider"/>
+
+    <div style="display:flex;gap:12px">
+      <button type="submit" class="btn btn-primary">💾 {{ btn_label }}</button>
+      <a href="{% url 'consultation_list' %}" class="btn btn-secondary">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

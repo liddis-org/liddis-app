@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Conta Bloqueada — LIDDIS</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#070e1a;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;position:relative}
+body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(rgba(0,212,255,.07) 1px,transparent 1px);background-size:28px 28px;pointer-events:none}
+.card{background:#0d1b2e;border:1px solid rgba(248,113,113,.2);border-radius:16px;padding:40px;width:100%;max-width:420px;text-align:center;position:relative;z-index:1;box-shadow:0 24px 64px rgba(0,0,0,.5)}
+.icon{font-size:56px;margin-bottom:20px}
+h1{font-size:20px;font-weight:800;color:#f87171;margin-bottom:10px}
+p{font-size:14px;color:#6b8caa;line-height:1.7;margin-bottom:24px}
+p strong{color:#e8f4ff}
+.btn{display:inline-block;padding:11px 24px;background:rgba(248,113,113,.1);color:#f87171;border:1px solid rgba(248,113,113,.2);border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;transition:all .15s}
+.btn:hover{background:rgba(248,113,113,.2)}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="icon">🔒</div>
+  <h1>Acesso Temporariamente Bloqueado</h1>
+  <p>
+    Detectamos <strong>muitas tentativas de login</strong> incorretas.<br>
+    Por segurança, este acesso foi bloqueado por <strong>1 hora</strong>.
+  </p>
+  <p style="font-size:12px;margin-bottom:24px">
+    Se você esqueceu sua senha, entre em contato com o suporte.
+  </p>
+  <a href="/login/" class="btn">Tentar novamente mais tarde</a>
+</div>
+</body>
+</html>

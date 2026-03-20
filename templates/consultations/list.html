@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Consultas — HealthData Hub{% endblock %}
+{% block topbar_title %}Minhas Consultas{% endblock %}
+{% block nav_consultations %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2>Consultas</h2>
+    <p>Histórico completo das suas consultas médicas</p>
+  </div>
+  <a href="{% url 'consultation_create' %}" class="btn btn-primary">+ Nova Consulta</a>
+</div>
+
+<div class="card">
+  {% if consultations %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Profissional</th>
+          <th>Especialidade</th>
+          <th>Diagnóstico</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in consultations %}
+        <tr>
+          <td style="white-space:nowrap;font-weight:600">{{ c.date|date:"d/m/Y" }}</td>
+          <td>{{ c.professional_name }}</td>
+          <td><span class="badge badge-blue">{{ c.get_specialty_display }}</span></td>
+          <td class="text-muted">{{ c.diagnosis|default:"—"|truncatechars:50 }}</td>
+          <td style="white-space:nowrap">
+            <a href="{% url 'consultation_detail' c.pk %}" class="btn btn-secondary btn-sm">👁 Ver</a>
+            <a href="{% url 'consultation_update' c.pk %}" class="btn btn-secondary btn-sm">✏️ Editar</a>
+            <a href="{% url 'consultation_delete' c.pk %}" class="btn btn-danger btn-sm">🗑</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">📋</div>
+    <p>Nenhuma consulta registrada ainda.</p>
+    <a href="{% url 'consultation_create' %}" class="btn btn-primary mt-4">Registrar primeira consulta</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

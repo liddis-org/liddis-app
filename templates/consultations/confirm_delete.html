@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Excluir Consulta — HealthData Hub{% endblock %}
+{% block topbar_title %}Excluir Consulta{% endblock %}
+{% block nav_consultations %}active{% endblock %}
+
+{% block content %}
+<div style="max-width:480px">
+  <div class="card">
+    <div style="text-align:center;padding:16px 0 24px">
+      <div style="font-size:48px;margin-bottom:12px">🗑️</div>
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:8px">Excluir consulta?</h2>
+      <p style="color:#64748b;font-size:14px">
+        Esta ação não pode ser desfeita. A consulta de
+        <strong>{{ object.date|date:"d/m/Y" }}</strong> com
+        <strong>{{ object.professional_name }}</strong> será removida permanentemente.
+      </p>
+    </div>
+    <form method="post" style="display:flex;gap:12px;justify-content:center">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">Sim, excluir</button>
+      <a href="{% url 'consultation_list' %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

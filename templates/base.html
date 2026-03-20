@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>{% block title %}LIDDIS — Inteligência Clínica{% endblock %}</title>
+<style>
+/* ── LIDDIS DESIGN SYSTEM ─────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+:root {
+  --bg:          #070e1a;
+  --surface:     #0d1b2e;
+  --surface-2:   #112038;
+  --surface-3:   #152642;
+  --teal:        #00d4ff;
+  --teal-dark:   #0099cc;
+  --teal-glow:   rgba(0,212,255,.15);
+  --green:       #4ade80;
+  --green-dark:  #22c55e;
+  --green-glow:  rgba(74,222,128,.12);
+  --danger:      #f87171;
+  --warning:     #fbbf24;
+  --border:      rgba(0,212,255,.12);
+  --border-soft: rgba(255,255,255,.06);
+  --text:        #e8f4ff;
+  --muted:       #6b8caa;
+  --muted-2:     #4a6a85;
+  --radius:      12px;
+  --radius-sm:   8px;
+  --shadow:      0 4px 24px rgba(0,0,0,.4);
+  --shadow-teal: 0 0 20px rgba(0,212,255,.1);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+}
+
+/* Dot pattern background */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:radial-gradient(rgba(0,212,255,.07) 1px, transparent 1px);
+  background-size:28px 28px;
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ── SIDEBAR ─────────────────────────────────────────────────────────────── */
+.sidebar{
+  width:248px;min-width:248px;
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  position:fixed;top:0;left:0;height:100vh;
+  overflow-y:auto;display:flex;flex-direction:column;
+  z-index:100;
+}
+.sidebar::-webkit-scrollbar{width:3px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+.sidebar-logo{
+  padding:24px 20px 20px;
+  border-bottom:1px solid var(--border-soft);
+  display:flex;align-items:center;gap:12px;
+}
+.logo-svg{width:38px;height:38px;flex-shrink:0}
+.sidebar-logo-text h1{font-size:15px;font-weight:800;color:#fff;letter-spacing:.5px}
+.sidebar-logo-text p{font-size:10px;color:var(--green);font-weight:600;letter-spacing:.3px;margin-top:2px}
+
+.sidebar-nav{padding:16px 12px;flex:1}
+.nav-section{font-size:9px;font-weight:700;color:var(--muted-2);letter-spacing:1.5px;text-transform:uppercase;padding:12px 10px 6px}
+.nav-link{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 12px;border-radius:var(--radius-sm);
+  color:var(--muted);text-decoration:none;
+  font-size:13px;font-weight:500;
+  transition:all .15s;margin-bottom:2px;
+}
+.nav-link:hover{background:var(--surface-3);color:var(--text)}
+.nav-link.active{background:var(--teal-glow);color:var(--teal);border:1px solid var(--border)}
+.nav-link .ico{width:18px;text-align:center;font-size:15px;flex-shrink:0}
+
+.sidebar-footer{
+  padding:16px 20px;
+  border-top:1px solid var(--border-soft);
+  font-size:12px;
+}
+.sidebar-footer a{
+  color:var(--muted);text-decoration:none;
+  display:flex;align-items:center;gap:8px;
+  padding:6px 0;transition:color .15s;
+}
+.sidebar-footer a:hover{color:var(--text)}
+.sidebar-footer .user-role{
+  font-size:10px;color:var(--green);font-weight:600;
+  letter-spacing:.3px;margin-top:2px;
+}
+
+/* ── MAIN LAYOUT ─────────────────────────────────────────────────────────── */
+.main{margin-left:248px;flex:1;display:flex;flex-direction:column;min-height:100vh;position:relative;z-index:1}
+
+.topbar{
+  background:rgba(13,27,46,.8);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border-soft);
+  padding:0 32px;height:54px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:50;
+}
+.topbar-title{font-size:14px;font-weight:700;color:var(--text)}
+.topbar-user{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.avatar{
+  width:30px;height:30px;
+  background:var(--teal-glow);
+  border:1px solid var(--teal);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:var(--teal);
+}
+.content{padding:28px 32px;flex:1}
+
+/* ── CARDS ───────────────────────────────────────────────────────────────── */
+.card{
+  background:var(--surface);
+  border:1px solid var(--border-soft);
+  border-radius:var(--radius);
+  padding:24px;
+  box-shadow:var(--shadow);
+}
+.card-grid{display:grid;gap:16px}
+.card-grid-2{grid-template-columns:repeat(2,1fr)}
+.card-grid-3{grid-template-columns:repeat(3,1fr)}
+.card-grid-4{grid-template-columns:repeat(4,1fr)}
+
+/* ── STAT CARDS ──────────────────────────────────────────────────────────── */
+.stat-card{
+  background:var(--surface);
+  border:1px solid var(--border-soft);
+  border-radius:var(--radius);
+  padding:20px 24px;
+}
+.stat-card .stat-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.stat-card .stat-value{font-size:26px;font-weight:800;color:var(--text)}
+.stat-card .stat-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.stat-card .stat-icon{font-size:24px;float:right;margin-top:-4px;opacity:.7}
+
+/* ── FORMS ───────────────────────────────────────────────────────────────── */
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.input{
+  width:100%;padding:10px 14px;
+  border:1.5px solid var(--border-soft);
+  border-radius:var(--radius-sm);
+  font-size:14px;color:var(--text);
+  background:var(--surface-2);
+  transition:border .15s,box-shadow .15s;
+  outline:none;font-family:inherit;
+}
+.input:focus{border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-glow)}
+.input::placeholder{color:var(--muted-2)}
+textarea.input{resize:vertical}
+select.input{
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b8caa' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:40px;
+}
+select.input option{background:var(--surface-2);color:var(--text)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-help{font-size:11px;color:var(--muted-2);margin-top:4px}
+.errorlist{list-style:none;margin-top:4px}
+.errorlist li{font-size:12px;color:var(--danger);background:rgba(248,113,113,.1);padding:4px 10px;border-radius:5px;margin-top:3px;border-left:2px solid var(--danger)}
+
+/* ── BUTTONS ─────────────────────────────────────────────────────────────── */
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:9px 18px;border-radius:var(--radius-sm);
+  font-size:13px;font-weight:600;
+  cursor:pointer;border:none;text-decoration:none;
+  transition:all .15s;font-family:inherit;
+}
+.btn-primary{
+  background:linear-gradient(135deg,var(--teal),var(--teal-dark));
+  color:#070e1a;
+}
+.btn-primary:hover{filter:brightness(1.1);box-shadow:var(--shadow-teal)}
+.btn-green{
+  background:linear-gradient(135deg,var(--green),var(--green-dark));
+  color:#070e1a;
+}
+.btn-green:hover{filter:brightness(1.1)}
+.btn-secondary{
+  background:var(--surface-2);color:var(--text);
+  border:1px solid var(--border-soft);
+}
+.btn-secondary:hover{background:var(--surface-3);border-color:var(--border)}
+.btn-danger{background:rgba(248,113,113,.1);color:var(--danger);border:1px solid rgba(248,113,113,.2)}
+.btn-danger:hover{background:rgba(248,113,113,.2)}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn-block{width:100%;justify-content:center}
+
+/* ── TABLE ───────────────────────────────────────────────────────────────── */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{
+  background:var(--surface-2);padding:10px 14px;
+  text-align:left;font-size:10px;font-weight:700;
+  color:var(--muted);text-transform:uppercase;letter-spacing:.8px;
+  border-bottom:1px solid var(--border-soft);
+}
+tbody td{padding:12px 14px;border-bottom:1px solid var(--border-soft);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--surface-2)}
+
+/* ── BADGES ──────────────────────────────────────────────────────────────── */
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 10px;border-radius:20px;letter-spacing:.3px}
+.badge-teal{background:var(--teal-glow);color:var(--teal);border:1px solid rgba(0,212,255,.2)}
+.badge-green{background:var(--green-glow);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.badge-yellow{background:rgba(251,191,36,.1);color:var(--warning);border:1px solid rgba(251,191,36,.2)}
+.badge-red{background:rgba(248,113,113,.1);color:var(--danger);border:1px solid rgba(248,113,113,.2)}
+.badge-gray{background:var(--surface-2);color:var(--muted);border:1px solid var(--border-soft)}
+/* alias para compatibilidade */
+.badge-blue{background:var(--teal-glow);color:var(--teal);border:1px solid rgba(0,212,255,.2)}
+
+/* ── ALERTS ──────────────────────────────────────────────────────────────── */
+.alert{padding:12px 16px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px}
+.alert-success{background:var(--green-glow);border-left:3px solid var(--green);color:var(--green)}
+.alert-error{background:rgba(248,113,113,.08);border-left:3px solid var(--danger);color:var(--danger)}
+.alert-info{background:var(--teal-glow);border-left:3px solid var(--teal);color:var(--teal)}
+
+/* ── PAGE HEADER ─────────────────────────────────────────────────────────── */
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.page-header h2{font-size:20px;font-weight:800;color:var(--text)}
+.page-header p{font-size:13px;color:var(--muted);margin-top:2px}
+
+/* ── MISC ────────────────────────────────────────────────────────────────── */
+.text-muted{color:var(--muted);font-size:13px}
+.mt-4{margin-top:16px}
+.mt-6{margin-top:24px}
+.empty-state{text-align:center;padding:56px 20px;color:var(--muted)}
+.empty-state .empty-icon{font-size:44px;margin-bottom:12px;opacity:.5}
+.empty-state p{font-size:14px}
+.divider{border:none;border-top:1px solid var(--border-soft);margin:20px 0}
+
+/* ── GLOW ACCENT LINE ────────────────────────────────────────────────────── */
+.accent-bar{height:3px;background:linear-gradient(90deg,var(--teal),var(--green));border-radius:2px;margin-bottom:20px}
+</style>
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+<nav class="sidebar">
+  <!-- Logo -->
+  <div class="sidebar-logo">
+    <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#00d4ff"/>
+          <stop offset="100%" stop-color="#4ade80"/>
+        </linearGradient>
+      </defs>
+      <rect width="100" height="100" rx="18" fill="#0d1b2e"/>
+      <path d="M50 8 L92 50 L50 92 L8 50 Z" fill="url(#lg)" opacity=".9"/>
+      <rect x="45" y="28" width="10" height="44" rx="4" fill="#070e1a"/>
+      <rect x="28" y="45" width="44" height="10" rx="4" fill="#070e1a"/>
+    </svg>
+    <div class="sidebar-logo-text">
+      <h1>LIDDIS</h1>
+      <p>Inteligência Clínica</p>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <div class="sidebar-nav">
+    <div class="nav-section">Principal</div>
+    <a class="nav-link {% block nav_dashboard %}{% endblock %}" href="{% url 'dashboard' %}">
+      <span class="ico">⬡</span> Dashboard
+    </a>
+
+    {% if user.role == 'PATIENT' %}
+      <a class="nav-link {% block nav_consultations %}{% endblock %}" href="{% url 'consultation_list' %}">
+        <span class="ico">📋</span> Minhas Consultas
+      </a>
+      <a class="nav-link {% block nav_vitals %}{% endblock %}" href="{% url 'vitals' %}">
+        <span class="ico">📊</span> Sinais Vitais
+      </a>
+      <div class="nav-section">Atendimento</div>
+      <a class="nav-link {% block nav_atendimento %}{% endblock %}" href="{% url 'iniciar_atendimento' %}">
+        <span class="ico">🔑</span> Iniciar Atendimento
+      </a>
+    {% else %}
+      <div class="nav-section">Atendimento</div>
+      <a class="nav-link {% block nav_entrar %}{% endblock %}" href="{% url 'entrar_atendimento' %}">
+        <span class="ico">▶</span> Atender Paciente
+      </a>
+    {% endif %}
+
+    <div class="nav-section">Conta</div>
+    <a class="nav-link {% block nav_profile %}{% endblock %}" href="{% url 'profile' %}">
+      <span class="ico">👤</span> Meu Perfil
+    </a>
+  </div>
+
+  <!-- Footer -->
+  <div class="sidebar-footer">
+    <a href="{% url 'profile' %}">
+      <div class="avatar" style="width:26px;height:26px;font-size:11px">{{ user.username|first|upper }}</div>
+      <div>
+        <div style="color:var(--text);font-weight:600;font-size:12px">{{ user.display_name }}</div>
+        <div class="user-role">{{ user.get_role_display }}</div>
+      </div>
+    </a>
+    <a href="{% url 'logout' %}" style="margin-top:4px;color:var(--muted-2)">
+      <span>⎋</span> Sair
+    </a>
+  </div>
+</nav>
+
+<div class="main">
+  <!-- Topbar -->
+  <div class="topbar">
+    <span class="topbar-title">{% block topbar_title %}LIDDIS{% endblock %}</span>
+    <div class="topbar-user">
+      <span style="font-size:11px;color:var(--muted)">{{ user.get_role_display }}</span>
+      <div class="avatar">{{ user.username|first|upper }}</div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+    {% for message in messages %}
+      <div class="alert alert-{% if message.tags == 'error' %}error{% else %}success{% endif %}">
+        <span>{% if message.tags == 'error' %}⚠{% else %}✓{% endif %}</span>
+        <span>{{ message }}</span>
+      </div>
+    {% endfor %}
+
+    {% block content %}{% endblock %}
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Código Gerado — HealthData Hub{% endblock %}
+{% block topbar_title %}Código de Atendimento{% endblock %}
+
+{% block extra_css %}
+<style>
+.token-box{
+  background:var(--primary);color:#fff;
+  border-radius:16px;padding:32px;text-align:center;margin:24px 0;
+}
+.token-code{
+  font-size:48px;font-weight:900;letter-spacing:10px;
+  font-family:'Courier New',monospace;margin:16px 0;
+}
+.token-full{
+  font-size:12px;opacity:.7;word-break:break-all;margin-top:8px;
+  font-family:'Courier New',monospace;
+}
+.timer{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.15);border-radius:20px;
+  padding:4px 14px;font-size:13px;font-weight:600;margin-top:8px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:520px;margin:0 auto">
+  <div style="text-align:center;margin-bottom:8px">
+    <h2 style="font-size:22px;font-weight:800">Código gerado com sucesso!</h2>
+    <p style="color:var(--muted);font-size:14px">Mostre este código ao seu profissional de saúde</p>
+  </div>
+
+  <div class="token-box">
+    <div style="font-size:13px;opacity:.8;font-weight:600;letter-spacing:1px;text-transform:uppercase">Seu código de atendimento</div>
+    <div class="token-code">{{ session.token_display }}</div>
+    <div class="timer">⏱ Expira em 2 horas</div>
+    <div class="token-full">Código completo: {{ session.token }}</div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <h3 style="font-size:14px;font-weight:700;margin-bottom:12px;color:var(--primary)">📋 Instruções</h3>
+    <ol style="padding-left:20px;font-size:13px;color:var(--muted);line-height:2">
+      <li>Mostre este código ao seu médico ou profissional</li>
+      <li>Ele irá inserir o código no sistema dele</li>
+      <li>A consulta será registrada automaticamente no seu histórico</li>
+      <li>O código <strong>expira em 2 horas</strong> ou após ser utilizado</li>
+    </ol>
+  </div>
+
+  <div style="display:flex;gap:12px">
+    <a href="{% url 'dashboard' %}" class="btn btn-secondary" style="flex:1;justify-content:center">
+      🏠 Ir ao Dashboard
+    </a>
+    <a href="{% url 'cancelar_sessao' session.token %}" class="btn btn-danger" style="flex:1;justify-content:center"
+       onclick="return confirm('Cancelar este atendimento?')">
+      ✕ Cancelar
+    </a>
+  </div>
+</div>
+{% endblock %}

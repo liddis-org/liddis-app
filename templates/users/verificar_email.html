@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Verificar E-mail — LIDDIS</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:#070e1a;min-height:100vh;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  position:relative;overflow:hidden;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:radial-gradient(rgba(0,212,255,.07) 1px,transparent 1px);
+  background-size:28px 28px;pointer-events:none;
+}
+body::after{
+  content:'';position:fixed;width:500px;height:500px;
+  background:radial-gradient(circle,rgba(74,222,128,.05) 0%,transparent 70%);
+  bottom:-120px;right:-120px;pointer-events:none;
+}
+
+.card{
+  background:#0d1b2e;border:1px solid rgba(0,212,255,.12);
+  border-radius:16px;padding:40px;width:100%;max-width:440px;
+  position:relative;z-index:1;
+  box-shadow:0 24px 64px rgba(0,0,0,.5);
+}
+
+.logo{text-align:center;margin-bottom:28px}
+.logo svg{width:52px;height:52px;margin:0 auto 14px;display:block}
+.logo h1{font-size:22px;font-weight:900;color:#fff;letter-spacing:2px}
+.logo p{font-size:12px;color:#6b8caa;margin-top:5px}
+
+.icon-wrap{
+  width:72px;height:72px;margin:0 auto 24px;
+  background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:32px;
+}
+.title{font-size:18px;font-weight:800;color:#fff;text-align:center;margin-bottom:8px}
+.subtitle{font-size:13px;color:#6b8caa;text-align:center;line-height:1.6;margin-bottom:28px}
+.subtitle strong{color:#e8f4ff}
+
+/* OTP inputs */
+.otp-wrap{display:flex;gap:10px;justify-content:center;margin-bottom:24px}
+.otp-input{
+  width:52px;height:62px;
+  background:#112038;border:2px solid rgba(255,255,255,.08);
+  border-radius:10px;text-align:center;
+  font-size:24px;font-weight:800;color:#fff;
+  font-family:'Inter',monospace;outline:none;
+  transition:border .15s,box-shadow .15s;
+  caret-color:transparent;
+}
+.otp-input:focus{border-color:#00d4ff;box-shadow:0 0 0 3px rgba(0,212,255,.12)}
+.otp-input.filled{border-color:rgba(74,222,128,.4)}
+
+/* Hidden real input */
+#code-hidden{display:none}
+
+.btn-primary{
+  width:100%;padding:12px;
+  background:linear-gradient(135deg,#00d4ff,#0099cc);
+  color:#070e1a;border:none;border-radius:8px;
+  font-size:14px;font-weight:800;cursor:pointer;
+  transition:all .15s;font-family:inherit;
+}
+.btn-primary:hover{filter:brightness(1.1);box-shadow:0 0 24px rgba(0,212,255,.25)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;filter:none;box-shadow:none}
+
+.resend-form{text-align:center;margin-top:20px}
+.btn-link{
+  background:none;border:none;color:#00d4ff;
+  font-size:13px;font-weight:600;cursor:pointer;
+  font-family:inherit;text-decoration:none;
+  padding:0;transition:color .15s;
+}
+.btn-link:hover{color:#4ade80}
+
+.alert{
+  padding:10px 14px;border-radius:8px;font-size:13px;
+  margin-bottom:20px;display:flex;align-items:center;gap:8px;
+}
+.alert-error{background:rgba(248,113,113,.08);border-left:3px solid #f87171;color:#f87171}
+.alert-success{background:rgba(74,222,128,.08);border-left:3px solid #4ade80;color:#4ade80}
+.alert-info{background:rgba(0,212,255,.08);border-left:3px solid #00d4ff;color:#00d4ff}
+
+.timer{
+  text-align:center;font-size:12px;color:#4a6a85;margin-top:12px;
+}
+
+.logout-link{
+  display:block;text-align:center;margin-top:20px;
+  font-size:12px;color:#4a6a85;text-decoration:none;
+}
+.logout-link:hover{color:#6b8caa}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#00d4ff"/><stop offset="100%" stop-color="#4ade80"/>
+        </linearGradient>
+      </defs>
+      <rect width="100" height="100" rx="20" fill="#0d1b2e"/>
+      <path d="M50 8 L92 50 L50 92 L8 50 Z" fill="url(#lg)" opacity=".9"/>
+      <rect x="45" y="28" width="10" height="44" rx="4" fill="#070e1a"/>
+      <rect x="28" y="45" width="44" height="10" rx="4" fill="#070e1a"/>
+    </svg>
+    <h1>LIDDIS</h1>
+    <p>Verificação de identidade</p>
+  </div>
+
+  {% for message in messages %}
+    <div class="alert alert-{% if message.tags == 'error' %}error{% elif message.tags == 'success' %}success{% else %}info{% endif %}">
+      {% if message.tags == 'error' %}⚠{% elif message.tags == 'success' %}✓{% else %}ℹ{% endif %}
+      {{ message }}
+    </div>
+  {% endfor %}
+
+  <div class="icon-wrap">✉</div>
+  <div class="title">Verifique seu e-mail</div>
+  <div class="subtitle">
+    Enviamos um código de 6 dígitos para<br>
+    <strong>{{ email }}</strong>
+  </div>
+
+  <form method="post" id="verify-form">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="verificar">
+    <input type="hidden" name="code" id="code-hidden">
+
+    <div class="otp-wrap" id="otp-wrap">
+      <input class="otp-input" type="text" inputmode="numeric" maxlength="1" data-index="0" autocomplete="off">
+      <input class="otp-input" type="text" inputmode="numeric" maxlength="1" data-index="1" autocomplete="off">
+      <input class="otp-input" type="text" inputmode="numeric" maxlength="1" data-index="2" autocomplete="off">
+      <input class="otp-input" type="text" inputmode="numeric" maxlength="1" data-index="3" autocomplete="off">
+      <input class="otp-input" type="text" inputmode="numeric" maxlength="1" data-index="4" autocomplete="off">
+      <input class="otp-input" type="text" inputmode="numeric" maxlength="1" data-index="5" autocomplete="off">
+    </div>
+
+    <button type="submit" class="btn-primary" id="confirm-btn" disabled>
+      Confirmar código
+    </button>
+  </form>
+
+  <div class="resend-form">
+    <span style="font-size:13px;color:#4a6a85">Não recebeu? </span>
+    <form method="post" style="display:inline">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="reenviar">
+      <button type="submit" class="btn-link">Reenviar código</button>
+    </form>
+  </div>
+
+  <div class="timer" id="timer">Código válido por <span id="countdown">10:00</span></div>
+
+  <a href="{% url 'logout' %}" class="logout-link">Usar outra conta</a>
+</div>
+
+<script>
+// ── OTP input navigation ──────────────────────────────────────────────────────
+const inputs  = document.querySelectorAll('.otp-input');
+const hidden  = document.getElementById('code-hidden');
+const btn     = document.getElementById('confirm-btn');
+
+function updateHidden(){
+  const val = [...inputs].map(i=>i.value).join('');
+  hidden.value = val;
+  btn.disabled = val.length < 6;
+  inputs.forEach((el,i) => el.classList.toggle('filled', !!el.value));
+}
+
+inputs.forEach((el, idx) => {
+  el.addEventListener('input', e => {
+    const v = e.target.value.replace(/\D/g,'');
+    e.target.value = v.slice(-1);
+    if(v && idx < 5) inputs[idx+1].focus();
+    updateHidden();
+  });
+  el.addEventListener('keydown', e => {
+    if(e.key === 'Backspace' && !el.value && idx > 0) inputs[idx-1].focus();
+  });
+  el.addEventListener('paste', e => {
+    e.preventDefault();
+    const paste = (e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'');
+    paste.split('').slice(0,6).forEach((c,i) => { if(inputs[i]) inputs[i].value=c; });
+    inputs[Math.min(paste.length, 5)].focus();
+    updateHidden();
+  });
+});
+inputs[0].focus();
+
+// ── Countdown 10 min ──────────────────────────────────────────────────────────
+let total = 600;
+const cd  = document.getElementById('countdown');
+const iv  = setInterval(() => {
+  total--;
+  if(total <= 0){ clearInterval(iv); cd.textContent='00:00'; return; }
+  const m = String(Math.floor(total/60)).padStart(2,'0');
+  const s = String(total%60).padStart(2,'0');
+  cd.textContent = m+':'+s;
+}, 1000);
+</script>
+</body>
+</html>

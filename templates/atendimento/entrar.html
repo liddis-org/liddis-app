@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Entrar em Atendimento — HealthData Hub{% endblock %}
+{% block topbar_title %}Entrar em Atendimento{% endblock %}
+
+{% block content %}
+<div style="max-width:480px;margin:0 auto;padding-top:20px">
+  <div style="text-align:center;margin-bottom:32px">
+    <div style="font-size:56px;margin-bottom:12px">🔑</div>
+    <h2 style="font-size:22px;font-weight:800;margin-bottom:8px">Entrar em Atendimento</h2>
+    <p style="color:var(--muted);font-size:14px">
+      Insira o código fornecido pelo paciente para acessar os dados e registrar a consulta.
+    </p>
+  </div>
+
+  <div class="card">
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label for="token">Código do Paciente</label>
+        <input
+          id="token"
+          name="token"
+          type="text"
+          class="input"
+          placeholder="Ex: a1b2c3d4-e5f6-..."
+          style="text-transform:uppercase;letter-spacing:2px;font-size:16px;font-family:'Courier New',monospace"
+          autocomplete="off"
+          autofocus
+          required
+        >
+        <div class="form-help">O código é fornecido pelo próprio paciente na tela de atendimento dele.</div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" style="margin-top:8px">
+        ▶ Iniciar Atendimento
+      </button>
+    </form>
+  </div>
+
+  <a href="{% url 'dashboard' %}" class="btn btn-secondary btn-block" style="margin-top:12px">
+    Voltar ao Dashboard
+  </a>
+</div>
+{% endblock %}

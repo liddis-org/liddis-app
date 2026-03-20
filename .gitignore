@@ -1,5 +1,38 @@
+# Ambiente virtual
+venv/
+env/
+.venv/
+
+# Variáveis de ambiente — NUNCA commitar
 .env
-__pycache__/
+.env.local
+.env.production
+
+# Django
 *.pyc
+*.pyo
+__pycache__/
 db.sqlite3
+*.sqlite3
+media/
+staticfiles/
+
+# Node
+node_modules/
+dist/
+build/
+
+# IDEs
 .vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Secrets
+*.pem
+*.key

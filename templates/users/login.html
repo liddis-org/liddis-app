@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Login — LIDDIS</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:#070e1a;
+  min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+  position:relative;overflow:hidden;
+}
+
+/* Dot pattern */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:radial-gradient(rgba(0,212,255,.07) 1px, transparent 1px);
+  background-size:28px 28px;pointer-events:none;
+}
+
+/* Glow blobs */
+body::after{
+  content:'';position:fixed;
+  width:600px;height:600px;
+  background:radial-gradient(circle, rgba(0,212,255,.06) 0%, transparent 70%);
+  top:-100px;right:-100px;pointer-events:none;
+}
+
+.auth-wrap{
+  width:100%;max-width:420px;
+  position:relative;z-index:1;
+}
+
+.auth-card{
+  background:#0d1b2e;
+  border:1px solid rgba(0,212,255,.12);
+  border-radius:16px;
+  padding:40px;
+  box-shadow:0 24px 64px rgba(0,0,0,.5), 0 0 40px rgba(0,212,255,.04);
+}
+
+/* Logo */
+.auth-logo{text-align:center;margin-bottom:36px}
+.auth-logo svg{width:60px;height:60px;margin:0 auto 16px;display:block}
+.auth-logo h1{font-size:28px;font-weight:900;color:#fff;letter-spacing:2px}
+.auth-logo .tagline{font-size:12px;color:#6b8caa;margin-top:6px}
+.auth-logo .tagline strong{color:#4ade80;font-weight:600}
+.auth-logo .sub{font-size:13px;color:#4a6a85;margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.05)}
+
+/* Form */
+.form-group{margin-bottom:18px}
+.form-group label{display:block;font-size:11px;font-weight:700;color:#6b8caa;margin-bottom:7px;text-transform:uppercase;letter-spacing:.7px}
+.input{
+  width:100%;padding:11px 14px;
+  border:1.5px solid rgba(255,255,255,.07);
+  border-radius:8px;font-size:14px;color:#e8f4ff;
+  background:#112038;
+  transition:border .15s,box-shadow .15s;
+  outline:none;font-family:inherit;
+}
+.input:focus{border-color:#00d4ff;box-shadow:0 0 0 3px rgba(0,212,255,.12)}
+.input::placeholder{color:#4a6a85}
+
+.btn{
+  width:100%;padding:12px;
+  background:linear-gradient(135deg,#00d4ff,#0099cc);
+  color:#070e1a;border:none;border-radius:8px;
+  font-size:14px;font-weight:800;cursor:pointer;
+  transition:all .15s;margin-top:8px;
+  font-family:inherit;letter-spacing:.3px;
+}
+.btn:hover{filter:brightness(1.1);box-shadow:0 0 24px rgba(0,212,255,.25)}
+
+.link-row{text-align:center;margin-top:22px;font-size:13px;color:#4a6a85}
+.link-row a{color:#00d4ff;font-weight:600;text-decoration:none}
+.link-row a:hover{color:#4ade80}
+
+.alert{
+  padding:10px 14px;border-radius:8px;
+  font-size:13px;margin-bottom:18px;
+  background:rgba(248,113,113,.08);
+  border-left:3px solid #f87171;
+  color:#f87171;display:flex;align-items:center;gap:8px;
+}
+
+.errorlist{list-style:none;font-size:12px;color:#f87171;margin-top:4px}
+.errorlist li{background:rgba(248,113,113,.08);padding:3px 10px;border-radius:5px;margin-top:3px}
+</style>
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="auth-card">
+
+    <div class="auth-logo">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#00d4ff"/>
+            <stop offset="100%" stop-color="#4ade80"/>
+          </linearGradient>
+        </defs>
+        <rect width="100" height="100" rx="20" fill="#0d1b2e"/>
+        <path d="M50 8 L92 50 L50 92 L8 50 Z" fill="url(#lg)" opacity=".9"/>
+        <rect x="45" y="28" width="10" height="44" rx="4" fill="#070e1a"/>
+        <rect x="28" y="45" width="44" height="10" rx="4" fill="#070e1a"/>
+      </svg>
+      <h1>LIDDIS</h1>
+      <div class="tagline">Transformando Dados em <strong>Inteligência Clínica</strong></div>
+      <div class="sub">Faça login para acessar sua conta</div>
+    </div>
+
+    {% if form.errors %}
+      <div class="alert">⚠ Usuário ou senha incorretos. Tente novamente.</div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label for="id_username">Usuário</label>
+        <input class="input" type="text" name="username" id="id_username" placeholder="Seu nome de usuário" autofocus required/>
+      </div>
+      <div class="form-group">
+        <label for="id_password">Senha</label>
+        <input class="input" type="password" name="password" id="id_password" placeholder="••••••••" required/>
+      </div>
+      <input type="hidden" name="next" value="{{ next }}"/>
+      <button class="btn" type="submit">Entrar na Plataforma</button>
+    </form>
+
+    <div class="link-row">
+      Não tem conta? <a href="{% url 'register' %}">Criar conta grátis</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>
