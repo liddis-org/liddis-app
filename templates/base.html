@@ -231,6 +231,7 @@ tbody tr:hover td{background:var(--surface-2)}
 .alert{padding:12px 16px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px}
 .alert-success{background:var(--green-glow);border-left:3px solid var(--green);color:var(--green)}
 .alert-error{background:rgba(248,113,113,.08);border-left:3px solid var(--danger);color:var(--danger)}
+.alert-warning{background:rgba(251,191,36,.08);border-left:3px solid var(--warning);color:var(--warning)}
 .alert-info{background:var(--teal-glow);border-left:3px solid var(--teal);color:var(--teal)}
 
 /* ── PAGE HEADER ─────────────────────────────────────────────────────────── */
@@ -249,6 +250,77 @@ tbody tr:hover td{background:var(--surface-2)}
 
 /* ── GLOW ACCENT LINE ────────────────────────────────────────────────────── */
 .accent-bar{height:3px;background:linear-gradient(90deg,var(--teal),var(--green));border-radius:2px;margin-bottom:20px}
+
+/* ── ALIASES DE COMPATIBILIDADE ─────────────────────────────────────────── */
+:root{
+  --primary:       var(--teal);
+  --primary-dark:  var(--teal-dark);
+  --surface-alt:   var(--surface-2);
+  --text-muted:    var(--muted);
+}
+
+/* ── HAMBURGER (só no mobile) ────────────────────────────────────────────── */
+.hamburger{
+  display:none;flex-direction:column;justify-content:center;gap:5px;
+  width:36px;height:36px;background:none;border:none;cursor:pointer;padding:4px;
+  border-radius:var(--radius-sm);transition:background .15s;
+}
+.hamburger:hover{background:var(--surface-2)}
+.hamburger span{display:block;width:22px;height:2px;background:var(--muted);border-radius:2px;transition:all .25s}
+.hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.hamburger.open span:nth-child(2){opacity:0;transform:scaleX(0)}
+.hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
+/* ── OVERLAY (mobile sidebar backdrop) ──────────────────────────────────── */
+.sidebar-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99;
+  backdrop-filter:blur(2px);
+}
+.sidebar-overlay.visible{display:block}
+
+/* ── RESPONSIVIDADE ──────────────────────────────────────────────────────── */
+@media (max-width:900px){
+  .card-grid-3{grid-template-columns:repeat(2,1fr)}
+  .card-grid-4{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:768px){
+  /* Sidebar vira drawer */
+  .sidebar{
+    transform:translateX(-100%);
+    transition:transform .25s cubic-bezier(.4,0,.2,1);
+    z-index:200;
+  }
+  .sidebar.open{transform:translateX(0)}
+
+  /* Main ocupa tela inteira */
+  .main{margin-left:0}
+
+  /* Topbar */
+  .topbar{padding:0 16px}
+  .hamburger{display:flex}
+
+  /* Content */
+  .content{padding:16px}
+  .page-header{flex-wrap:wrap;gap:12px}
+  .page-header h2{font-size:17px}
+
+  /* Forms */
+  .form-row{grid-template-columns:1fr}
+
+  /* Cards e grids */
+  .card-grid-2,.card-grid-3,.card-grid-4{grid-template-columns:1fr}
+
+  /* Tabela: scroll horizontal */
+  .table-wrap{-webkit-overflow-scrolling:touch}
+
+  /* Tabs: scroll horizontal */
+  .tabs-nav{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:0}
+  .tabs-nav::-webkit-scrollbar{height:0}
+}
+@media (max-width:480px){
+  .topbar-user .user-role-label{display:none}
+  .btn-sm{padding:4px 10px;font-size:11px}
+}
 </style>
 {% block extra_css %}{% endblock %}
 </head>
@@ -278,7 +350,7 @@ tbody tr:hover td{background:var(--surface-2)}
   <div class="sidebar-nav">
     <div class="nav-section">Principal</div>
     <a class="nav-link {% block nav_dashboard %}{% endblock %}" href="{% url 'dashboard' %}">
-      <span class="ico">⬡</span> Dashboard
+      <span class="ico">⬡</span> Início
     </a>
 
     {% if user.role == 'PATIENT' %}
@@ -303,6 +375,11 @@ tbody tr:hover td{background:var(--surface-2)}
     <a class="nav-link {% block nav_profile %}{% endblock %}" href="{% url 'profile' %}">
       <span class="ico">👤</span> Meu Perfil
     </a>
+
+    <div class="nav-section">Sobre</div>
+    <a class="nav-link {% block nav_quem_somos %}{% endblock %}" href="{% url 'quem_somos' %}">
+      <span class="ico">💡</span> Quem Somos
+    </a>
   </div>
 
   <!-- Footer -->
@@ -323,9 +400,14 @@ tbody tr:hover td{background:var(--surface-2)}
 <div class="main">
   <!-- Topbar -->
   <div class="topbar">
-    <span class="topbar-title">{% block topbar_title %}LIDDIS{% endblock %}</span>
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+      <span class="topbar-title">{% block topbar_title %}LIDDIS{% endblock %}</span>
+    </div>
     <div class="topbar-user">
-      <span style="font-size:11px;color:var(--muted)">{{ user.get_role_display }}</span>
+      <span class="user-role-label" style="font-size:11px;color:var(--muted)">{{ user.get_role_display }}</span>
       <div class="avatar">{{ user.username|first|upper }}</div>
     </div>
   </div>
@@ -333,14 +415,54 @@ tbody tr:hover td{background:var(--surface-2)}
   <!-- Content -->
   <div class="content">
     {% for message in messages %}
-      <div class="alert alert-{% if message.tags == 'error' %}error{% else %}success{% endif %}">
-        <span>{% if message.tags == 'error' %}⚠{% else %}✓{% endif %}</span>
-        <span>{{ message }}</span>
-      </div>
+      {% if 'error' in message.tags %}
+        <div class="alert alert-error"><span>⚠</span><span>{{ message }}</span></div>
+      {% elif 'warning' in message.tags %}
+        <div class="alert alert-warning"><span>⚠</span><span>{{ message }}</span></div>
+      {% elif 'info' in message.tags %}
+        <div class="alert alert-info"><span>ℹ</span><span>{{ message }}</span></div>
+      {% else %}
+        <div class="alert alert-success"><span>✓</span><span>{{ message }}</span></div>
+      {% endif %}
     {% endfor %}
 
     {% block content %}{% endblock %}
   </div>
 </div>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+<script>
+(function(){
+  var hamburger = document.getElementById('hamburger');
+  var sidebar   = document.querySelector('.sidebar');
+  var overlay   = document.getElementById('sidebar-overlay');
+  if (!hamburger) return;
+
+  function openSidebar(){
+    sidebar.classList.add('open');
+    overlay.classList.add('visible');
+    hamburger.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeSidebar(){
+    sidebar.classList.remove('open');
+    overlay.classList.remove('visible');
+    hamburger.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  hamburger.addEventListener('click', function(){
+    sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+  });
+  overlay.addEventListener('click', closeSidebar);
+
+  // Fecha ao navegar (links dentro da sidebar)
+  sidebar.querySelectorAll('.nav-link').forEach(function(link){
+    link.addEventListener('click', function(){
+      if (window.innerWidth <= 768) closeSidebar();
+    });
+  });
+})();
+</script>
+{% block extra_js %}{% endblock %}
 </body>
 </html>

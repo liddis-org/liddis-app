@@ -7,6 +7,9 @@ django-filter>=24.2
 # ── Autenticação JWT ──────────────────────────────────────────────────────────
 djangorestframework-simplejwt>=5.3
 
+# ── Autenticação Social (Google OAuth) + Recuperação de Senha ─────────────────
+django-allauth[socialaccount]>=0.56.0
+
 # ── Banco de Dados (PostgreSQL) ───────────────────────────────────────────────
 psycopg2-binary>=2.9
 dj-database-url>=2.1      # lê DATABASE_URL injetada pelo Railway/DigitalOcean

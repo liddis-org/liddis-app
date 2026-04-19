@@ -111,7 +111,7 @@ class RegisterWebView(View):
         form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user, backend='axes.backends.AxesStandaloneBackend')
+            login(request, user, backend='users.backends.EmailOrUsernameBackend')
             try:
                 _send_email_code(user)
                 messages.info(request, f'Conta criada! Enviamos um código para {user.email}.')
@@ -269,3 +269,7 @@ def profile(request):
     else:
         form = ProfileForm(instance=request.user)
     return render(request, 'users/profile.html', {'form': form})
+
+
+def quem_somos(request):
+    return render(request, 'quem_somos.html')

@@ -1,3 +1,4 @@
+import os
 import uuid
 from django.db import models
 from django.conf import settings
@@ -5,22 +6,23 @@ from django.utils import timezone
 from datetime import timedelta
 
 
-class Consultation(models.Model):
-    SPECIALTY_CHOICES = [
-        ('clinico_geral', 'Clínico Geral'),
-        ('cardiologia', 'Cardiologia'),
-        ('neurologia', 'Neurologia'),
-        ('ortopedia', 'Ortopedia'),
-        ('nutricao', 'Nutrição'),
-        ('fisioterapia', 'Fisioterapia'),
-        ('enfermagem', 'Enfermagem'),
-        ('psicologia', 'Psicologia'),
-        ('dermatologia', 'Dermatologia'),
-        ('ginecologia', 'Ginecologia'),
-        ('pediatria', 'Pediatria'),
-        ('outro', 'Outro'),
-    ]
+SPECIALTY_CHOICES = [
+    ('clinico_geral', 'Clínico Geral'),
+    ('cardiologia', 'Cardiologia'),
+    ('neurologia', 'Neurologia'),
+    ('ortopedia', 'Ortopedia'),
+    ('nutricao', 'Nutrição'),
+    ('fisioterapia', 'Fisioterapia'),
+    ('enfermagem', 'Enfermagem'),
+    ('psicologia', 'Psicologia'),
+    ('dermatologia', 'Dermatologia'),
+    ('ginecologia', 'Ginecologia'),
+    ('pediatria', 'Pediatria'),
+    ('outro', 'Outro'),
+]
 
+
+class Consultation(models.Model):
     patient = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -28,7 +30,13 @@ class Consultation(models.Model):
     )
     date = models.DateField(verbose_name='Data da consulta')
     professional_name = models.CharField(max_length=150, verbose_name='Nome do profissional')
+    profession     = models.CharField(max_length=100, blank=True, verbose_name='Profissão do profissional')
+    clinic_name         = models.CharField(max_length=200, blank=True, verbose_name='Nome do local')
+    clinic_neighborhood = models.CharField(max_length=100, blank=True, verbose_name='Bairro')
+    clinic_city         = models.CharField(max_length=100, blank=True, verbose_name='Cidade')
+    clinic_address      = models.CharField(max_length=300, blank=True, verbose_name='Endereço completo')
     specialty = models.CharField(max_length=50, choices=SPECIALTY_CHOICES, verbose_name='Especialidade')
+    specialty_other = models.CharField(max_length=100, blank=True, verbose_name='Especialidade (Outro)')
     diagnosis = models.TextField(blank=True, verbose_name='Diagnóstico')
     notes = models.TextField(blank=True, verbose_name='Anotações / Evolução')
     prescription = models.TextField(blank=True, verbose_name='Prescrição / Medicamentos')
@@ -42,6 +50,97 @@ class Consultation(models.Model):
 
     def __str__(self):
         return f'{self.date} — {self.professional_name} ({self.get_specialty_display()})'
+
+    @property
+    def specialty_label(self):
+        """Retorna o rótulo da especialidade, usando specialty_other quando for 'outro'."""
+        if self.specialty == 'outro' and self.specialty_other:
+            return self.specialty_other
+        return self.get_specialty_display()
+
+
+class Anamnese(models.Model):
+    """Anamnese vinculada a uma consulta (relação 1-para-1)."""
+    consultation = models.OneToOneField(
+        Consultation,
+        on_delete=models.CASCADE,
+        related_name='anamnese'
+    )
+    chief_complaint = models.TextField(blank=True, verbose_name='Queixa principal')
+    history = models.TextField(blank=True, verbose_name='História da doença atual')
+    past_history = models.TextField(blank=True, verbose_name='Antecedentes pessoais')
+    family_history = models.TextField(blank=True, verbose_name='Antecedentes familiares')
+    medications = models.TextField(blank=True, verbose_name='Medicamentos em uso')
+    allergies = models.TextField(blank=True, verbose_name='Alergias')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Anamnese'
+        verbose_name_plural = 'Anamneses'
+
+    def __str__(self):
+        return f'Anamnese — {self.consultation}'
+
+
+class ExameLaboratorial(models.Model):
+    """Exames laboratoriais vinculados a uma consulta (relação 1-para-1)."""
+    consultation = models.OneToOneField(
+        Consultation,
+        on_delete=models.CASCADE,
+        related_name='exames'
+    )
+    hemograma = models.TextField(blank=True, verbose_name='Hemograma')
+    glicemia = models.TextField(blank=True, verbose_name='Glicemia')
+    colesterol = models.TextField(blank=True, verbose_name='Colesterol e triglicerídeos')
+    funcao_renal = models.TextField(blank=True, verbose_name='Função renal (creatinina, ureia)')
+    funcao_hepatica = models.TextField(blank=True, verbose_name='Função hepática')
+    hormonal = models.TextField(blank=True, verbose_name='Exames hormonais')
+    urina = models.TextField(blank=True, verbose_name='Urina (EAS)')
+    outros = models.TextField(blank=True, verbose_name='Outros exames')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Exame Laboratorial'
+        verbose_name_plural = 'Exames Laboratoriais'
+
+    def __str__(self):
+        return f'Exames — {self.consultation}'
+
+
+def consultation_image_path(instance, filename):
+    ext = os.path.splitext(filename)[1].lower()
+    new_name = f'{uuid.uuid4().hex}{ext}'
+    return f'consultations/{instance.consultation.patient_id}/{instance.consultation_id}/{instance.tab}/{new_name}'
+
+
+class ConsultationImage(models.Model):
+    """Imagens anexadas a uma consulta, organizadas por aba."""
+    TAB_CHOICES = [
+        ('anamnese',   'Anamnese'),
+        ('exames',     'Exames Laboratoriais'),
+        ('diagnostico','Diagnóstico'),
+        ('prescricao', 'Prescrição'),
+    ]
+
+    consultation = models.ForeignKey(
+        Consultation,
+        on_delete=models.CASCADE,
+        related_name='images'
+    )
+    tab = models.CharField(max_length=20, choices=TAB_CHOICES, verbose_name='Aba')
+    image = models.ImageField(upload_to=consultation_image_path, verbose_name='Imagem')
+    caption = models.CharField(max_length=255, blank=True, verbose_name='Legenda')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-uploaded_at']
+        verbose_name = 'Imagem da Consulta'
+        verbose_name_plural = 'Imagens das Consultas'
+
+    def __str__(self):
+        return f'Imagem [{self.get_tab_display()}] — Consulta #{self.consultation_id}'
 
 
 class VitalSign(models.Model):
@@ -106,7 +205,7 @@ class ConsultationSession(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.pk:
-            self.expires_at = timezone.now() + timedelta(hours=2)
+            self.expires_at = timezone.now() + timedelta(hours=24)
         super().save(*args, **kwargs)
 
     @property

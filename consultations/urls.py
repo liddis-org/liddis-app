@@ -13,6 +13,10 @@ urlpatterns = [
     path('sinais-vitais/', views.VitalSignListView.as_view(), name='vitals'),
     path('sinais-vitais/novo/', views.VitalSignCreateView.as_view(), name='vital_create'),
 
+    # Imagens da consulta
+    path('<int:pk>/imagem/', views.upload_image, name='consultation_upload_image'),
+    path('<int:pk>/imagem/<int:img_pk>/excluir/', views.delete_image, name='consultation_delete_image'),
+
     # Fluxo de atendimento por token
     path('atendimento/iniciar/', views.iniciar_atendimento, name='iniciar_atendimento'),
     path('atendimento/entrar/', views.entrar_atendimento, name='entrar_atendimento'),

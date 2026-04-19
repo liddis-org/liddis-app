@@ -1,0 +1,158 @@
+{% comment %}
+Partial: galeria de imagens + upload por aba.
+Variáveis esperadas: tab_key, tab_label, imgs (lista), consultation
+{% endcomment %}
+<div class="upload-section">
+  <div class="field-label" style="margin-bottom:12px">Imagens — {{ tab_label }}</div>
+
+  <!-- ── Galeria existente ── -->
+  {% if imgs %}
+  <div class="img-gallery">
+    {% for img in imgs %}
+    <div class="img-gallery-item">
+      <a href="{{ img.image.url }}" target="_blank" rel="noopener">
+        <img src="{{ img.image.url }}" alt="{{ img.caption|default:'imagem' }}">
+      </a>
+      <div class="img-meta">
+        <span class="img-caption" title="{{ img.caption }}">{{ img.caption|default:"—" }}</span>
+        <form method="post"
+              action="{% url 'consultation_delete_image' consultation.pk img.pk %}"
+              onsubmit="return confirm('Remover imagem?')">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger btn-sm"
+                  style="padding:2px 8px;font-size:11px;line-height:1.4">×</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Nenhuma imagem anexada ainda.</p>
+  {% endif %}
+
+  <!-- ── Formulário de upload ── -->
+  <form method="post"
+        action="{% url 'consultation_upload_image' consultation.pk %}"
+        enctype="multipart/form-data"
+        id="form_upload_{{ tab_key }}">
+    {% csrf_token %}
+    <input type="hidden" name="tab" value="{{ tab_key }}">
+
+    <!--
+      Input de arquivo: oculto — acionado via JS.
+      accept="image/*" permite câmera no mobile sem forçar modo câmera exclusivo.
+    -->
+    <input type="file"
+           name="image"
+           id="file_{{ tab_key }}"
+           accept="image/*"
+           style="display:none"
+           onchange="onFileChosen_{{ tab_key|slugify }}(this)">
+
+    <!-- Área de seleção + preview + legenda + botão num único bloco -->
+    <div class="upload-block" id="ub_{{ tab_key }}">
+
+      <!-- Preview: aparece após seleção -->
+      <div class="upload-preview" id="prev_{{ tab_key }}" style="display:none">
+        <img id="prev_img_{{ tab_key }}" src="" alt="preview"
+             style="max-height:120px;border-radius:8px;object-fit:cover;display:block;margin-bottom:8px">
+        <span class="upload-fname" id="fname_{{ tab_key }}"
+              style="font-size:12px;color:var(--muted)"></span>
+      </div>
+
+      <!-- Linha: legenda + botão principal -->
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px">
+        <input class="input" type="text" name="caption"
+               placeholder="Legenda (opcional)"
+               style="flex:1;min-width:140px">
+
+        <!--
+          Botão inteligente:
+          - Sem arquivo selecionado → abre o file picker
+          - Com arquivo selecionado → submete o formulário
+        -->
+        <button type="button"
+                id="btn_{{ tab_key }}"
+                class="btn btn-secondary"
+                onclick="smartAnexar_{{ tab_key|slugify }}()">
+          Selecionar arquivo
+        </button>
+      </div>
+
+    </div>
+  </form>
+</div>
+
+<script>
+// Funções isoladas por tab para evitar conflito entre instâncias
+(function() {
+  var TAB = '{{ tab_key }}';
+  var SLUG = '{{ tab_key|slugify }}';
+
+  window['onFileChosen_' + SLUG] = function(input) {
+    var btn   = document.getElementById('btn_'      + TAB);
+    var prev  = document.getElementById('prev_'     + TAB);
+    var img   = document.getElementById('prev_img_' + TAB);
+    var fname = document.getElementById('fname_'    + TAB);
+
+    if (!input.files || !input.files.length) return;
+
+    var file = input.files[0];
+
+    // Mostra preview se for imagem
+    if (file.type.startsWith('image/')) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        img.src = e.target.result;
+        prev.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    } else {
+      prev.style.display = 'none';
+    }
+
+    // Atualiza nome do arquivo
+    fname.textContent = file.name;
+    prev.style.display = 'block';
+
+    // Muda botão para "Anexar" (submissão)
+    btn.textContent = 'Anexar';
+    btn.className   = 'btn btn-primary';
+  };
+
+  window['smartAnexar_' + SLUG] = function() {
+    var input = document.getElementById('file_' + TAB);
+    if (input.files && input.files.length > 0) {
+      // Arquivo já selecionado → submete
+      document.getElementById('form_upload_' + TAB).submit();
+    } else {
+      // Nenhum arquivo → abre o seletor
+      input.click();
+    }
+  };
+
+  // Drag-and-drop: a drop-zone é o upload-block inteiro
+  var block = document.getElementById('ub_' + TAB);
+  if (block) {
+    block.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      block.style.borderColor = 'var(--teal)';
+      block.style.background  = 'var(--teal-glow)';
+    });
+    block.addEventListener('dragleave', function() {
+      block.style.borderColor = '';
+      block.style.background  = '';
+    });
+    block.addEventListener('drop', function(e) {
+      e.preventDefault();
+      block.style.borderColor = '';
+      block.style.background  = '';
+      var input = document.getElementById('file_' + TAB);
+      var dt = new DataTransfer();
+      Array.from(e.dataTransfer.files).forEach(function(f) { dt.items.add(f); });
+      input.files = dt.files;
+      input.dispatchEvent(new Event('change'));
+    });
+  }
+})();
+</script>

@@ -78,6 +78,29 @@ body::after{
 }
 .btn:hover{filter:brightness(1.1);box-shadow:0 0 24px rgba(0,212,255,.25)}
 
+/* Divisor */
+.divider{
+  display:flex;align-items:center;gap:12px;
+  margin:22px 0;color:#2a4a6a;font-size:12px;font-weight:600;
+}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.07)}
+
+/* Botão Google */
+.btn-google{
+  width:100%;padding:11px;
+  background:#112038;
+  color:#e8f4ff;border:1.5px solid rgba(255,255,255,.1);border-radius:8px;
+  font-size:14px;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  transition:all .15s;font-family:inherit;text-decoration:none;
+}
+.btn-google:hover{border-color:rgba(0,212,255,.35);background:#152840;box-shadow:0 0 16px rgba(0,212,255,.08)}
+.btn-google svg{width:18px;height:18px;flex-shrink:0}
+
+.forgot-row{text-align:right;margin-top:-6px;margin-bottom:10px}
+.forgot-row a{font-size:12px;color:#4a6a85;text-decoration:none;font-weight:500}
+.forgot-row a:hover{color:#00d4ff}
+
 .link-row{text-align:center;margin-top:22px;font-size:13px;color:#4a6a85}
 .link-row a{color:#00d4ff;font-weight:600;text-decoration:none}
 .link-row a:hover{color:#4ade80}
@@ -88,6 +111,11 @@ body::after{
   background:rgba(248,113,113,.08);
   border-left:3px solid #f87171;
   color:#f87171;display:flex;align-items:center;gap:8px;
+}
+.alert-success{
+  background:rgba(74,222,128,.08);
+  border-left:3px solid #4ade80;
+  color:#4ade80;
 }
 
 .errorlist{list-style:none;font-size:12px;color:#f87171;margin-top:4px}
@@ -116,20 +144,48 @@ body::after{
       <div class="sub">Faça login para acessar sua conta</div>
     </div>
 
-    {% if form.errors %}
-      <div class="alert">⚠ Usuário ou senha incorretos. Tente novamente.</div>
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert {% if message.tags == 'success' %}alert-success{% endif %}">
+          {% if message.tags == 'success' %}✓{% else %}⚠{% endif %} {{ message }}
+        </div>
+      {% endfor %}
     {% endif %}
+
+    {% if form.errors %}
+      <div class="alert">⚠ E-mail ou senha incorretos. Tente novamente.</div>
+    {% endif %}
+
+    <!-- Botão Google OAuth -->
+    <a class="btn-google" href="{% url 'google_login' %}">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Entrar com Google
+    </a>
+
+    <div class="divider">ou acesse com e-mail</div>
 
     <form method="post">
       {% csrf_token %}
       <div class="form-group">
-        <label for="id_username">Usuário</label>
-        <input class="input" type="text" name="username" id="id_username" placeholder="Seu nome de usuário" autofocus required/>
+        <label for="id_username">E-mail ou usuário</label>
+        <input class="input" type="text" name="username" id="id_username"
+               placeholder="seu@email.com" autofocus required autocomplete="username"/>
       </div>
       <div class="form-group">
         <label for="id_password">Senha</label>
-        <input class="input" type="password" name="password" id="id_password" placeholder="••••••••" required/>
+        <input class="input" type="password" name="password" id="id_password"
+               placeholder="••••••••" required autocomplete="current-password"/>
       </div>
+
+      <div class="forgot-row">
+        <a href="{% url 'password_reset' %}">Esqueci minha senha</a>
+      </div>
+
       <input type="hidden" name="next" value="{{ next }}"/>
       <button class="btn" type="submit">Entrar na Plataforma</button>
     </form>

@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import CustomUser
+from consultations.models import SPECIALTY_CHOICES
 
 _INPUT = {'class': 'input'}
 _INPUT_DATE = {'class': 'input', 'type': 'date'}
@@ -55,24 +56,28 @@ class RegisterForm(UserCreationForm):
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = CustomUser
-        fields = ('first_name', 'last_name', 'email', 'phone', 'date_of_birth', 'bio', 'role')
+        fields = ('first_name', 'last_name', 'email', 'phone', 'date_of_birth', 'bio', 'role', 'profession', 'professional_specialty')
         widgets = {
-            'first_name':    forms.TextInput(attrs=_INPUT),
-            'last_name':     forms.TextInput(attrs=_INPUT),
-            'email':         forms.EmailInput(attrs=_INPUT),
-            'phone':         forms.TextInput(attrs={**_INPUT, 'placeholder': '(11) 99999-9999'}),
-            'date_of_birth': forms.DateInput(attrs=_INPUT_DATE),
-            'bio':           forms.Textarea(attrs={**_INPUT, 'rows': 3, 'placeholder': 'Conte um pouco sobre você...'}),
-            'role':          forms.Select(attrs=_INPUT),
+            'first_name':             forms.TextInput(attrs=_INPUT),
+            'last_name':              forms.TextInput(attrs=_INPUT),
+            'email':                  forms.EmailInput(attrs=_INPUT),
+            'phone':                  forms.TextInput(attrs={**_INPUT, 'placeholder': '(11) 99999-9999'}),
+            'date_of_birth':          forms.DateInput(attrs=_INPUT_DATE),
+            'bio':                    forms.Textarea(attrs={**_INPUT, 'rows': 3, 'placeholder': 'Conte um pouco sobre você...'}),
+            'role':                   forms.Select(attrs=_INPUT),
+            'profession':             forms.TextInput(attrs={**_INPUT, 'placeholder': 'Ex: Médico, Fisioterapeuta...'}),
+            'professional_specialty': forms.Select(attrs=_INPUT, choices=[('', '— Selecione —')] + SPECIALTY_CHOICES),
         }
         labels = {
-            'first_name':    'Nome',
-            'last_name':     'Sobrenome',
-            'email':         'E-mail',
-            'phone':         'Telefone',
-            'date_of_birth': 'Data de nascimento',
-            'bio':           'Sobre mim',
-            'role':          'Tipo de conta',
+            'first_name':             'Nome',
+            'last_name':              'Sobrenome',
+            'email':                  'E-mail',
+            'phone':                  'Telefone',
+            'date_of_birth':          'Data de nascimento',
+            'bio':                    'Sobre mim',
+            'role':                   'Tipo de conta',
+            'profession':             'Profissão',
+            'professional_specialty': 'Especialidade',
         }
 
     def clean_email(self):

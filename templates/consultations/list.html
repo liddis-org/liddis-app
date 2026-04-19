@@ -1,24 +1,67 @@
 {% extends 'base.html' %}
 {% block title %}Consultas — HealthData Hub{% endblock %}
-{% block topbar_title %}Minhas Consultas{% endblock %}
+{% block topbar_title %}{% if is_professional %}Minhas Consultas Realizadas{% else %}Minhas Consultas{% endif %}{% endblock %}
 {% block nav_consultations %}active{% endblock %}
 
 {% block content %}
 <div class="page-header">
   <div>
-    <h2>Consultas</h2>
-    <p>Histórico completo das suas consultas médicas</p>
+    <h2>{% if is_professional %}Consultas Realizadas{% else %}Minhas Consultas{% endif %}</h2>
+    <p>
+      {% if is_professional %}
+        Histórico de consultas que você registrou via atendimento
+      {% else %}
+        Histórico completo das suas consultas médicas
+      {% endif %}
+    </p>
   </div>
+  {% if not is_professional %}
   <a href="{% url 'consultation_create' %}" class="btn btn-primary">+ Nova Consulta</a>
+  {% else %}
+  <a href="{% url 'entrar_atendimento' %}" class="btn btn-primary">▶ Novo Atendimento</a>
+  {% endif %}
+</div>
+
+<!-- Barra de busca + ordenação -->
+<div class="card" style="padding:16px 20px;margin-bottom:12px">
+  <form method="get" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+    <div style="flex:1;min-width:200px">
+      <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Buscar</label>
+      <input class="input" type="text" name="q" value="{{ q }}"
+             placeholder="{% if is_professional %}Paciente, especialidade, diagnóstico…{% else %}Profissional, especialidade, diagnóstico…{% endif %}"
+             style="width:100%">
+    </div>
+    <div style="min-width:180px">
+      <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Ordenar por</label>
+      <select class="input" name="sort" onchange="this.form.submit()">
+        <option value="-date"             {% if sort == '-date'             %}selected{% endif %}>Mais recentes</option>
+        <option value="date"              {% if sort == 'date'              %}selected{% endif %}>Mais antigas</option>
+        <option value="professional_name" {% if sort == 'professional_name' %}selected{% endif %}>Profissional A→Z</option>
+        <option value="-professional_name"{% if sort == '-professional_name'%}selected{% endif %}>Profissional Z→A</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button type="submit" class="btn btn-primary">Buscar</button>
+      {% if q %}
+      <a href="{% url 'consultation_list' %}" class="btn btn-secondary">Limpar</a>
+      {% endif %}
+    </div>
+  </form>
 </div>
 
 <div class="card">
   {% if consultations %}
+  {% if q %}
+  <p style="font-size:13px;color:var(--muted);margin-bottom:12px">
+    {{ consultations|length }} resultado(s) para "<strong>{{ q }}</strong>"
+  </p>
+  {% endif %}
   <div class="table-wrap">
     <table>
       <thead>
         <tr>
           <th>Data</th>
+          {% if is_professional %}<th>Paciente</th>{% endif %}
           <th>Profissional</th>
           <th>Especialidade</th>
           <th>Diagnóstico</th>
@@ -29,13 +72,16 @@
         {% for c in consultations %}
         <tr>
           <td style="white-space:nowrap;font-weight:600">{{ c.date|date:"d/m/Y" }}</td>
+          {% if is_professional %}<td>{{ c.patient.display_name }}</td>{% endif %}
           <td>{{ c.professional_name }}</td>
-          <td><span class="badge badge-blue">{{ c.get_specialty_display }}</span></td>
+          <td><span class="badge badge-teal">{{ c.specialty_label }}</span></td>
           <td class="text-muted">{{ c.diagnosis|default:"—"|truncatechars:50 }}</td>
           <td style="white-space:nowrap">
-            <a href="{% url 'consultation_detail' c.pk %}" class="btn btn-secondary btn-sm">👁 Ver</a>
-            <a href="{% url 'consultation_update' c.pk %}" class="btn btn-secondary btn-sm">✏️ Editar</a>
-            <a href="{% url 'consultation_delete' c.pk %}" class="btn btn-danger btn-sm">🗑</a>
+            <a href="{% url 'consultation_detail' c.pk %}" class="btn btn-secondary btn-sm">Ver</a>
+            <a href="{% url 'consultation_update' c.pk %}" class="btn btn-secondary btn-sm">Editar</a>
+            {% if not is_professional %}
+            <a href="{% url 'consultation_delete' c.pk %}" class="btn btn-danger btn-sm">Excluir</a>
+            {% endif %}
           </td>
         </tr>
         {% endfor %}
@@ -45,8 +91,16 @@
   {% else %}
   <div class="empty-state">
     <div class="empty-icon">📋</div>
+    {% if q %}
+    <p>Nenhuma consulta encontrada para "{{ q }}".</p>
+    <a href="{% url 'consultation_list' %}" class="btn btn-secondary mt-4">Ver todas</a>
+    {% elif is_professional %}
+    <p>Você ainda não registrou nenhuma consulta via atendimento.</p>
+    <a href="{% url 'entrar_atendimento' %}" class="btn btn-primary mt-4">Iniciar atendimento</a>
+    {% else %}
     <p>Nenhuma consulta registrada ainda.</p>
     <a href="{% url 'consultation_create' %}" class="btn btn-primary mt-4">Registrar primeira consulta</a>
+    {% endif %}
   </div>
   {% endif %}
 </div>

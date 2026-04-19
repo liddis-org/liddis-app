@@ -13,8 +13,44 @@
   </div>
 
   <div class="card">
-    <form method="post">
+    <form method="post" id="form-entrar">
       {% csrf_token %}
+
+      {% if not already_logged %}
+      {# ── Credenciais do profissional (quando não está logado) ── #}
+      <div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.07)">
+        <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:14px">
+          Suas credenciais
+        </p>
+        <div class="form-group">
+          <label for="username">E-mail ou usuário</label>
+          <input
+            id="username"
+            name="username"
+            type="text"
+            class="input"
+            placeholder="seu@email.com"
+            autocomplete="username"
+            autofocus
+            required
+          >
+        </div>
+        <div class="form-group">
+          <label for="password">Senha</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            class="input"
+            placeholder="••••••••"
+            autocomplete="current-password"
+            required
+          >
+        </div>
+      </div>
+      {% endif %}
+
+      {# ── Token do paciente ── #}
       <div class="form-group">
         <label for="token">Código do Paciente</label>
         <input
@@ -22,23 +58,39 @@
           name="token"
           type="text"
           class="input"
-          placeholder="Ex: a1b2c3d4-e5f6-..."
-          style="text-transform:uppercase;letter-spacing:2px;font-size:16px;font-family:'Courier New',monospace"
+          placeholder="{% if test_mode %}Código curto (ex: A1B2C3D4) ou UUID completo{% else %}ex: a1b2c3d4-e5f6-7890-abcd-ef1234567890{% endif %}"
+          style="font-family:'Courier New',monospace;letter-spacing:1.5px;font-size:15px"
           autocomplete="off"
-          autofocus
+          autocorrect="off"
+          autocapitalize="characters"
+          spellcheck="false"
+          {% if already_logged %}autofocus{% endif %}
           required
         >
-        <div class="form-help">O código é fornecido pelo próprio paciente na tela de atendimento dele.</div>
+        <div class="form-help" style="margin-top:6px">
+          O código é exibido na tela do paciente após ele clicar em "Iniciar Atendimento".
+        </div>
       </div>
 
-      <button type="submit" class="btn btn-primary btn-block" style="margin-top:8px">
+      {% if test_mode %}
+      <div class="alert alert-info" style="margin-bottom:16px">
+        <span>🧪</span>
+        <div>
+          <strong>Modo Teste ativo</strong> — Você pode inserir apenas os primeiros
+          <strong>8 caracteres</strong> do código (ex: <code style="font-family:monospace;background:rgba(0,212,255,.1);padding:2px 6px;border-radius:4px">A1B2C3D4</code>)
+          ou o UUID completo.
+        </div>
+      </div>
+      {% endif %}
+
+      <button type="submit" class="btn btn-primary btn-block">
         ▶ Iniciar Atendimento
       </button>
     </form>
   </div>
 
   <a href="{% url 'dashboard' %}" class="btn btn-secondary btn-block" style="margin-top:12px">
-    Voltar ao Dashboard
+    Voltar ao Início
   </a>
 </div>
 {% endblock %}

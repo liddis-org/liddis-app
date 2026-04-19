@@ -11,6 +11,12 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-inseguro-troque-em-producao
 DEBUG      = os.getenv('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
+# ── Modo Teste ─────────────────────────────────────────────────────────────────
+# Aceita qualquer senha no login — apenas quando DEBUG=True.
+# Ative em .env: TEST_MODE=True
+# NUNCA suba para produção com TEST_MODE=True.
+TEST_MODE = DEBUG and os.getenv('TEST_MODE', 'False') == 'True'
+
 # ── Apps Instalados ────────────────────────────────────────────────────────────
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -19,11 +25,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',         # exigido pelo django-allauth
     # Terceiros
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
     'axes',              # rate limiting / bloqueio por tentativas
+    # django-allauth (autenticação social + Google OAuth)
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
     # Apps do projeto
     'users',
     'consultations',
@@ -39,6 +51,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'axes.middleware.AxesMiddleware',               # rate limiting (após auth middleware)
+    'allauth.account.middleware.AccountMiddleware', # exigido pelo django-allauth >= 0.56
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'users.middleware.EmailVerificationMiddleware', # força verificação de e-mail
@@ -110,8 +123,14 @@ LOGOUT_REDIRECT_URL   = '/login/'
 
 AUTHENTICATION_BACKENDS = [
     'axes.backends.AxesStandaloneBackend',          # deve vir primeiro
-    'django.contrib.auth.backends.ModelBackend',
+    'users.backends.EmailOrUsernameBackend',        # login por e-mail ou username
+    'allauth.account.auth_backends.AuthenticationBackend',  # backend do allauth (Google OAuth)
+    'django.contrib.auth.backends.ModelBackend',   # fallback padrão
 ]
+
+# Insere TestModeBackend apenas em desenvolvimento com TEST_MODE=True
+if TEST_MODE:
+    AUTHENTICATION_BACKENDS.insert(1, 'users.backends.TestModeBackend')
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -126,7 +145,7 @@ SESSION_COOKIE_SAMESITE = 'Lax'        # proteção CSRF básica
 SESSION_COOKIE_AGE      = 60 * 60 * 8  # sessão expira em 8 horas
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
-CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False   # False = padrão Django; True impede forms server-rendered após rotação de sessão
 CSRF_COOKIE_SAMESITE = 'Lax'
 
 # ── Segurança HTTPS (ativas apenas em produção) ────────────────────────────────
@@ -239,6 +258,13 @@ SIMPLE_JWT = {
 # ── CORS ───────────────────────────────────────────────────────────────────────
 CORS_ALLOWED_ORIGINS = [o for o in os.getenv('CORS_ORIGINS', 'http://localhost:5173,http://localhost:3000').split(',') if o]
 
+# ── CSRF Trusted Origins ───────────────────────────────────────────────────────
+# Necessário para requisições POST de domínios externos (frontend separado, Railway, etc.)
+# Em desenvolvimento: localhost já é confiável por padrão.
+# Em produção: defina CSRF_TRUSTED_ORIGINS=https://seudominio.com no .env
+_csrf_default = 'http://localhost:8000,http://127.0.0.1:8000' if DEBUG else ''
+CSRF_TRUSTED_ORIGINS = [o for o in os.getenv('CSRF_TRUSTED_ORIGINS', _csrf_default).split(',') if o]
+
 # ── Arquivos Estáticos (whitenoise em produção) ────────────────────────────────
 STATIC_URL  = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
@@ -268,6 +294,35 @@ if SENTRY_DSN:
         environment='production' if not DEBUG else 'development',
     )
 
+# ── Sites Framework (exigido pelo django-allauth) ──────────────────────────────
+SITE_ID = 1
+
+# ── django-allauth ─────────────────────────────────────────────────────────────
+ACCOUNT_LOGIN_METHODS         = {'email'}    # login por e-mail (não username)
+ACCOUNT_SIGNUP_FIELDS         = ['email*', 'password1*', 'password2*']  # campos obrigatórios
+ACCOUNT_EMAIL_VERIFICATION    = 'none'       # verificação OTP própria (não a do allauth)
+ACCOUNT_ADAPTER               = 'users.adapters.CustomAccountAdapter'
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'http' if DEBUG else 'https'
+
+SOCIALACCOUNT_ADAPTER      = 'users.adapters.CustomSocialAccountAdapter'
+SOCIALACCOUNT_AUTO_SIGNUP  = True            # cria conta automaticamente no 1º login Google
+SOCIALACCOUNT_EMAIL_REQUIRED = True
+SOCIALACCOUNT_QUERY_EMAIL  = True
+SOCIALACCOUNT_STORE_TOKENS = False
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APP': {
+            'client_id': os.getenv('GOOGLE_CLIENT_ID', ''),
+            'secret':    os.getenv('GOOGLE_SECRET', ''),
+            'key':       '',
+        },
+        'SCOPE': ['profile', 'email'],
+        'AUTH_PARAMS': {'access_type': 'online'},
+        'VERIFIED_EMAIL': True,              # Google já verifica o e-mail
+    }
+}
+
 # ── Logging ────────────────────────────────────────────────────────────────────
 LOGGING = {
     'version': 1,
@@ -287,7 +342,7 @@ LOGGING = {
     'loggers': {
         'liddis': {                  # use logging.getLogger('liddis') no código
             'handlers': ['console'],
-            'level': 'DEBUG' if DEBUG else 'WARNING',
+            'level': 'DEBUG' if DEBUG else 'INFO',   # INFO em prod: registra eventos, silencia debug
             'propagate': False,
         },
         'django.request': {

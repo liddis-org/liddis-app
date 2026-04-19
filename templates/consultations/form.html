@@ -3,6 +3,124 @@
 {% block topbar_title %}{{ titulo }}{% endblock %}
 {% block nav_consultations %}active{% endblock %}
 
+{% block extra_css %}
+<style>
+/* ── Tabs ── */
+.tabs-nav {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--border-soft);
+  margin-bottom: 28px;
+  overflow-x: auto;
+}
+.tabs-nav::-webkit-scrollbar { height: 0; }
+.tab-btn {
+  padding: 11px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active {
+  color: var(--teal);
+  border-bottom-color: var(--teal);
+}
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── Upload zone ── */
+.drop-zone {
+  border: 2px dashed var(--border-soft);
+  border-radius: var(--radius);
+  padding: 20px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.drop-zone:hover, .drop-zone.dragover {
+  border-color: var(--teal);
+  background: var(--teal-glow);
+}
+.drop-zone input[type=file] { display: none; }
+.drop-zone .dz-icon { font-size: 24px; margin-bottom: 6px; opacity: .5; }
+
+/* ── Image grids ── */
+.img-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+.img-item {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  aspect-ratio: 1;
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+}
+.img-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.img-item .del-btn {
+  position: absolute;
+  top: 4px; right: 4px;
+  width: 22px; height: 22px;
+  background: rgba(248,113,113,.9);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  font-size: 14px;
+  line-height: 22px;
+  text-align: center;
+  cursor: pointer;
+  font-weight: 700;
+}
+.img-item .del-btn:hover { background: var(--danger); }
+
+/* ── Existing images section ── */
+.existing-imgs {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-soft);
+}
+.existing-imgs-label {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 10px;
+}
+
+/* ── Upload section wrapper ── */
+.upload-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-soft);
+}
+.upload-section-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 10px;
+  display: block;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="page-header">
   <div>
@@ -12,54 +130,418 @@
   <a href="{% url 'consultation_list' %}" class="btn btn-secondary">← Voltar</a>
 </div>
 
-<div class="card" style="max-width:720px">
-  <form method="post">
+<div class="card" style="max-width:840px">
+  <form method="post" enctype="multipart/form-data" id="consultation-form">
     {% csrf_token %}
+    <input type="hidden" name="active_tab" id="active_tab_input" value="{{ active_tab|default:'geral' }}">
 
-    <div class="form-row">
+    <!-- ── Abas de navegação ── -->
+    <div class="tabs-nav" role="tablist" aria-label="Seções da consulta">
+      <button type="button" class="tab-btn {% if active_tab == 'geral' or not active_tab %}active{% endif %}"
+              data-tab="geral" role="tab">Informações Gerais</button>
+      <button type="button" class="tab-btn {% if active_tab == 'anamnese' %}active{% endif %}"
+              data-tab="anamnese" role="tab">Anamnese</button>
+      <button type="button" class="tab-btn {% if active_tab == 'exames' %}active{% endif %}"
+              data-tab="exames" role="tab">Exames Laboratoriais</button>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         ABA: Informações Gerais
+    ═════════════════════════════════════════════════════════════════════════ -->
+    <div class="tab-panel {% if active_tab == 'geral' or not active_tab %}active{% endif %}"
+         id="tab-geral" role="tabpanel">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Data da consulta *</label>
+          {{ form.date }}
+          {{ form.date.errors }}
+        </div>
+        <div class="form-group">
+          <label>Especialidade *</label>
+          {{ form.specialty }}
+          {{ form.specialty.errors }}
+        </div>
+      </div>
+
+      <div class="form-group" id="specialty-other-wrap"
+           style="display:{% if form.specialty.value == 'outro' %}block{% else %}none{% endif %}">
+        <label>Qual especialidade?</label>
+        {{ form.specialty_other }}
+        {{ form.specialty_other.errors }}
+      </div>
+
       <div class="form-group">
-        <label>Data da consulta *</label>
-        {{ form.date }}
-        {{ form.date.errors }}
+        <label>Nome do profissional *</label>
+        {{ form.professional_name }}
+        {{ form.professional_name.errors }}
+      </div>
+
+      <!-- ── Dados do Local ── -->
+      <div style="margin:20px 0 4px;padding-top:16px;border-top:1px solid var(--border-soft)">
+        <span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px">📍 Local da consulta</span>
+      </div>
+
+      <div class="form-group">
+        <label>Nome do local *</label>
+        {{ form.clinic_name }}
+        {{ form.clinic_name.errors }}
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Bairro *</label>
+          {{ form.clinic_neighborhood }}
+          {{ form.clinic_neighborhood.errors }}
+        </div>
+        <div class="form-group">
+          <label>Cidade *</label>
+          {{ form.clinic_city }}
+          {{ form.clinic_city.errors }}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Endereço completo <span style="font-weight:400;font-size:11px;color:var(--muted-2)">(opcional)</span></label>
+        {{ form.clinic_address }}
+        {{ form.clinic_address.errors }}
+      </div>
+
+      <div class="form-group">
+        <label>Diagnóstico</label>
+        {{ form.diagnosis }}
+        {{ form.diagnosis.errors }}
+      </div>
+
+      <div class="form-group">
+        <label>Anotações / Evolução clínica</label>
+        {{ form.notes }}
+        {{ form.notes.errors }}
+      </div>
+
+      <div class="form-group">
+        <label>Prescrição / Medicamentos</label>
+        {{ form.prescription }}
+        <span class="form-help">Liste os medicamentos prescritos com dosagem e frequência.</span>
+        {{ form.prescription.errors }}
+      </div>
+
+      <!-- Upload: Diagnóstico -->
+      <div class="upload-section">
+        <span class="upload-section-label">Imagens do Diagnóstico</span>
+
+        {% if images_by_tab.diagnostico %}
+        <div class="existing-imgs">
+          <div class="existing-imgs-label">Já anexadas ({{ images_by_tab.diagnostico|length }})</div>
+          <div class="img-grid">
+            {% for img in images_by_tab.diagnostico %}
+            <div class="img-item">
+              <a href="{{ img.image.url }}" target="_blank" title="{{ img.caption }}">
+                <img src="{{ img.image.url }}" alt="{{ img.caption|default:'imagem' }}">
+              </a>
+              <form method="post"
+                    action="{% url 'consultation_delete_image' object.pk img.pk %}"
+                    onsubmit="return confirm('Remover imagem?')">
+                {% csrf_token %}
+                <button type="submit" class="del-btn" title="Remover">×</button>
+              </form>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="drop-zone" style="margin-top:10px"
+             onclick="document.getElementById('img_diagnostico').click()">
+          <input type="file" name="images_diagnostico" id="img_diagnostico"
+                 accept="image/*" multiple data-preview="preview_diagnostico"
+                 onchange="previewImages(this, this.dataset.preview)">
+          <div class="dz-icon">+</div>
+          <div>Clique ou arraste para adicionar imagens</div>
+          <div style="font-size:11px;margin-top:3px;opacity:.6">JPG · PNG · WEBP</div>
+        </div>
+        <div class="img-grid" id="preview_diagnostico"></div>
+      </div>
+
+      <!-- Upload: Prescrição -->
+      <div class="upload-section">
+        <span class="upload-section-label">Imagens da Prescrição</span>
+
+        {% if images_by_tab.prescricao %}
+        <div class="existing-imgs">
+          <div class="existing-imgs-label">Já anexadas ({{ images_by_tab.prescricao|length }})</div>
+          <div class="img-grid">
+            {% for img in images_by_tab.prescricao %}
+            <div class="img-item">
+              <a href="{{ img.image.url }}" target="_blank" title="{{ img.caption }}">
+                <img src="{{ img.image.url }}" alt="{{ img.caption|default:'imagem' }}">
+              </a>
+              <form method="post"
+                    action="{% url 'consultation_delete_image' object.pk img.pk %}"
+                    onsubmit="return confirm('Remover imagem?')">
+                {% csrf_token %}
+                <button type="submit" class="del-btn" title="Remover">×</button>
+              </form>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="drop-zone" style="margin-top:10px"
+             onclick="document.getElementById('img_prescricao').click()">
+          <input type="file" name="images_prescricao" id="img_prescricao"
+                 accept="image/*" multiple data-preview="preview_prescricao"
+                 onchange="previewImages(this, this.dataset.preview)">
+          <div class="dz-icon">+</div>
+          <div>Clique ou arraste para adicionar imagens</div>
+          <div style="font-size:11px;margin-top:3px;opacity:.6">JPG · PNG · WEBP</div>
+        </div>
+        <div class="img-grid" id="preview_prescricao"></div>
+      </div>
+
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         ABA: Anamnese
+    ═════════════════════════════════════════════════════════════════════════ -->
+    <div class="tab-panel {% if active_tab == 'anamnese' %}active{% endif %}"
+         id="tab-anamnese" role="tabpanel">
+
+      <div class="form-group">
+        <label>Queixa principal</label>
+        {{ anamnese_form.chief_complaint }}
+        {{ anamnese_form.chief_complaint.errors }}
       </div>
       <div class="form-group">
-        <label>Especialidade *</label>
-        {{ form.specialty }}
-        {{ form.specialty.errors }}
+        <label>História da doença atual</label>
+        {{ anamnese_form.history }}
+        {{ anamnese_form.history.errors }}
+      </div>
+      <div class="form-group">
+        <label>Antecedentes pessoais</label>
+        {{ anamnese_form.past_history }}
+        {{ anamnese_form.past_history.errors }}
+      </div>
+      <div class="form-group">
+        <label>Antecedentes familiares</label>
+        {{ anamnese_form.family_history }}
+        {{ anamnese_form.family_history.errors }}
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Medicamentos em uso</label>
+          {{ anamnese_form.medications }}
+          {{ anamnese_form.medications.errors }}
+        </div>
+        <div class="form-group">
+          <label>Alergias</label>
+          {{ anamnese_form.allergies }}
+          {{ anamnese_form.allergies.errors }}
+        </div>
+      </div>
+
+      <!-- Upload: Anamnese -->
+      <div class="upload-section">
+        <span class="upload-section-label">Imagens da Anamnese</span>
+
+        {% if images_by_tab.anamnese %}
+        <div class="existing-imgs">
+          <div class="existing-imgs-label">Já anexadas ({{ images_by_tab.anamnese|length }})</div>
+          <div class="img-grid">
+            {% for img in images_by_tab.anamnese %}
+            <div class="img-item">
+              <a href="{{ img.image.url }}" target="_blank" title="{{ img.caption }}">
+                <img src="{{ img.image.url }}" alt="{{ img.caption|default:'imagem' }}">
+              </a>
+              <form method="post"
+                    action="{% url 'consultation_delete_image' object.pk img.pk %}"
+                    onsubmit="return confirm('Remover imagem?')">
+                {% csrf_token %}
+                <button type="submit" class="del-btn" title="Remover">×</button>
+              </form>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="drop-zone" style="margin-top:10px"
+             onclick="document.getElementById('img_anamnese').click()">
+          <input type="file" name="images_anamnese" id="img_anamnese"
+                 accept="image/*" multiple data-preview="preview_anamnese"
+                 onchange="previewImages(this, this.dataset.preview)">
+          <div class="dz-icon">+</div>
+          <div>Clique ou arraste para adicionar imagens</div>
+          <div style="font-size:11px;margin-top:3px;opacity:.6">JPG · PNG · WEBP</div>
+        </div>
+        <div class="img-grid" id="preview_anamnese"></div>
       </div>
     </div>
 
-    <div class="form-group">
-      <label>Nome do profissional *</label>
-      {{ form.professional_name }}
-      {{ form.professional_name.errors }}
+    <!-- ════════════════════════════════════════════════════════════════════
+         ABA: Exames Laboratoriais
+    ═════════════════════════════════════════════════════════════════════════ -->
+    <div class="tab-panel {% if active_tab == 'exames' %}active{% endif %}"
+         id="tab-exames" role="tabpanel">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Hemograma</label>
+          {{ exames_form.hemograma }}
+        </div>
+        <div class="form-group">
+          <label>Glicemia</label>
+          {{ exames_form.glicemia }}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Colesterol e triglicerídeos</label>
+          {{ exames_form.colesterol }}
+        </div>
+        <div class="form-group">
+          <label>Função renal</label>
+          {{ exames_form.funcao_renal }}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Função hepática</label>
+          {{ exames_form.funcao_hepatica }}
+        </div>
+        <div class="form-group">
+          <label>Exames hormonais</label>
+          {{ exames_form.hormonal }}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Urina (EAS)</label>
+          {{ exames_form.urina }}
+        </div>
+        <div class="form-group">
+          <label>Outros exames</label>
+          {{ exames_form.outros }}
+        </div>
+      </div>
+
+      <!-- Upload: Exames -->
+      <div class="upload-section">
+        <span class="upload-section-label">Imagens dos Exames</span>
+
+        {% if images_by_tab.exames %}
+        <div class="existing-imgs">
+          <div class="existing-imgs-label">Já anexadas ({{ images_by_tab.exames|length }})</div>
+          <div class="img-grid">
+            {% for img in images_by_tab.exames %}
+            <div class="img-item">
+              <a href="{{ img.image.url }}" target="_blank" title="{{ img.caption }}">
+                <img src="{{ img.image.url }}" alt="{{ img.caption|default:'imagem' }}">
+              </a>
+              <form method="post"
+                    action="{% url 'consultation_delete_image' object.pk img.pk %}"
+                    onsubmit="return confirm('Remover imagem?')">
+                {% csrf_token %}
+                <button type="submit" class="del-btn" title="Remover">×</button>
+              </form>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="drop-zone" style="margin-top:10px"
+             onclick="document.getElementById('img_exames').click()">
+          <input type="file" name="images_exames" id="img_exames"
+                 accept="image/*" multiple data-preview="preview_exames"
+                 onchange="previewImages(this, this.dataset.preview)">
+          <div class="dz-icon">+</div>
+          <div>Clique ou arraste para adicionar imagens</div>
+          <div style="font-size:11px;margin-top:3px;opacity:.6">JPG · PNG · WEBP</div>
+        </div>
+        <div class="img-grid" id="preview_exames"></div>
+      </div>
     </div>
 
-    <div class="form-group">
-      <label>Diagnóstico</label>
-      {{ form.diagnosis }}
-      {{ form.diagnosis.errors }}
-    </div>
-
-    <div class="form-group">
-      <label>Anotações / Evolução clínica</label>
-      {{ form.notes }}
-      {{ form.notes.errors }}
-    </div>
-
-    <div class="form-group">
-      <label>Prescrição / Medicamentos</label>
-      {{ form.prescription }}
-      <span class="form-help">Liste os medicamentos prescritos com dosagem e frequência.</span>
-      {{ form.prescription.errors }}
-    </div>
-
-    <hr class="divider"/>
-
-    <div style="display:flex;gap:12px">
-      <button type="submit" class="btn btn-primary">💾 {{ btn_label }}</button>
+    <!-- ── Rodapé do form ── -->
+    <hr class="divider" style="margin-top:28px"/>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <button type="submit" class="btn btn-primary">{{ btn_label }}</button>
       <a href="{% url 'consultation_list' %}" class="btn btn-secondary">Cancelar</a>
     </div>
   </form>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var tab = this.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+    this.classList.add('active');
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.getElementById('active_tab_input').value = tab;
+  });
+});
+
+// ── Specialty "Outro" reveal ──────────────────────────────────────────────────
+(function() {
+  var sel  = document.getElementById('{{ form.specialty.id_for_label }}');
+  var wrap = document.getElementById('specialty-other-wrap');
+  if (!sel) return;
+  sel.addEventListener('change', function() {
+    wrap.style.display = this.value === 'outro' ? 'block' : 'none';
+  });
+})();
+
+// ── Drag & Drop ───────────────────────────────────────────────────────────────
+document.querySelectorAll('.drop-zone').forEach(function(zone) {
+  zone.addEventListener('dragover',  function(e){ e.preventDefault(); this.classList.add('dragover'); });
+  zone.addEventListener('dragleave', function()  { this.classList.remove('dragover'); });
+  zone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    this.classList.remove('dragover');
+    var input = this.querySelector('input[type=file]');
+    if (!input) return;
+    var dt = new DataTransfer();
+    Array.from(e.dataTransfer.files).forEach(function(f) { dt.items.add(f); });
+    input.files = dt.files;
+    input.dispatchEvent(new Event('change'));
+  });
+});
+
+// ── Preview de imagens selecionadas ──────────────────────────────────────────
+function previewImages(input, previewId) {
+  var container = document.getElementById(previewId);
+  if (!container) return;
+  container.innerHTML = '';
+  Array.from(input.files).forEach(function(file, idx) {
+    if (!file.type.startsWith('image/')) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      var wrap = document.createElement('div');
+      wrap.className = 'img-item';
+      var inputId = input.id;
+      wrap.innerHTML =
+        '<img src="' + ev.target.result + '" alt="preview">' +
+        '<button type="button" class="del-btn" ' +
+          'onclick="removePreview(' + idx + ',\'' + inputId + '\',\'' + previewId + '\')">×</button>';
+      container.appendChild(wrap);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function removePreview(idx, inputId, previewId) {
+  var input = document.getElementById(inputId);
+  var dt = new DataTransfer();
+  Array.from(input.files).forEach(function(f, i) { if (i !== idx) dt.items.add(f); });
+  input.files = dt.files;
+  input.dispatchEvent(new Event('change'));
+}
+</script>
 {% endblock %}

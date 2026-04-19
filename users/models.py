@@ -19,6 +19,8 @@ class CustomUser(AbstractUser):
     phone         = models.CharField(max_length=20, blank=True, verbose_name='Telefone')
     date_of_birth = models.DateField(null=True, blank=True, verbose_name='Data de nascimento')
     bio           = models.TextField(max_length=500, blank=True, verbose_name='Sobre mim')
+    profession             = models.CharField(max_length=100, blank=True, verbose_name='Profissão')
+    professional_specialty = models.CharField(max_length=50,  blank=True, verbose_name='Especialidade')
     email         = models.EmailField(unique=True, verbose_name='E-mail')
     updated_at    = models.DateTimeField(auto_now=True)
 

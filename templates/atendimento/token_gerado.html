@@ -5,7 +5,7 @@
 {% block extra_css %}
 <style>
 .token-box{
-  background:var(--primary);color:#fff;
+  background:linear-gradient(135deg,var(--teal),var(--teal-dark));color:#070e1a;
   border-radius:16px;padding:32px;text-align:center;margin:24px 0;
 }
 .token-code{
@@ -34,23 +34,23 @@
   <div class="token-box">
     <div style="font-size:13px;opacity:.8;font-weight:600;letter-spacing:1px;text-transform:uppercase">Seu código de atendimento</div>
     <div class="token-code">{{ session.token_display }}</div>
-    <div class="timer">⏱ Expira em 2 horas</div>
+    <div class="timer">⏱ Expira em 24 horas</div>
     <div class="token-full">Código completo: {{ session.token }}</div>
   </div>
 
   <div class="card" style="margin-bottom:16px">
-    <h3 style="font-size:14px;font-weight:700;margin-bottom:12px;color:var(--primary)">📋 Instruções</h3>
+    <h3 style="font-size:14px;font-weight:700;margin-bottom:12px;color:var(--teal)">📋 Instruções</h3>
     <ol style="padding-left:20px;font-size:13px;color:var(--muted);line-height:2">
       <li>Mostre este código ao seu médico ou profissional</li>
       <li>Ele irá inserir o código no sistema dele</li>
       <li>A consulta será registrada automaticamente no seu histórico</li>
-      <li>O código <strong>expira em 2 horas</strong> ou após ser utilizado</li>
+      <li>O código <strong>expira em 24 horas</strong> ou após ser utilizado</li>
     </ol>
   </div>
 
   <div style="display:flex;gap:12px">
     <a href="{% url 'dashboard' %}" class="btn btn-secondary" style="flex:1;justify-content:center">
-      🏠 Ir ao Dashboard
+      🏠 Ir ao Início
     </a>
     <a href="{% url 'cancelar_sessao' session.token %}" class="btn btn-danger" style="flex:1;justify-content:center"
        onclick="return confirm('Cancelar este atendimento?')">

@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+{% block title %}Quem Somos — LIDDIS{% endblock %}
+{% block topbar_title %}Quem Somos{% endblock %}
+{% block nav_quem_somos %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+.qs-hero {
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 48px 40px;
+  text-align: center;
+  margin-bottom: 32px;
+  position: relative;
+  overflow: hidden;
+}
+.qs-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(0,212,255,.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.qs-logo {
+  width: 72px; height: 72px;
+  margin: 0 auto 20px;
+  display: block;
+}
+.qs-hero h1 {
+  font-size: 32px; font-weight: 900;
+  letter-spacing: -0.5px;
+  background: linear-gradient(90deg, var(--teal), var(--green));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+.qs-hero .tagline {
+  font-size: 15px; color: var(--muted); max-width: 520px; margin: 0 auto 24px; line-height: 1.7;
+}
+.origin-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(74,222,128,.08);
+  border: 1px solid rgba(74,222,128,.2);
+  border-radius: 20px;
+  padding: 6px 18px;
+  font-size: 12px; font-weight: 600; color: var(--green);
+  letter-spacing: .3px;
+}
+
+.qs-section { margin-bottom: 28px; }
+.qs-section h2 {
+  font-size: 14px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1px;
+  color: var(--teal);
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.qs-section p {
+  font-size: 14px; color: var(--text); line-height: 1.85;
+}
+.qs-section p + p { margin-top: 10px; }
+
+.keyword {
+  color: var(--teal); font-weight: 700;
+}
+.keyword-green {
+  color: var(--green); font-weight: 700;
+}
+.keyword-warn {
+  color: var(--warning); font-weight: 700;
+}
+
+.pillars-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 16px;
+}
+@media (max-width: 700px) { .pillars-grid { grid-template-columns: 1fr; } }
+
+.pillar-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 20px 18px;
+  text-align: center;
+}
+.pillar-icon { font-size: 30px; margin-bottom: 10px; }
+.pillar-title {
+  font-size: 13px; font-weight: 800; margin-bottom: 6px;
+  color: var(--text);
+}
+.pillar-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+.timeline-item {
+  display: flex; gap: 16px; padding: 16px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+.timeline-item:last-child { border-bottom: none; }
+.timeline-dot {
+  width: 36px; height: 36px; flex-shrink: 0;
+  background: var(--teal-glow);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.timeline-date {
+  font-size: 10px; font-weight: 700; color: var(--teal);
+  text-transform: uppercase; letter-spacing: .5px; margin-bottom: 3px;
+}
+.timeline-text { font-size: 13px; color: var(--text); line-height: 1.6; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:800px;margin:0 auto">
+
+  <!-- Hero -->
+  <div class="qs-hero">
+    <svg class="qs-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="lg2" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#00d4ff"/>
+          <stop offset="100%" stop-color="#4ade80"/>
+        </linearGradient>
+      </defs>
+      <rect width="100" height="100" rx="18" fill="#0d1b2e"/>
+      <path d="M50 8 L92 50 L50 92 L8 50 Z" fill="url(#lg2)" opacity=".9"/>
+      <rect x="45" y="28" width="10" height="44" rx="4" fill="#070e1a"/>
+      <rect x="28" y="45" width="44" height="10" rx="4" fill="#070e1a"/>
+    </svg>
+    <h1>LIDDIS</h1>
+    <p class="tagline">
+      Uma plataforma de inteligência clínica que coloca o paciente no centro do cuidado,
+      conectando pessoas e profissionais de saúde com segurança e simplicidade.
+    </p>
+    <span class="origin-badge">🏆 Nascido no Impulso Saúde Hack · Nov/2025</span>
+  </div>
+
+  <!-- Nossa história -->
+  <div class="card qs-section">
+    <h2>📖 Nossa história</h2>
+    <p>
+      O LIDDIS nasceu durante o <span class="keyword-green">Impulso Saúde Hack</span>, maratona de inovação em saúde realizada entre os dias
+      <span class="keyword">28 e 30 de novembro de 2025</span>. Em 48 horas de desenvolvimento intenso, nossa equipe
+      transformou uma necessidade real em solução funcional: como garantir que o histórico de saúde de uma pessoa
+      esteja sempre acessível, organizado e protegido?
+    </p>
+    <p>
+      Hoje, o LIDDIS evoluiu do protótipo do hackathon para uma plataforma completa — mas a essência permanece a
+      mesma: <span class="keyword-green">tecnologia a serviço das pessoas</span>, não o contrário.
+    </p>
+  </div>
+
+  <!-- Pilares -->
+  <div class="card qs-section">
+    <h2>⚡ Nossos pilares</h2>
+    <div class="pillars-grid">
+      <div class="pillar-card">
+        <div class="pillar-icon">🔒</div>
+        <div class="pillar-title">Segurança</div>
+        <div class="pillar-desc">
+          Seus dados pertencem a você. Acesso controlado por tokens únicos e autenticação robusta.
+        </div>
+      </div>
+      <div class="pillar-card">
+        <div class="pillar-icon">📂</div>
+        <div class="pillar-title">Organização</div>
+        <div class="pillar-desc">
+          Histórico completo de consultas, exames e sinais vitais em um único lugar, sempre atualizado.
+        </div>
+      </div>
+      <div class="pillar-card">
+        <div class="pillar-icon">🔗</div>
+        <div class="pillar-title">Integração</div>
+        <div class="pillar-desc">
+          Conecta pacientes e profissionais em tempo real durante o atendimento, sem burocracia.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Como funciona -->
+  <div class="card qs-section">
+    <h2>⚙️ Como funciona</h2>
+    <div>
+      <div class="timeline-item">
+        <div class="timeline-dot">1</div>
+        <div>
+          <div class="timeline-date">Paciente</div>
+          <div class="timeline-text">
+            Cria sua conta, registra suas consultas e mantém seu histórico de saúde organizado.
+            Quando vai a uma consulta, gera um <span class="keyword">código de atendimento único</span>.
+          </div>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot">2</div>
+        <div>
+          <div class="timeline-date">Profissional</div>
+          <div class="timeline-text">
+            Recebe o código do paciente, acessa os dados com segurança e registra a consulta diretamente
+            no histórico — sem papéis, sem retrabalho.
+          </div>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot">3</div>
+        <div>
+          <div class="timeline-date">Histórico</div>
+          <div class="timeline-text">
+            Diagnósticos, prescrições, exames e anamnese ficam salvos, pesquisáveis e sempre disponíveis
+            — para o paciente acessar quando precisar.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Missão -->
+  <div class="card qs-section" style="border-left:4px solid var(--teal)">
+    <h2>🎯 Nossa missão</h2>
+    <p>
+      Democratizar o acesso ao histórico de saúde pessoal. Acreditamos que toda pessoa tem o direito de
+      ter seus dados médicos organizados, seguros e acessíveis — independentemente de onde foi atendida ou
+      por qual profissional.
+    </p>
+    <p>
+      O LIDDIS é a ponte entre <span class="keyword">segurança</span>, <span class="keyword-green">organização</span>
+      e <span class="keyword-warn">integração</span> no cuidado com a saúde.
+    </p>
+  </div>
+
+</div>
+{% endblock %}

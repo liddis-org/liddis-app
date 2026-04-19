@@ -3,66 +3,313 @@
 {% block topbar_title %}Detalhe da Consulta{% endblock %}
 {% block nav_consultations %}active{% endblock %}
 
+{% block extra_css %}
+<style>
+/* ── Tabs ── */
+.tabs-nav {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--border-soft);
+  margin-bottom: 28px;
+  overflow-x: auto;
+}
+.tabs-nav::-webkit-scrollbar { height: 0; }
+.tab-btn {
+  padding: 11px 20px;
+  font-size: 13px; font-weight: 600;
+  color: var(--muted);
+  background: none; border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+  white-space: nowrap; flex-shrink: 0;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--teal); border-bottom-color: var(--teal); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── Campos de leitura ── */
+.field-label {
+  font-size: 11px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .5px;
+  font-weight: 700; margin-bottom: 4px;
+}
+.field-value { line-height: 1.75; white-space: pre-wrap; font-size: 14px; }
+
+/* ── Galeria de imagens ── */
+.img-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+.img-gallery-item {
+  border-radius: 10px; overflow: hidden;
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+}
+.img-gallery-item a img {
+  width: 100%; aspect-ratio: 1; object-fit: cover; display: block;
+  transition: opacity .15s;
+}
+.img-gallery-item a:hover img { opacity: .85; }
+.img-meta {
+  padding: 6px 8px; font-size: 11px; color: var(--muted);
+  display: flex; justify-content: space-between; align-items: center; gap: 6px;
+}
+.img-caption { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Upload section ── */
+.upload-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-soft);
+}
+
+/* Upload block — área arrastável */
+.upload-block {
+  border: 2px dashed var(--border-soft);
+  border-radius: var(--radius);
+  padding: 16px;
+  transition: border-color .15s, background .15s;
+  margin-top: 10px;
+}
+.upload-block:hover { border-color: var(--teal); }
+
+/* Preview após seleção */
+.upload-preview {
+  margin-bottom: 8px;
+}
+.upload-fname {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+  word-break: break-all;
+}
+
+/* ── Info grid ── */
+.info-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;
+}
+@media (max-width: 480px) { .info-grid { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="page-header">
   <div>
-    <h2>Consulta — {{ consultation.date|date:"d/m/Y" }}</h2>
-    <p>{{ consultation.professional_name }} · {{ consultation.get_specialty_display }}</p>
+    <h2>{{ consultation.date|date:"d/m/Y" }}</h2>
+    <p>{{ consultation.professional_name }} · {{ consultation.specialty_label }}</p>
   </div>
-  <div style="display:flex;gap:10px">
-    <a href="{% url 'consultation_update' consultation.pk %}" class="btn btn-secondary">✏️ Editar</a>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <a href="{% url 'consultation_update' consultation.pk %}" class="btn btn-secondary">Editar</a>
     <a href="{% url 'consultation_list' %}" class="btn btn-secondary">← Voltar</a>
   </div>
 </div>
 
-<div style="display:grid;gap:16px;max-width:720px">
-
+<div style="max-width:840px">
   <div class="card">
-    <h3 style="font-size:14px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.6px;margin-bottom:16px">Informações gerais</h3>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-      <div>
-        <div style="font-size:12px;color:#64748b;margin-bottom:3px">Data</div>
-        <div style="font-weight:600">{{ consultation.date|date:"d/m/Y" }}</div>
-      </div>
-      <div>
-        <div style="font-size:12px;color:#64748b;margin-bottom:3px">Especialidade</div>
-        <span class="badge badge-blue">{{ consultation.get_specialty_display }}</span>
-      </div>
-      <div>
-        <div style="font-size:12px;color:#64748b;margin-bottom:3px">Profissional</div>
-        <div style="font-weight:600">{{ consultation.professional_name }}</div>
-      </div>
-      <div>
-        <div style="font-size:12px;color:#64748b;margin-bottom:3px">Registrado em</div>
-        <div>{{ consultation.created_at|date:"d/m/Y H:i" }}</div>
-      </div>
+
+    <!-- ── Abas ── -->
+    <div class="tabs-nav" role="tablist">
+      <button type="button" class="tab-btn {% if active_tab == 'geral' or not active_tab %}active{% endif %}"
+              data-tab="geral" role="tab">Informações Gerais</button>
+      <button type="button" class="tab-btn {% if active_tab == 'anamnese' %}active{% endif %}"
+              data-tab="anamnese" role="tab">Anamnese</button>
+      <button type="button" class="tab-btn {% if active_tab == 'exames' %}active{% endif %}"
+              data-tab="exames" role="tab">Exames Laboratoriais</button>
     </div>
-  </div>
 
-  {% if consultation.diagnosis %}
-  <div class="card">
-    <h3 style="font-size:14px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">🩺 Diagnóstico</h3>
-    <p style="line-height:1.7;white-space:pre-wrap">{{ consultation.diagnosis }}</p>
-  </div>
-  {% endif %}
+    <!-- ════════════════════════════════════════════════════════════════════
+         ABA: Informações Gerais
+    ═════════════════════════════════════════════════════════════════════════ -->
+    <div class="tab-panel {% if active_tab == 'geral' or not active_tab %}active{% endif %}"
+         id="tab-geral" role="tabpanel">
 
-  {% if consultation.notes %}
-  <div class="card">
-    <h3 style="font-size:14px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">📝 Anotações</h3>
-    <p style="line-height:1.7;white-space:pre-wrap">{{ consultation.notes }}</p>
-  </div>
-  {% endif %}
+      <div class="info-grid">
+        <div>
+          <div class="field-label">Data</div>
+          <div style="font-weight:600;font-size:15px">{{ consultation.date|date:"d/m/Y" }}</div>
+        </div>
+        <div>
+          <div class="field-label">Especialidade</div>
+          <span class="badge badge-teal">{{ consultation.specialty_label }}</span>
+        </div>
+        <div>
+          <div class="field-label">Profissional</div>
+          <div style="font-weight:600">{{ consultation.professional_name }}</div>
+          {% if consultation.profession %}<div style="font-size:12px;color:var(--muted);margin-top:2px">{{ consultation.profession }}</div>{% endif %}
+        </div>
+        {% if is_professional %}
+        <div>
+          <div class="field-label">Paciente</div>
+          <div style="font-weight:600">{{ consultation.patient.display_name }}</div>
+        </div>
+        {% else %}
+        <div>
+          <div class="field-label">Registrado em</div>
+          <div>{{ consultation.created_at|date:"d/m/Y H:i" }}</div>
+        </div>
+        {% endif %}
+      </div>
 
-  {% if consultation.prescription %}
-  <div class="card" style="border-left:4px solid #f59e0b">
-    <h3 style="font-size:14px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">💊 Prescrição / Medicamentos</h3>
-    <p style="line-height:1.8;white-space:pre-wrap;font-family:monospace;font-size:13px">{{ consultation.prescription }}</p>
-  </div>
-  {% endif %}
+      {% if consultation.clinic_name %}
+      <div style="background:var(--surface-2);border:1px solid var(--border-soft);border-radius:10px;padding:14px 18px;margin-bottom:20px">
+        <div class="field-label" style="margin-bottom:8px">📍 Local da consulta</div>
+        <div style="font-weight:700;font-size:15px;margin-bottom:4px">{{ consultation.clinic_name }}</div>
+        <div style="font-size:13px;color:var(--muted)">
+          {% if consultation.clinic_neighborhood %}{{ consultation.clinic_neighborhood }}{% endif %}
+          {% if consultation.clinic_neighborhood and consultation.clinic_city %} · {% endif %}
+          {% if consultation.clinic_city %}{{ consultation.clinic_city }}{% endif %}
+          {% if consultation.clinic_address %}<br><span style="font-size:12px">{{ consultation.clinic_address }}</span>{% endif %}
+        </div>
+      </div>
+      {% endif %}
 
-  <div style="display:flex;gap:10px">
-    <a href="{% url 'consultation_update' consultation.pk %}" class="btn btn-primary">✏️ Editar consulta</a>
-    <a href="{% url 'consultation_delete' consultation.pk %}" class="btn btn-danger">🗑 Excluir</a>
+      {% if consultation.diagnosis %}
+      <div style="margin-bottom:20px">
+        <div class="field-label">Diagnóstico</div>
+        <p class="field-value">{{ consultation.diagnosis }}</p>
+      </div>
+      {% endif %}
+
+      {% if consultation.notes %}
+      <div style="margin-bottom:20px">
+        <div class="field-label">Anotações / Evolução</div>
+        <p class="field-value">{{ consultation.notes }}</p>
+      </div>
+      {% endif %}
+
+      {% if consultation.prescription %}
+      <div style="background:rgba(245,158,11,.06);border-left:3px solid #f59e0b;padding:16px;border-radius:0 8px 8px 0;margin-bottom:20px">
+        <div class="field-label" style="margin-bottom:8px">Prescrição / Medicamentos</div>
+        <p class="field-value" style="font-family:monospace;font-size:13px">{{ consultation.prescription }}</p>
+      </div>
+      {% endif %}
+
+      <!-- Upload — Diagnóstico -->
+      {% include "consultations/_tab_images.html" with tab_key="diagnostico" tab_label="Diagnóstico" imgs=images_by_tab.diagnostico consultation=consultation %}
+
+      <!-- Upload — Prescrição -->
+      {% include "consultations/_tab_images.html" with tab_key="prescricao" tab_label="Prescrição" imgs=images_by_tab.prescricao consultation=consultation %}
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         ABA: Anamnese
+    ═════════════════════════════════════════════════════════════════════════ -->
+    <div class="tab-panel {% if active_tab == 'anamnese' %}active{% endif %}"
+         id="tab-anamnese" role="tabpanel">
+
+      {% if anamnese %}
+        {% if anamnese.chief_complaint %}
+        <div style="margin-bottom:18px">
+          <div class="field-label">Queixa principal</div>
+          <p class="field-value">{{ anamnese.chief_complaint }}</p>
+        </div>
+        {% endif %}
+        {% if anamnese.history %}
+        <div style="margin-bottom:18px">
+          <div class="field-label">História da doença atual</div>
+          <p class="field-value">{{ anamnese.history }}</p>
+        </div>
+        {% endif %}
+        {% if anamnese.past_history %}
+        <div style="margin-bottom:18px">
+          <div class="field-label">Antecedentes pessoais</div>
+          <p class="field-value">{{ anamnese.past_history }}</p>
+        </div>
+        {% endif %}
+        {% if anamnese.family_history %}
+        <div style="margin-bottom:18px">
+          <div class="field-label">Antecedentes familiares</div>
+          <p class="field-value">{{ anamnese.family_history }}</p>
+        </div>
+        {% endif %}
+        {% if anamnese.medications %}
+        <div style="margin-bottom:18px">
+          <div class="field-label">Medicamentos em uso</div>
+          <p class="field-value">{{ anamnese.medications }}</p>
+        </div>
+        {% endif %}
+        {% if anamnese.allergies %}
+        <div style="margin-bottom:18px;background:rgba(248,113,113,.05);border-left:3px solid var(--danger);padding:14px;border-radius:0 8px 8px 0">
+          <div class="field-label" style="margin-bottom:6px">Alergias</div>
+          <p class="field-value">{{ anamnese.allergies }}</p>
+        </div>
+        {% endif %}
+      {% else %}
+        <p style="color:var(--muted);font-size:13px;padding:8px 0">Nenhuma anamnese registrada para esta consulta.</p>
+      {% endif %}
+
+      {% include "consultations/_tab_images.html" with tab_key="anamnese" tab_label="Anamnese" imgs=images_by_tab.anamnese consultation=consultation %}
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         ABA: Exames Laboratoriais
+    ═════════════════════════════════════════════════════════════════════════ -->
+    <div class="tab-panel {% if active_tab == 'exames' %}active{% endif %}"
+         id="tab-exames" role="tabpanel">
+
+      {% if exames %}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        {% if exames.hemograma %}
+        <div><div class="field-label">Hemograma</div><p class="field-value" style="font-size:13px">{{ exames.hemograma }}</p></div>
+        {% endif %}
+        {% if exames.glicemia %}
+        <div><div class="field-label">Glicemia</div><p class="field-value" style="font-size:13px">{{ exames.glicemia }}</p></div>
+        {% endif %}
+        {% if exames.colesterol %}
+        <div><div class="field-label">Colesterol / Triglicerídeos</div><p class="field-value" style="font-size:13px">{{ exames.colesterol }}</p></div>
+        {% endif %}
+        {% if exames.funcao_renal %}
+        <div><div class="field-label">Função Renal</div><p class="field-value" style="font-size:13px">{{ exames.funcao_renal }}</p></div>
+        {% endif %}
+        {% if exames.funcao_hepatica %}
+        <div><div class="field-label">Função Hepática</div><p class="field-value" style="font-size:13px">{{ exames.funcao_hepatica }}</p></div>
+        {% endif %}
+        {% if exames.hormonal %}
+        <div><div class="field-label">Exames Hormonais</div><p class="field-value" style="font-size:13px">{{ exames.hormonal }}</p></div>
+        {% endif %}
+        {% if exames.urina %}
+        <div><div class="field-label">Urina (EAS)</div><p class="field-value" style="font-size:13px">{{ exames.urina }}</p></div>
+        {% endif %}
+        {% if exames.outros %}
+        <div style="grid-column:1/-1"><div class="field-label">Outros Exames</div><p class="field-value" style="font-size:13px">{{ exames.outros }}</p></div>
+        {% endif %}
+      </div>
+      {% else %}
+        <p style="color:var(--muted);font-size:13px;padding:8px 0">Nenhum exame laboratorial registrado para esta consulta.</p>
+      {% endif %}
+
+      {% include "consultations/_tab_images.html" with tab_key="exames" tab_label="Exames" imgs=images_by_tab.exames consultation=consultation %}
+    </div>
+
+  </div><!-- /card -->
+
+  <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
+    <a href="{% url 'consultation_update' consultation.pk %}" class="btn btn-primary">Editar consulta</a>
+    <a href="{% url 'consultation_delete' consultation.pk %}" class="btn btn-danger">Excluir</a>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var tab = this.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+    this.classList.add('active');
+    document.getElementById('tab-' + tab).classList.add('active');
+    var url = new URL(window.location);
+    url.searchParams.set('tab', tab);
+    history.replaceState(null, '', url);
+  });
+});
+</script>
 {% endblock %}

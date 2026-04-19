@@ -3,6 +3,7 @@ from .views import (
     RegisterAPIView, MeView, RegisterWebView,
     dashboard, profile,
     verificar_email, verificar_celular,
+    quem_somos,
 )
 
 urlpatterns = [
@@ -10,6 +11,7 @@ urlpatterns = [
     path('register/',  RegisterWebView.as_view(), name='register'),
     path('dashboard/', dashboard, name='dashboard'),
     path('perfil/',    profile,   name='profile'),
+    path('quem-somos/', quem_somos, name='quem_somos'),
 
     # Verificação de identidade
     path('verificar/email/',    verificar_email,    name='verificar_email'),
