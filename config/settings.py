@@ -92,6 +92,7 @@ if _DATABASE_URL:
             _DATABASE_URL,
             conn_max_age=600,
             conn_health_checks=True,
+            ssl_require=not DEBUG,   # SSL obrigatório em produção (Supabase exige)
         )
     }
 elif os.getenv('USE_SQLITE', 'False') == 'True':
