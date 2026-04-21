@@ -279,9 +279,10 @@ section{padding:96px 24px;position:relative;z-index:1}
   background:var(--surface);
   border:1px solid var(--border-s);
   border-radius:var(--radius);
-  padding:32px 28px;
+  padding:32px 24px;
   transition:transform .25s,box-shadow .25s,border-color .25s;
   position:relative;overflow:hidden;
+  display:flex;flex-direction:column;
 }
 .plan-card::before{
   content:'';position:absolute;top:0;left:0;right:0;
@@ -298,61 +299,121 @@ section{padding:96px 24px;position:relative;z-index:1}
 .plan-card.featured{
   background:linear-gradient(160deg,#0d1b2e 0%,#112038 100%);
   border-color:var(--teal);
-  box-shadow:0 0 0 1px rgba(0,212,255,.2), 0 20px 60px rgba(0,0,0,.4);
-  transform:scale(1.03);
+  box-shadow:0 0 0 1px rgba(0,212,255,.2), 0 24px 64px rgba(0,0,0,.5);
+  transform:scale(1.04);
 }
-.plan-card.featured::before{
-  background:linear-gradient(90deg,var(--teal),var(--green));
-}
-.plan-card.featured:hover{transform:scale(1.03) translateY(-6px)}
+.plan-card.featured::before{background:linear-gradient(90deg,var(--teal),var(--green))}
+.plan-card.featured:hover{transform:scale(1.04) translateY(-6px)}
 
 .plan-badge-popular{
   position:absolute;top:16px;right:16px;
-  padding:4px 12px;border-radius:20px;
+  padding:5px 14px;border-radius:20px;
   background:linear-gradient(135deg,var(--teal),var(--green));
   font-size:10px;font-weight:800;color:#070e1a;
   letter-spacing:.5px;text-transform:uppercase;
 }
 
 .plan-icon{
-  width:48px;height:48px;border-radius:12px;
+  width:44px;height:44px;border-radius:11px;
   display:flex;align-items:center;justify-content:center;
-  font-size:22px;margin-bottom:20px;
+  font-size:20px;margin-bottom:16px;
 }
-.plan-icon.free{background:rgba(107,140,170,.1)}
-.plan-icon.premium{background:rgba(0,212,255,.1)}
-.plan-icon.pro{background:linear-gradient(135deg,rgba(0,212,255,.15),rgba(74,222,128,.1))}
-.plan-icon.enterprise{background:rgba(251,191,36,.1)}
+.plan-icon.free    {background:rgba(107,140,170,.1)}
+.plan-icon.premium {background:rgba(0,212,255,.1)}
+.plan-icon.pro     {background:linear-gradient(135deg,rgba(0,212,255,.15),rgba(74,222,128,.1))}
+.plan-icon.ent     {background:rgba(251,191,36,.1)}
 
-.plan-name{font-size:14px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
-.plan-price{margin-bottom:6px}
-.plan-price .currency{font-size:18px;font-weight:700;color:var(--muted);vertical-align:top;margin-top:6px;display:inline-block}
-.plan-price .amount{font-size:42px;font-weight:900;color:#fff;line-height:1}
-.plan-price .period{font-size:13px;color:var(--muted);font-weight:500}
-.plan-price .custom{font-size:28px;font-weight:900;color:#fff}
-.plan-desc{font-size:13px;color:var(--muted-2);margin-bottom:24px;line-height:1.5}
+.plan-name{
+  font-size:11px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;
+}
 
-.plan-features{list-style:none;margin-bottom:28px}
+/* ── PRICE HIGHLIGHT ─────────────────────────────────────────────────────── */
+.plan-price-box{
+  background:var(--surface-2);
+  border:1px solid var(--border-s);
+  border-radius:var(--radius-sm);
+  padding:16px;margin-bottom:16px;text-align:center;
+}
+.plan-price-box .pre{
+  font-size:11px;font-weight:600;color:var(--muted-2);
+  text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;
+}
+.plan-price-box .price-row{
+  display:flex;align-items:flex-start;justify-content:center;gap:2px;
+}
+.plan-price-box .cur{
+  font-size:16px;font-weight:700;color:var(--muted);
+  margin-top:8px;
+}
+.plan-price-box .val{
+  font-size:48px;font-weight:900;line-height:1;
+  background:linear-gradient(135deg,var(--teal),var(--green));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.plan-card.featured .plan-price-box .val{
+  background:linear-gradient(135deg,#fff,var(--teal));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.plan-price-box .cents{
+  font-size:20px;font-weight:800;
+  background:linear-gradient(135deg,var(--teal),var(--green));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  margin-top:8px;
+}
+.plan-price-box .period{
+  font-size:12px;color:var(--muted-2);margin-top:6px;
+}
+.plan-price-box .free-tag{
+  font-size:34px;font-weight:900;
+  background:linear-gradient(135deg,var(--green),var(--teal));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+
+/* ── USABILITY BOX ───────────────────────────────────────────────────────── */
+.plan-usability{
+  display:flex;align-items:flex-start;gap:9px;
+  background:rgba(0,212,255,.05);
+  border:1px solid rgba(0,212,255,.1);
+  border-radius:var(--radius-sm);
+  padding:12px 14px;margin-bottom:20px;
+}
+.plan-usability .use-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.plan-usability .use-text{font-size:12px;color:var(--muted);line-height:1.5}
+.plan-usability .use-label{
+  font-size:10px;font-weight:700;color:var(--teal);
+  text-transform:uppercase;letter-spacing:.5px;display:block;
+  margin-bottom:3px;
+}
+
+/* ── FEATURES LIST ───────────────────────────────────────────────────────── */
+.plan-features{list-style:none;margin-bottom:20px;flex:1}
 .plan-features li{
   display:flex;align-items:flex-start;gap:10px;
   font-size:13px;color:var(--muted);
-  padding:6px 0;border-bottom:1px solid var(--border-s);
+  padding:7px 0;border-bottom:1px solid var(--border-s);
 }
 .plan-features li:last-child{border-bottom:none}
-.plan-features .check{
-  width:18px;height:18px;border-radius:50%;
+.plan-check{
+  width:19px;height:19px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  font-size:10px;flex-shrink:0;margin-top:1px;
+  flex-shrink:0;margin-top:1px;
 }
-.plan-features .check.yes{background:rgba(74,222,128,.15);color:var(--green)}
-.plan-features .check.no{background:rgba(255,255,255,.05);color:var(--muted-2)}
+.plan-check.yes{
+  background:rgba(74,222,128,.15);
+  color:var(--green);font-size:11px;font-weight:700;
+}
 
 .plan-btn{
-  display:block;width:100%;padding:12px;
+  display:block;width:100%;padding:13px;
   border-radius:var(--radius-sm);text-align:center;
   font-size:13px;font-weight:700;text-decoration:none;
   transition:all .2s;border:none;cursor:pointer;
-  font-family:inherit;
+  font-family:inherit;margin-top:auto;
 }
 .plan-btn.outline{
   background:transparent;color:var(--teal);
@@ -361,14 +422,19 @@ section{padding:96px 24px;position:relative;z-index:1}
 .plan-btn.outline:hover{background:var(--teal-glow);border-color:var(--teal)}
 .plan-btn.solid{
   background:linear-gradient(135deg,var(--teal),var(--teal-dark));
+  color:#070e1a;box-shadow:0 4px 16px rgba(0,212,255,.2);
+}
+.plan-btn.solid:hover{filter:brightness(1.1);box-shadow:0 8px 28px rgba(0,212,255,.35);transform:translateY(-2px)}
+.plan-btn.green{
+  background:linear-gradient(135deg,var(--green),var(--green-dark));
   color:#070e1a;
 }
-.plan-btn.solid:hover{filter:brightness(1.1);box-shadow:0 8px 24px rgba(0,212,255,.3);transform:translateY(-1px)}
+.plan-btn.green:hover{filter:brightness(1.1);box-shadow:0 8px 24px rgba(74,222,128,.3);transform:translateY(-2px)}
 .plan-btn.gold{
   background:linear-gradient(135deg,#fbbf24,#f59e0b);
   color:#070e1a;
 }
-.plan-btn.gold:hover{filter:brightness(1.1);box-shadow:0 8px 24px rgba(251,191,36,.3);transform:translateY(-1px)}
+.plan-btn.gold:hover{filter:brightness(1.1);box-shadow:0 8px 24px rgba(251,191,36,.3);transform:translateY(-2px)}
 
 /* ── DIFFERENTIALS ───────────────────────────────────────────────────────── */
 .diff-section{background:var(--surface)}
@@ -706,91 +772,135 @@ footer{
 
     <div class="plans-grid">
 
-      <!-- Free -->
+      <!-- ── Free / Basic ─────────────────────────────────────────────── -->
       <div class="plan-card reveal reveal-delay-1">
         <div class="plan-icon free">🌱</div>
-        <div class="plan-name">Grátis</div>
-        <div class="plan-price">
-          <span class="currency">R$</span>
-          <span class="amount">0</span>
-          <span class="period">/mês</span>
+        <div class="plan-name">Free / Basic</div>
+
+        <div class="plan-price-box">
+          <div class="pre">Preço mensal</div>
+          <div class="free-tag">Grátis</div>
+          <div class="period">R$ 0,00 / mês · sempre</div>
         </div>
-        <div class="plan-desc">Para clínicas que estão começando sua jornada digital.</div>
+
+        <div class="plan-usability">
+          <span class="use-icon">👤</span>
+          <div class="use-text">
+            <span class="use-label">Para quem é</span>
+            Ideal para iniciantes que querem organizar dados e conhecer a plataforma.
+          </div>
+        </div>
+
         <ul class="plan-features">
-          <li><span class="check yes">✓</span> Até 50 consultas/mês</li>
-          <li><span class="check yes">✓</span> 1 profissional</li>
-          <li><span class="check yes">✓</span> Prontuário eletrônico básico</li>
-          <li><span class="check yes">✓</span> Dashboard essencial</li>
-          <li><span class="check no">–</span> IA clínica</li>
-          <li><span class="check no">–</span> Integrações</li>
-          <li><span class="check no">–</span> Suporte prioritário</li>
+          <li><span class="plan-check yes">✓</span> Portal de dados básico</li>
+          <li><span class="plan-check yes">✓</span> Centralização de documentos</li>
+          <li><span class="plan-check yes">✓</span> Exportação manual de dados</li>
         </ul>
-        <a class="plan-btn outline" href="{% url 'register' %}">Começar grátis</a>
+
+        <a class="plan-btn outline" href="{% url 'register' %}">Começar grátis →</a>
       </div>
 
-      <!-- Premium -->
-      <div class="plan-card reveal reveal-delay-2">
+      <!-- ── Premium / Pro (FEATURED) ──────────────────────────────────── -->
+      <div class="plan-card featured reveal reveal-delay-2">
+        <span class="plan-badge-popular">⭐ Mais popular</span>
         <div class="plan-icon premium">⚡</div>
-        <div class="plan-name">Premium</div>
-        <div class="plan-price">
-          <span class="currency">R$</span>
-          <span class="amount">79</span>
-          <span class="period">/mês</span>
+        <div class="plan-name">Premium / Pro</div>
+
+        <div class="plan-price-box">
+          <div class="pre">Preço mensal</div>
+          <div class="price-row">
+            <span class="cur">R$</span>
+            <span class="val">19</span>
+            <span class="cents">,90</span>
+          </div>
+          <div class="period">por mês · cancele quando quiser</div>
         </div>
-        <div class="plan-desc">Para profissionais liberais e clínicas de pequeno porte.</div>
+
+        <div class="plan-usability">
+          <span class="use-icon">💡</span>
+          <div class="use-text">
+            <span class="use-label">Para quem é</span>
+            Para usuários que desejam insights inteligentes e automação sem complexidade.
+          </div>
+        </div>
+
         <ul class="plan-features">
-          <li><span class="check yes">✓</span> Consultas ilimitadas</li>
-          <li><span class="check yes">✓</span> Até 3 profissionais</li>
-          <li><span class="check yes">✓</span> Prontuário completo</li>
-          <li><span class="check yes">✓</span> Dashboards avançados</li>
-          <li><span class="check yes">✓</span> IA básica</li>
-          <li><span class="check no">–</span> Integrações externas</li>
-          <li><span class="check no">–</span> SLA garantido</li>
+          <li><span class="plan-check yes">✓</span> Tudo do plano Free</li>
+          <li><span class="plan-check yes">✓</span> IA para análise preditiva</li>
+          <li><span class="plan-check yes">✓</span> Resumo automático de dados</li>
+          <li><span class="plan-check yes">✓</span> Dashboard de acompanhamento</li>
         </ul>
-        <a class="plan-btn outline" href="{% url 'register' %}">Assinar Premium</a>
+
+        <a class="plan-btn solid" href="{% url 'register' %}">Assinar Premium →</a>
       </div>
 
-      <!-- Professional (featured) -->
-      <div class="plan-card featured reveal reveal-delay-3">
-        <span class="plan-badge-popular">⭐ Recomendado</span>
+      <!-- ── Professional / Advanced ───────────────────────────────────── -->
+      <div class="plan-card reveal reveal-delay-3">
         <div class="plan-icon pro">🚀</div>
-        <div class="plan-name">Profissional</div>
-        <div class="plan-price">
-          <span class="currency">R$</span>
-          <span class="amount">199</span>
-          <span class="period">/mês</span>
+        <div class="plan-name">Professional / Advanced</div>
+
+        <div class="plan-price-box">
+          <div class="pre">Preço mensal</div>
+          <div class="price-row">
+            <span class="cur">R$</span>
+            <span class="val">29</span>
+            <span class="cents">,90</span>
+          </div>
+          <div class="period">por mês · cancele quando quiser</div>
         </div>
-        <div class="plan-desc">Para clínicas em crescimento que precisam de mais poder.</div>
+
+        <div class="plan-usability">
+          <span class="use-icon">🔧</span>
+          <div class="use-text">
+            <span class="use-label">Para quem é</span>
+            Ideal para profissionais que precisam de integração e controle detalhado.
+          </div>
+        </div>
+
         <ul class="plan-features">
-          <li><span class="check yes">✓</span> Tudo do Premium</li>
-          <li><span class="check yes">✓</span> Até 10 profissionais</li>
-          <li><span class="check yes">✓</span> IA clínica completa</li>
-          <li><span class="check yes">✓</span> Integrações (lab, farmácia)</li>
-          <li><span class="check yes">✓</span> Relatórios personalizados</li>
-          <li><span class="check yes">✓</span> API REST acesso completo</li>
-          <li><span class="check yes">✓</span> Suporte prioritário 24h</li>
+          <li><span class="plan-check yes">✓</span> Tudo do plano Premium</li>
+          <li><span class="plan-check yes">✓</span> API para integração com sistemas</li>
+          <li><span class="plan-check yes">✓</span> Controle avançado de dados</li>
+          <li><span class="plan-check yes">✓</span> Acesso completo às informações</li>
+          <li><span class="plan-check yes">✓</span> Inteligência sobre histórico</li>
         </ul>
-        <a class="plan-btn solid" href="{% url 'register' %}">Assinar Profissional</a>
+
+        <a class="plan-btn green" href="{% url 'register' %}">Assinar Professional →</a>
       </div>
 
-      <!-- Enterprise -->
+      <!-- ── Enterprise / Organization ─────────────────────────────────── -->
       <div class="plan-card reveal reveal-delay-4">
-        <div class="plan-icon enterprise">🏥</div>
-        <div class="plan-name">Enterprise</div>
-        <div class="plan-price">
-          <span class="custom">Sob consulta</span>
+        <div class="plan-icon ent">🏢</div>
+        <div class="plan-name">Enterprise / Organization</div>
+
+        <div class="plan-price-box">
+          <div class="pre">Preço mensal</div>
+          <div class="price-row">
+            <span class="cur">R$</span>
+            <span class="val">49</span>
+            <span class="cents">,90</span>
+          </div>
+          <div class="period">por mês · por usuário</div>
         </div>
-        <div class="plan-desc">Para hospitais e redes clínicas com necessidades específicas.</div>
+
+        <div class="plan-usability">
+          <span class="use-icon">🏢</span>
+          <div class="use-text">
+            <span class="use-label">Para quem é</span>
+            Indicado para empresas e equipes que precisam de escala e colaboração.
+          </div>
+        </div>
+
         <ul class="plan-features">
-          <li><span class="check yes">✓</span> Tudo do Profissional</li>
-          <li><span class="check yes">✓</span> Profissionais ilimitados</li>
-          <li><span class="check yes">✓</span> Infraestrutura dedicada</li>
-          <li><span class="check yes">✓</span> SLA 99.9% garantido</li>
-          <li><span class="check yes">✓</span> Onboarding personalizado</li>
-          <li><span class="check yes">✓</span> Integrações customizadas</li>
-          <li><span class="check yes">✓</span> Gerente de conta dedicado</li>
+          <li><span class="plan-check yes">✓</span> Tudo do plano Professional</li>
+          <li><span class="plan-check yes">✓</span> Configuração personalizada</li>
+          <li><span class="plan-check yes">✓</span> Desenvolvimento sob demanda</li>
+          <li><span class="plan-check yes">✓</span> IA para análise em massa</li>
+          <li><span class="plan-check yes">✓</span> Multiusuário (até 10 usuários)</li>
+          <li><span class="plan-check yes">✓</span> Dashboard avançado</li>
         </ul>
-        <a class="plan-btn gold" href="#contato">Falar com vendas</a>
+
+        <a class="plan-btn gold" href="#contato">Falar com vendas →</a>
       </div>
 
     </div>
