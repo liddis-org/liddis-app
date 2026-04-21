@@ -23,37 +23,79 @@ SPECIALTY_CHOICES = [
 
 
 class Consultation(models.Model):
+    class Status(models.TextChoices):
+        DRAFT     = 'draft',     'Rascunho'
+        ACTIVE    = 'active',    'Ativa'
+        COMPLETED = 'completed', 'Concluída'
+        CANCELLED = 'cancelled', 'Cancelada'
+
+    class Severity(models.TextChoices):
+        LOW      = 'low',      'Leve'
+        MODERATE = 'moderate', 'Moderada'
+        HIGH     = 'high',     'Grave'
+        CRITICAL = 'critical', 'Crítica'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
     patient = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='consultations'
+        related_name='consultations',
+        verbose_name='Paciente',
     )
+    organization = models.ForeignKey(
+        'users.Organization',
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='consultations',
+        verbose_name='Organização',
+    )
+
     date = models.DateField(verbose_name='Data da consulta')
-    professional_name = models.CharField(max_length=150, verbose_name='Nome do profissional')
-    profession     = models.CharField(max_length=100, blank=True, verbose_name='Profissão do profissional')
+    professional_name   = models.CharField(max_length=150, verbose_name='Nome do profissional')
+    profession          = models.CharField(max_length=100, blank=True, verbose_name='Profissão do profissional')
     clinic_name         = models.CharField(max_length=200, blank=True, verbose_name='Nome do local')
     clinic_neighborhood = models.CharField(max_length=100, blank=True, verbose_name='Bairro')
     clinic_city         = models.CharField(max_length=100, blank=True, verbose_name='Cidade')
     clinic_address      = models.CharField(max_length=300, blank=True, verbose_name='Endereço completo')
-    specialty = models.CharField(max_length=50, choices=SPECIALTY_CHOICES, verbose_name='Especialidade')
+    specialty       = models.CharField(max_length=50, choices=SPECIALTY_CHOICES, verbose_name='Especialidade')
     specialty_other = models.CharField(max_length=100, blank=True, verbose_name='Especialidade (Outro)')
-    diagnosis = models.TextField(blank=True, verbose_name='Diagnóstico')
-    notes = models.TextField(blank=True, verbose_name='Anotações / Evolução')
+    diagnosis    = models.TextField(blank=True, verbose_name='Diagnóstico')
+    notes        = models.TextField(blank=True, verbose_name='Anotações / Evolução')
     prescription = models.TextField(blank=True, verbose_name='Prescrição / Medicamentos')
+
+    # Status e triagem
+    status   = models.CharField(max_length=10, choices=Status.choices, default=Status.ACTIVE, verbose_name='Status')
+    severity = models.CharField(max_length=10, choices=Severity.choices, blank=True, verbose_name='Gravidade')
+
+    # Codificação clínica (CID-10)
+    icd_code = models.CharField(max_length=10, blank=True, verbose_name='CID-10')
+
+    # Campos semânticos para IA
+    ai_summary      = models.TextField(blank=True, verbose_name='Resumo gerado por IA')
+    ai_last_analysis = models.DateTimeField(null=True, blank=True, verbose_name='Última análise IA')
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-date']
-        verbose_name = 'Consulta'
+        db_table            = 'consultations'
+        ordering            = ['-date']
+        verbose_name        = 'Consulta'
         verbose_name_plural = 'Consultas'
+        indexes = [
+            models.Index(fields=['patient', 'date']),
+            models.Index(fields=['organization']),
+            models.Index(fields=['status']),
+            models.Index(fields=['severity']),
+            models.Index(fields=['icd_code']),
+        ]
 
     def __str__(self):
         return f'{self.date} — {self.professional_name} ({self.get_specialty_display()})'
 
     @property
     def specialty_label(self):
-        """Retorna o rótulo da especialidade, usando specialty_other quando for 'outro'."""
         if self.specialty == 'outro' and self.specialty_other:
             return self.specialty_other
         return self.get_specialty_display()
@@ -76,7 +118,8 @@ class Anamnese(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Anamnese'
+        db_table            = 'anamneses'
+        verbose_name        = 'Anamnese'
         verbose_name_plural = 'Anamneses'
 
     def __str__(self):
@@ -102,7 +145,8 @@ class ExameLaboratorial(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Exame Laboratorial'
+        db_table            = 'exames_laboratoriais'
+        verbose_name        = 'Exame Laboratorial'
         verbose_name_plural = 'Exames Laboratoriais'
 
     def __str__(self):
@@ -135,8 +179,9 @@ class ConsultationImage(models.Model):
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-uploaded_at']
-        verbose_name = 'Imagem da Consulta'
+        db_table            = 'consultation_images'
+        ordering            = ['-uploaded_at']
+        verbose_name        = 'Imagem da Consulta'
         verbose_name_plural = 'Imagens das Consultas'
 
     def __str__(self):
@@ -159,8 +204,9 @@ class VitalSign(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-date']
-        verbose_name = 'Sinal Vital'
+        db_table            = 'vital_signs'
+        ordering            = ['-date']
+        verbose_name        = 'Sinal Vital'
         verbose_name_plural = 'Sinais Vitais'
 
     def __str__(self):
@@ -199,8 +245,9 @@ class ConsultationSession(models.Model):
     closed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        ordering = ['-created_at']
-        verbose_name = 'Sessão de Atendimento'
+        db_table            = 'consultation_sessions'
+        ordering            = ['-created_at']
+        verbose_name        = 'Sessão de Atendimento'
         verbose_name_plural = 'Sessões de Atendimento'
 
     def save(self, *args, **kwargs):
