@@ -296,7 +296,9 @@ if SENTRY_DSN:
     )
 
 # ── Sites Framework (exigido pelo django-allauth) ──────────────────────────────
-SITE_ID = 1
+SITE_ID     = 1
+SITE_DOMAIN = os.getenv('SITE_DOMAIN', 'localhost:8000')
+SITE_NAME   = os.getenv('SITE_NAME',   'LIDDIS')
 
 # ── django-allauth ─────────────────────────────────────────────────────────────
 ACCOUNT_LOGIN_METHODS         = {'email'}    # login por e-mail (não username)
