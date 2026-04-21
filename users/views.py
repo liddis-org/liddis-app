@@ -17,6 +17,14 @@ from .forms import RegisterForm, ProfileForm
 logger = logging.getLogger('liddis')
 
 
+# ── Home ───────────────────────────────────────────────────────────────────────
+
+def home(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    return render(request, 'home.html')
+
+
 # ── Helpers de envio ───────────────────────────────────────────────────────────
 
 def _send_email_code(user):

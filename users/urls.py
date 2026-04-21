@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import (
+    home,
     RegisterAPIView, MeView, RegisterWebView,
     dashboard, profile,
     verificar_email, verificar_celular,
@@ -7,6 +8,9 @@ from .views import (
 )
 
 urlpatterns = [
+    # Home (landing page)
+    path('home/', home, name='home'),
+
     # Web
     path('register/',  RegisterWebView.as_view(), name='register'),
     path('dashboard/', dashboard, name='dashboard'),

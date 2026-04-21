@@ -3,6 +3,7 @@ from django.urls import path, include
 from django.http import JsonResponse
 from django.contrib.auth import views as auth_views
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from users.views import home
 
 # Estilos e templates compartilhados para views de autenticação
 _PASS_RESET_KWARGS = {
@@ -21,7 +22,7 @@ def api_root(request):
         'versao': '1.0.0',
         'web': {
             'login':      '/login/',
-            'cadastro':   '/cadastro/',
+            'cadastro':   '/register/',
             'dashboard':  '/dashboard/',
             'consultas':  '/consultas/',
         },
@@ -34,8 +35,11 @@ def api_root(request):
 
 
 urlpatterns = [
-    # Raiz
-    path('', api_root, name='api_root'),
+    # Raiz → Landing page
+    path('', home, name='landing'),
+
+    # API info
+    path('api/', api_root, name='api_root'),
 
     # Admin
     path('admin/', admin.site.urls),
