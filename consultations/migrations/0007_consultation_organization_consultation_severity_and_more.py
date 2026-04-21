@@ -6,6 +6,23 @@ from django.conf import settings
 from django.db import migrations, models
 
 
+def convert_consultation_ids_to_uuid(apps, schema_editor):
+    """Converte IDs inteiros para UUID válido antes de alterar o tipo da coluna."""
+    db = schema_editor.connection.vendor
+    if db == 'sqlite':
+        schema_editor.execute(
+            "UPDATE consultations_consultation SET id = lower(hex(randomblob(4)) || '-' || "
+            "hex(randomblob(2)) || '-4' || substr(hex(randomblob(2)),2) || '-' || "
+            "substr('89ab', abs(random()) % 4 + 1, 1) || substr(hex(randomblob(2)),2) || '-' || "
+            "hex(randomblob(6))) WHERE id NOT LIKE '%-%-%-%-%'"
+        )
+    else:
+        schema_editor.execute(
+            "UPDATE consultations_consultation SET id = gen_random_uuid()::text "
+            "WHERE id !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'"
+        )
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -15,6 +32,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunPython(convert_consultation_ids_to_uuid, migrations.RunPython.noop),
         migrations.AddField(
             model_name='consultation',
             name='organization',

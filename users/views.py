@@ -237,29 +237,49 @@ def verificar_celular(request):
 
 @login_required
 def dashboard(request):
+    import logging
     from consultations.models import Consultation, VitalSign
 
+    logger = logging.getLogger('liddis')
     is_professional = request.user.role != 'PATIENT'
 
     if is_professional:
-        atendimentos = Consultation.objects.filter(
-            session__professional=request.user
-        ).order_by('-date')
-        ultimo = atendimentos.first()
-        return render(request, 'dashboard.html', {
-            'is_professional': True,
-            'total_atendimentos': atendimentos.count(),
-            'ultimo_atendimento': ultimo.date if ultimo else None,
-            'atendimentos_recentes': atendimentos[:5],
-        })
+        try:
+            atendimentos = list(
+                Consultation.objects.filter(session__professional=request.user).order_by('-date')
+            )
+            ultimo = atendimentos[0] if atendimentos else None
+            return render(request, 'dashboard.html', {
+                'is_professional': True,
+                'total_atendimentos': len(atendimentos),
+                'ultimo_atendimento': ultimo.date if ultimo else None,
+                'atendimentos_recentes': atendimentos[:5],
+            })
+        except Exception as exc:
+            logger.error('Erro ao carregar dashboard profissional: %s', exc)
+            messages.error(request, 'Não foi possível carregar os dados. Tente novamente.')
+            return render(request, 'dashboard.html', {
+                'is_professional': True,
+                'total_atendimentos': 0,
+                'ultimo_atendimento': None,
+                'atendimentos_recentes': [],
+            })
 
-    consultations = Consultation.objects.filter(patient=request.user).order_by('-date')[:5]
-    vitals = VitalSign.objects.filter(patient=request.user).order_by('-date')[:1]
-    total = Consultation.objects.filter(patient=request.user).count()
+    try:
+        consultations = list(
+            Consultation.objects.filter(patient=request.user).order_by('-date')[:5]
+        )
+        vitals = list(VitalSign.objects.filter(patient=request.user).order_by('-date')[:1])
+        total = Consultation.objects.filter(patient=request.user).count()
+    except Exception as exc:
+        logger.error('Erro ao carregar dashboard paciente: %s', exc)
+        messages.error(request, 'Não foi possível carregar os dados. Tente novamente.')
+        consultations, vitals, total = [], [], 0
+
     return render(request, 'dashboard.html', {
         'is_professional': False,
         'consultations': consultations,
-        'latest_vital': vitals.first(),
+        'latest_vital': vitals[0] if vitals else None,
         'total_consultations': total,
     })
 
