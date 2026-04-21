@@ -120,7 +120,7 @@ AUTH_USER_MODEL = 'users.CustomUser'
 
 LOGIN_URL             = '/login/'
 LOGIN_REDIRECT_URL    = '/dashboard/'
-LOGOUT_REDIRECT_URL   = '/login/'
+LOGOUT_REDIRECT_URL   = '/'
 
 AUTHENTICATION_BACKENDS = [
     'axes.backends.AxesStandaloneBackend',          # deve vir primeiro

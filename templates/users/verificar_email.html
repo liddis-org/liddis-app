@@ -163,7 +163,10 @@ body::after{
 
   <div class="timer" id="timer">Código válido por <span id="countdown">10:00</span></div>
 
-  <a href="{% url 'logout' %}" class="logout-link">Usar outra conta</a>
+  <form method="post" action="{% url 'logout' %}" style="margin:0">
+    {% csrf_token %}
+    <button type="submit" class="logout-link" style="background:none;border:none;cursor:pointer;font-family:inherit">Usar outra conta</button>
+  </form>
 </div>
 
 <script>
