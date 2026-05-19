@@ -105,7 +105,9 @@
     <p>{{ consultation.professional_name }} · {{ consultation.specialty_label }}</p>
   </div>
   <div style="display:flex;gap:10px;flex-wrap:wrap">
+    {% if allowed_actions.edit %}
     <a href="{% url 'consultation_update' consultation.pk %}" class="btn btn-secondary">Editar</a>
+    {% endif %}
     <a href="{% url 'consultation_list' %}" class="btn btn-secondary">← Voltar</a>
   </div>
 </div>
@@ -289,10 +291,16 @@
 
   </div><!-- /card -->
 
+  {% if allowed_actions.edit or allowed_actions.delete %}
   <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
+    {% if allowed_actions.edit %}
     <a href="{% url 'consultation_update' consultation.pk %}" class="btn btn-primary">Editar consulta</a>
+    {% endif %}
+    {% if allowed_actions.delete %}
     <a href="{% url 'consultation_delete' consultation.pk %}" class="btn btn-danger">Excluir</a>
+    {% endif %}
   </div>
+  {% endif %}
 </div>
 {% endblock %}
 

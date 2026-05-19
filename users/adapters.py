@@ -53,8 +53,12 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
         Se já existir um usuário com aquele e-mail, vincula a conta social
         à conta existente em vez de criar uma nova.
         """
-        # Conta social já associada → nada a fazer
         if sociallogin.is_existing:
+            # Re-login com conta já vinculada: garante e-mail verificado
+            user = sociallogin.user
+            if user.pk and not user.is_email_verified:
+                user.is_email_verified = True
+                user.save(update_fields=['is_email_verified'])
             return
 
         email = getattr(sociallogin.user, 'email', '') or ''
@@ -62,17 +66,29 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
             return
 
         from .models import CustomUser
+        from allauth.socialaccount.models import SocialAccount
         try:
             existing = CustomUser.objects.get(email__iexact=email)
-            # Vincula conta Google ao usuário existente
-            sociallogin.connect(request, existing)
-            # Aproveita para marcar e-mail como verificado
-            if not existing.is_email_verified:
-                existing.is_email_verified = True
-                existing.save(update_fields=['is_email_verified'])
-                logger.info('E-mail verificado via Google OAuth: %s', email)
         except CustomUser.DoesNotExist:
-            pass  # Usuário novo — será criado normalmente pelo allauth
+            return  # Usuário novo — será criado normalmente pelo allauth
+
+        # Verifica se já existe SocialAccount para evitar duplo-connect
+        try:
+            existing_sa = SocialAccount.objects.get(
+                user=existing, provider=sociallogin.account.provider
+            )
+            # Reutiliza a SocialAccount existente sem tentar criar outra
+            sociallogin.account = existing_sa
+            sociallogin.user = existing
+            logger.info('Re-login Google reutilizando SocialAccount existente: %s', email)
+        except SocialAccount.DoesNotExist:
+            sociallogin.connect(request, existing)
+            logger.info('Conta Google vinculada ao usuário existente: %s', email)
+
+        if not existing.is_email_verified:
+            existing.is_email_verified = True
+            existing.save(update_fields=['is_email_verified'])
+            logger.info('E-mail verificado via Google OAuth: %s', email)
 
     def save_user(self, request, sociallogin, form=None):
         """

@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.urls import reverse_lazy
 from django.contrib import messages
@@ -14,8 +15,21 @@ from django.utils import timezone
 
 _log = logging.getLogger('liddis')
 
-from .models import Consultation, VitalSign, ConsultationSession, Anamnese, ExameLaboratorial, ConsultationImage
-from .forms import ConsultationForm, VitalSignForm, AnamneseForm, ExameLaboratorialForm, AtendimentoForm
+from .models import (
+    Consultation, VitalSign, ConsultationSession, Anamnese, ExameLaboratorial,
+    ConsultationImage, Evolution, Prescription, DiagnosisCID, PhysicalExam, LabRequest,
+)
+from .forms import (
+    ConsultationForm, VitalSignForm, AnamneseForm, ExameLaboratorialForm, AtendimentoForm,
+    EvolutionForm, PrescriptionForm, DiagnosisCIDForm, PhysicalExamForm,
+    LabRequestForm, LabResultForm,
+)
+from users.permissions import (
+    has_permission, can_access_patient,
+    filter_evolutions_for_user, get_evolution_create_category,
+    get_prescription_allowed_types,
+)
+from users.audit import log_access
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
@@ -28,10 +42,19 @@ def _accessible_consultations(user):
     """
     Retorna queryset de Consultation acessível ao usuário:
     - Pacientes: consultas onde são o paciente.
-    - Profissionais: consultas que realizaram via sessão.
+    - Profissionais: consultas que realizaram via sessão (com vínculo ativo).
     """
     if _is_professional(user):
-        return Consultation.objects.filter(session__professional=user)
+        from users.models import PatientProfessionalAccess
+        if user.role == 'ADMIN' or user.is_superuser:
+            return Consultation.objects.filter(session__professional=user)
+        # Profissional vê apenas pacientes com vínculo ativo
+        linked_patients = PatientProfessionalAccess.objects.filter(
+            professional=user, is_active=True
+        ).values_list('patient_id', flat=True)
+        return Consultation.objects.filter(
+            Q(session__professional=user) | Q(patient__in=linked_patients)
+        )
     return Consultation.objects.filter(patient=user)
 
 
@@ -86,6 +109,13 @@ class ConsultationListView(LoginRequiredMixin, ListView):
     template_name = 'consultations/list.html'
     context_object_name = 'consultations'
 
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and not has_permission(request.user, 'consultation', 'view'):
+            log_access(request, 'access_denied', 'consultation', success=False)
+            messages.error(request, 'Você não tem permissão para visualizar consultas.')
+            return redirect('dashboard')
+        return super().dispatch(request, *args, **kwargs)
+
     def get_queryset(self):
         qs = _accessible_consultations(self.request.user)
         q = self.request.GET.get('q', '').strip()
@@ -98,7 +128,6 @@ class ConsultationListView(LoginRequiredMixin, ListView):
                 Q(date__icontains=q)
             )
             if _is_professional(self.request.user):
-                # Profissional: busca também por nome do paciente
                 filters |= (
                     Q(patient__first_name__icontains=q) |
                     Q(patient__last_name__icontains=q) |
@@ -113,6 +142,11 @@ class ConsultationListView(LoginRequiredMixin, ListView):
         ctx['q'] = self.request.GET.get('q', '')
         ctx['sort'] = self.request.GET.get('sort', '-date')
         ctx['is_professional'] = _is_professional(self.request.user)
+        ctx['allowed_actions'] = {
+            'create': has_permission(self.request.user, 'consultation', 'create'),
+            'edit':   has_permission(self.request.user, 'consultation', 'edit'),
+            'delete': has_permission(self.request.user, 'consultation', 'delete'),
+        }
         return ctx
 
 
@@ -124,18 +158,43 @@ class ConsultationDetailView(LoginRequiredMixin, DetailView):
     def get_queryset(self):
         return _accessible_consultations(self.request.user)
 
+    def get_object(self, queryset=None):
+        obj = super().get_object(queryset)
+        log_access(
+            self.request, 'view', 'consultation',
+            resource_id=obj.pk,
+            patient=obj.patient if hasattr(obj, 'patient') else None,
+        )
+        return obj
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         anamnese, exames = _get_or_init_sub_models(self.object)
-        ctx['anamnese'] = anamnese
-        ctx['exames'] = exames
-        ctx['images_by_tab'] = {
-            tab: list(self.object.images.filter(tab=tab))
-            for tab, _ in ConsultationImage.TAB_CHOICES
+        user = self.request.user
+        ctx['anamnese'] = anamnese if has_permission(user, 'anamnese', 'view') else None
+        ctx['exames']   = exames   if has_permission(user, 'exams',    'view') else None
+        ctx['images_by_tab'] = (
+            {
+                tab: list(self.object.images.filter(tab=tab))
+                for tab, _ in ConsultationImage.TAB_CHOICES
+            }
+            if has_permission(user, 'images', 'view') else {}
+        )
+        ctx['tab_choices']   = ConsultationImage.TAB_CHOICES
+        ctx['active_tab']    = self.request.GET.get('tab', 'geral')
+        ctx['is_professional'] = _is_professional(user)
+        ctx['allowed_actions'] = {
+            'edit':             has_permission(user, 'consultation', 'edit'),
+            'delete':           has_permission(user, 'consultation', 'delete'),
+            'view_anamnese':    has_permission(user, 'anamnese',     'view'),
+            'edit_anamnese':    has_permission(user, 'anamnese',     'edit'),
+            'view_exams':       has_permission(user, 'exams',        'view'),
+            'view_prescription':has_permission(user, 'prescription', 'view'),
+            'view_diagnosis':   has_permission(user, 'diagnosis',    'view'),
+            'view_images':      has_permission(user, 'images',       'view'),
+            'upload_images':    has_permission(user, 'images',       'create'),
+            'delete_images':    has_permission(user, 'images',       'delete'),
         }
-        ctx['tab_choices'] = ConsultationImage.TAB_CHOICES
-        ctx['active_tab'] = self.request.GET.get('tab', 'geral')
-        ctx['is_professional'] = _is_professional(self.request.user)
         return ctx
 
 
@@ -146,10 +205,13 @@ class ConsultationCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('consultation_list')
 
     def dispatch(self, request, *args, **kwargs):
-        # Profissionais devem criar consultas via fluxo de token
         if request.user.is_authenticated and _is_professional(request.user):
             messages.info(request, 'Profissionais devem iniciar consultas pelo fluxo de atendimento com token.')
             return redirect('entrar_atendimento')
+        if request.user.is_authenticated and not has_permission(request.user, 'consultation', 'create'):
+            log_access(request, 'access_denied', 'consultation', success=False)
+            messages.error(request, 'Você não tem permissão para criar consultas.')
+            return redirect('consultation_list')
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -170,6 +232,7 @@ class ConsultationCreateView(LoginRequiredMixin, CreateView):
         exames_form = ExameLaboratorialForm(self.request.POST, prefix='exames')
         _save_sub_forms(self.request, self.object, anamnese_form, exames_form)
         _handle_image_uploads(self.request, self.object)
+        log_access(self.request, 'create', 'consultation', resource_id=self.object.pk)
         messages.success(self.request, 'Consulta registrada com sucesso!')
         return response
 
@@ -179,6 +242,13 @@ class ConsultationUpdateView(LoginRequiredMixin, UpdateView):
     form_class = ConsultationForm
     template_name = 'consultations/form.html'
     success_url = reverse_lazy('consultation_list')
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and not has_permission(request.user, 'consultation', 'edit'):
+            log_access(request, 'access_denied', 'consultation', success=False)
+            messages.error(request, 'Você não tem permissão para editar consultas.')
+            return redirect('consultation_list')
+        return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
         return _accessible_consultations(self.request.user)
@@ -209,6 +279,7 @@ class ConsultationUpdateView(LoginRequiredMixin, UpdateView):
         exames_form = ExameLaboratorialForm(self.request.POST, prefix='exames', instance=exames)
         _save_sub_forms(self.request, consultation, anamnese_form, exames_form)
         _handle_image_uploads(self.request, consultation)
+        log_access(self.request, 'edit', 'consultation', resource_id=consultation.pk)
         messages.success(self.request, 'Consulta atualizada com sucesso!')
         return response
 
@@ -218,10 +289,18 @@ class ConsultationDeleteView(LoginRequiredMixin, DeleteView):
     template_name = 'consultations/confirm_delete.html'
     success_url = reverse_lazy('consultation_list')
 
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and not has_permission(request.user, 'consultation', 'delete'):
+            log_access(request, 'access_denied', 'consultation', success=False)
+            messages.error(request, 'Você não tem permissão para excluir consultas.')
+            return redirect('consultation_list')
+        return super().dispatch(request, *args, **kwargs)
+
     def get_queryset(self):
         return _accessible_consultations(self.request.user)
 
     def form_valid(self, form):
+        log_access(self.request, 'delete', 'consultation', resource_id=self.object.pk)
         messages.success(self.request, 'Consulta excluída.')
         return super().form_valid(form)
 
@@ -270,12 +349,20 @@ class VitalSignListView(LoginRequiredMixin, ListView):
     template_name = 'consultations/vitals.html'
     context_object_name = 'vitals'
 
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and not has_permission(request.user, 'vitals', 'view'):
+            log_access(request, 'access_denied', 'vitals', success=False)
+            messages.error(request, 'Você não tem permissão para visualizar sinais vitais.')
+            return redirect('dashboard')
+        return super().dispatch(request, *args, **kwargs)
+
     def get_queryset(self):
         return VitalSign.objects.filter(patient=self.request.user)
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['form'] = VitalSignForm()
+        ctx['can_create'] = has_permission(self.request.user, 'vitals', 'create')
         return ctx
 
 
@@ -284,8 +371,16 @@ class VitalSignCreateView(LoginRequiredMixin, CreateView):
     form_class = VitalSignForm
     success_url = reverse_lazy('vitals')
 
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and not has_permission(request.user, 'vitals', 'create'):
+            log_access(request, 'access_denied', 'vitals', success=False)
+            messages.error(request, 'Você não tem permissão para registrar sinais vitais.')
+            return redirect('vitals')
+        return super().dispatch(request, *args, **kwargs)
+
     def form_valid(self, form):
         form.instance.patient = self.request.user
+        log_access(self.request, 'create', 'vitals')
         messages.success(self.request, 'Sinal vital registrado!')
         return super().form_valid(form)
 
@@ -327,10 +422,8 @@ def entrar_atendimento(request):
     if request.user.is_authenticated and not _is_professional(request.user):
         return redirect('iniciar_atendimento')
 
-    test_mode = getattr(settings, 'TEST_MODE', False)
-    short_code_allowed = test_mode or settings.DEBUG   # código curto liberado em qualquer ambiente de dev
     already_logged = request.user.is_authenticated
-    ctx = {'test_mode': short_code_allowed, 'already_logged': already_logged}
+    ctx = {'already_logged': already_logged}
 
     if request.method == 'POST':
         token_raw = request.POST.get('token', '').strip()
@@ -364,16 +457,16 @@ def entrar_atendimento(request):
 
         # ── Buscar sessão pelo token ──────────────────────────────────────────
         session = None
-        pending_sessions = list(ConsultationSession.objects.filter(status='pending'))
-        _log.debug(
-            'ENTRAR_ATENDIMENTO | token_raw=%r len=%d short_code_allowed=%s | sessões pendentes: %s',
-            token_raw, len(token_raw), short_code_allowed,
-            [(str(s.token_display), str(s.token)) for s in pending_sessions],
-        )
 
-        if short_code_allowed and len(token_raw) <= 8:
-            # código curto: compara com os primeiros 8 chars do token
+        if len(token_raw) <= 8:
+            # código curto (8 chars exibidos ao paciente): compara com token_display
             token_upper = token_raw.upper()
+            pending_sessions = list(ConsultationSession.objects.filter(status='pending'))
+            _log.debug(
+                'ENTRAR_ATENDIMENTO (código curto) | token=%r | sessões pendentes: %s',
+                token_upper,
+                [s.token_display for s in pending_sessions],
+            )
             for s in pending_sessions:
                 if s.token_display == token_upper:
                     session = s
@@ -381,19 +474,17 @@ def entrar_atendimento(request):
             if session is None:
                 messages.error(
                     request,
-                    'Código curto não encontrado entre os atendimentos pendentes. '
-                    'Peça ao paciente que gere um novo código.',
+                    'Código não encontrado. Verifique o código na tela do paciente e tente novamente.',
                 )
                 return render(request, 'atendimento/entrar.html', {**ctx, 'already_logged': True})
         else:
+            # UUID completo (fallback para quem copiar o código longo)
             try:
                 uuid_obj = _uuid_module.UUID(token_raw)
             except (ValueError, AttributeError):
                 messages.error(
                     request,
-                    'Formato de token inválido. '
-                    'Insira o código UUID completo fornecido pelo paciente '
-                    '(ex: a1b2c3d4-e5f6-7890-abcd-ef1234567890).',
+                    'Código inválido. Digite os 8 caracteres exibidos na tela do paciente.',
                 )
                 return render(request, 'atendimento/entrar.html', {**ctx, 'already_logged': True})
 
@@ -452,6 +543,33 @@ def atendimento_consulta(request, token):
             session.status = 'closed'
             session.closed_at = timezone.now()
             session.save()
+
+            # Cria vínculo clínico para que o profissional possa acessar
+            # o prontuário do paciente nas consultas futuras (RBAC middleware exige)
+            try:
+                from users.models import PatientProfessionalAccess
+                ppa, _ = PatientProfessionalAccess.objects.get_or_create(
+                    patient=patient,
+                    professional=request.user,
+                    defaults={
+                        'granted_by': request.user,
+                        'access_reason': 'Atendimento registrado via token',
+                        'is_active': True,
+                    }
+                )
+                if not ppa.is_active:
+                    ppa.is_active = True
+                    ppa.revoked_at = None
+                    ppa.save(update_fields=['is_active', 'revoked_at'])
+            except Exception as exc:
+                _log.error('Falha ao criar vínculo clínico: professional=%s patient=%s erro=%s',
+                           request.user.pk, patient.pk, exc)
+
+            log_access(
+                request, 'create', 'consultation',
+                resource_id=consultation.pk,
+                patient=patient,
+            )
             messages.success(request, f'Consulta de {patient.display_name} registrada!')
             return redirect('dashboard')
     else:
@@ -481,3 +599,314 @@ def cancelar_sessao(request, token):
     session.save()
     messages.info(request, 'Atendimento cancelado.')
     return redirect('dashboard')
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# RECURSOS CLÍNICOS AVANÇADOS — com RBAC granular
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _get_accessible_consultation(user, pk):
+    """Atalho: busca consulta acessível ao usuário ou levanta 404."""
+    return get_object_or_404(_accessible_consultations(user), pk=pk)
+
+
+# ── Evoluções ─────────────────────────────────────────────────────────────────
+
+@login_required
+def evolution_list(request, consultation_pk):
+    if not has_permission(request.user, 'evolution', 'view'):
+        messages.error(request, 'Você não tem permissão para visualizar evoluções.')
+        return redirect('consultation_list')
+
+    consultation = _get_accessible_consultation(request.user, consultation_pk)
+    qs = filter_evolutions_for_user(
+        Evolution.objects.filter(consultation=consultation).select_related('professional'),
+        request.user,
+    )
+    log_access(request, 'view', 'evolution', resource_id=consultation_pk, patient=consultation.patient)
+    return render(request, 'consultations/evolution_list.html', {
+        'consultation': consultation,
+        'evolutions':   qs,
+        'can_create':   has_permission(request.user, 'evolution', 'create') and
+                        bool(get_evolution_create_category(request.user)),
+    })
+
+
+@login_required
+def evolution_create(request, consultation_pk):
+    if not has_permission(request.user, 'evolution', 'create'):
+        messages.error(request, 'Você não tem permissão para registrar evoluções.')
+        return redirect('consultation_list')
+
+    cat = get_evolution_create_category(request.user)
+    if not cat:
+        messages.error(request, 'Seu perfil não permite criar evoluções clínicas.')
+        return redirect('consultation_list')
+
+    consultation = _get_accessible_consultation(request.user, consultation_pk)
+
+    if request.method == 'POST':
+        form = EvolutionForm(request.POST, user=request.user)
+        if form.is_valid():
+            ev = form.save(commit=False)
+            ev.consultation = consultation
+            ev.professional = request.user
+            ev.category = cat   # garante a categoria correta independente do POST
+            ev.save()
+            log_access(request, 'create', 'evolution', resource_id=ev.pk, patient=consultation.patient)
+            messages.success(request, 'Evolução registrada com sucesso.')
+            return redirect('evolution_list', consultation_pk=consultation_pk)
+    else:
+        form = EvolutionForm(user=request.user)
+
+    return render(request, 'consultations/evolution_form.html', {
+        'form': form,
+        'consultation': consultation,
+        'titulo': 'Nova Evolução',
+    })
+
+
+@login_required
+def evolution_edit(request, consultation_pk, pk):
+    if not has_permission(request.user, 'evolution', 'edit'):
+        messages.error(request, 'Você não tem permissão para editar evoluções.')
+        return redirect('consultation_list')
+
+    consultation = _get_accessible_consultation(request.user, consultation_pk)
+    ev = get_object_or_404(Evolution, pk=pk, consultation=consultation, professional=request.user)
+
+    if request.method == 'POST':
+        form = EvolutionForm(request.POST, instance=ev, user=request.user)
+        if form.is_valid():
+            form.save()
+            log_access(request, 'edit', 'evolution', resource_id=ev.pk, patient=consultation.patient)
+            messages.success(request, 'Evolução atualizada.')
+            return redirect('evolution_list', consultation_pk=consultation_pk)
+    else:
+        form = EvolutionForm(instance=ev, user=request.user)
+
+    return render(request, 'consultations/evolution_form.html', {
+        'form': form,
+        'consultation': consultation,
+        'titulo': 'Editar Evolução',
+    })
+
+
+# ── Prescrições ───────────────────────────────────────────────────────────────
+
+@login_required
+def prescription_list(request, consultation_pk):
+    if not has_permission(request.user, 'prescription', 'view'):
+        messages.error(request, 'Você não tem permissão para visualizar prescrições.')
+        return redirect('consultation_list')
+
+    consultation = _get_accessible_consultation(request.user, consultation_pk)
+    prescriptions = Prescription.objects.filter(
+        consultation=consultation
+    ).select_related('prescriber').order_by('-created_at')
+
+    log_access(request, 'view', 'prescription', resource_id=consultation_pk, patient=consultation.patient)
+    return render(request, 'consultations/prescription_list.html', {
+        'consultation': consultation,
+        'prescriptions': prescriptions,
+        'can_create': bool(get_prescription_allowed_types(request.user)),
+    })
+
+
+@login_required
+def prescription_create(request, consultation_pk):
+    allowed = get_prescription_allowed_types(request.user)
+    if not has_permission(request.user, 'prescription', 'create') or not allowed:
+        messages.error(request, 'Você não tem permissão para registrar prescrições.')
+        return redirect('consultation_list')
+
+    consultation = _get_accessible_consultation(request.user, consultation_pk)
+
+    if request.method == 'POST':
+        form = PrescriptionForm(request.POST, user=request.user)
+        if form.is_valid():
+            pres = form.save(commit=False)
+            pres.consultation = consultation
+            pres.prescriber = request.user
+            if pres.prescription_type not in allowed:
+                messages.error(request, 'Tipo de prescrição não permitido para seu perfil.')
+                return render(request, 'consultations/prescription_form.html',
+                              {'form': form, 'consultation': consultation})
+            pres.save()
+            log_access(request, 'create', 'prescription', resource_id=pres.pk, patient=consultation.patient)
+            messages.success(request, 'Prescrição registrada.')
+            return redirect('prescription_list', consultation_pk=consultation_pk)
+    else:
+        form = PrescriptionForm(user=request.user)
+
+    return render(request, 'consultations/prescription_form.html', {
+        'form': form,
+        'consultation': consultation,
+        'titulo': 'Nova Prescrição',
+    })
+
+
+# ── Diagnósticos CID ──────────────────────────────────────────────────────────
+
+@login_required
+def diagnosis_list(request, consultation_pk):
+    if not has_permission(request.user, 'diagnosis', 'view'):
+        messages.error(request, 'Você não tem permissão para visualizar diagnósticos.')
+        return redirect('consultation_list')
+
+    consultation = _get_accessible_consultation(request.user, consultation_pk)
+    diagnoses = DiagnosisCID.objects.filter(
+        consultation=consultation
+    ).select_related('professional').order_by('-is_primary', '-created_at')
+
+    log_access(request, 'view', 'diagnosis', resource_id=consultation_pk, patient=consultation.patient)
+    return render(request, 'consultations/diagnosis_list.html', {
+        'consultation': consultation,
+        'diagnoses':    diagnoses,
+        'can_create':   has_permission(request.user, 'diagnosis', 'create'),
+    })
+
+
+@login_required
+def diagnosis_create(request, consultation_pk):
+    if not has_permission(request.user, 'diagnosis', 'create'):
+        messages.error(request, 'Você não tem permissão para registrar diagnósticos.')
+        return redirect('consultation_list')
+
+    consultation = _get_accessible_consultation(request.user, consultation_pk)
+
+    if request.method == 'POST':
+        form = DiagnosisCIDForm(request.POST)
+        if form.is_valid():
+            diag = form.save(commit=False)
+            diag.consultation = consultation
+            diag.professional = request.user
+            diag.save()
+            log_access(request, 'create', 'diagnosis', resource_id=diag.pk, patient=consultation.patient)
+            messages.success(request, f'Diagnóstico {diag.icd_code} registrado.')
+            return redirect('diagnosis_list', consultation_pk=consultation_pk)
+    else:
+        form = DiagnosisCIDForm()
+
+    return render(request, 'consultations/diagnosis_form.html', {
+        'form': form,
+        'consultation': consultation,
+        'titulo': 'Novo Diagnóstico CID-10',
+    })
+
+
+# ── Exame Físico ──────────────────────────────────────────────────────────────
+
+@login_required
+def physical_exam_view(request, consultation_pk):
+    if not has_permission(request.user, 'physical_exam', 'view'):
+        messages.error(request, 'Você não tem permissão para visualizar o exame físico.')
+        return redirect('consultation_list')
+
+    consultation = _get_accessible_consultation(request.user, consultation_pk)
+    exams = PhysicalExam.objects.filter(
+        consultation=consultation
+    ).select_related('professional').order_by('-created_at')
+
+    can_create = has_permission(request.user, 'physical_exam', 'create')
+    form = PhysicalExamForm() if can_create else None
+
+    if request.method == 'POST' and can_create:
+        form = PhysicalExamForm(request.POST)
+        if form.is_valid():
+            exam = form.save(commit=False)
+            exam.consultation = consultation
+            exam.professional = request.user
+            exam.save()
+            log_access(request, 'create', 'physical_exam', resource_id=exam.pk, patient=consultation.patient)
+            messages.success(request, 'Exame físico registrado.')
+            return redirect('physical_exam_view', consultation_pk=consultation_pk)
+
+    log_access(request, 'view', 'physical_exam', resource_id=consultation_pk, patient=consultation.patient)
+    return render(request, 'consultations/physical_exam.html', {
+        'consultation': consultation,
+        'exams':        exams,
+        'form':         form,
+        'can_create':   can_create,
+    })
+
+
+# ── Solicitações de Exame (Lab Requests) ──────────────────────────────────────
+
+@login_required
+def lab_request_list(request, consultation_pk):
+    if not has_permission(request.user, 'lab_requests', 'view'):
+        messages.error(request, 'Você não tem permissão para visualizar solicitações de exame.')
+        return redirect('consultation_list')
+
+    consultation = _get_accessible_consultation(request.user, consultation_pk)
+    lab_reqs = LabRequest.objects.filter(
+        consultation=consultation
+    ).select_related('requesting_professional', 'result_registered_by').order_by('-created_at')
+
+    log_access(request, 'view', 'lab_requests', resource_id=consultation_pk, patient=consultation.patient)
+    return render(request, 'consultations/lab_request_list.html', {
+        'consultation': consultation,
+        'lab_requests': lab_reqs,
+        'can_create':   has_permission(request.user, 'lab_requests', 'create'),
+        'can_fill_result': request.user.role in ('BIOMEDICO', 'ADMIN') or request.user.is_superuser,
+    })
+
+
+@login_required
+def lab_request_create(request, consultation_pk):
+    if not has_permission(request.user, 'lab_requests', 'create'):
+        messages.error(request, 'Você não tem permissão para solicitar exames.')
+        return redirect('consultation_list')
+
+    consultation = _get_accessible_consultation(request.user, consultation_pk)
+
+    if request.method == 'POST':
+        form = LabRequestForm(request.POST)
+        if form.is_valid():
+            req = form.save(commit=False)
+            req.consultation = consultation
+            req.requesting_professional = request.user
+            req.save()
+            log_access(request, 'create', 'lab_requests', resource_id=req.pk, patient=consultation.patient)
+            messages.success(request, f'Solicitação de "{req.exam_type}" registrada.')
+            return redirect('lab_request_list', consultation_pk=consultation_pk)
+    else:
+        form = LabRequestForm()
+
+    return render(request, 'consultations/lab_request_form.html', {
+        'form': form,
+        'consultation': consultation,
+        'titulo': 'Solicitar Exame',
+    })
+
+
+@login_required
+def lab_result_fill(request, consultation_pk, pk):
+    """Preenchimento de resultado — exclusivo para Biomédico e Admin."""
+    if request.user.role not in ('BIOMEDICO', 'ADMIN') and not request.user.is_superuser:
+        log_access(request, 'access_denied', 'lab_requests', success=False)
+        messages.error(request, 'Apenas biomédicos podem registrar resultados de exames.')
+        return redirect('consultation_list')
+
+    consultation = _get_accessible_consultation(request.user, consultation_pk)
+    lab_req = get_object_or_404(LabRequest, pk=pk, consultation=consultation)
+
+    if request.method == 'POST':
+        form = LabResultForm(request.POST, instance=lab_req)
+        if form.is_valid():
+            result = form.save(commit=False)
+            result.result_registered_by = request.user
+            result.save()
+            log_access(request, 'edit', 'lab_requests', resource_id=lab_req.pk, patient=consultation.patient)
+            messages.success(request, 'Resultado registrado com sucesso.')
+            return redirect('lab_request_list', consultation_pk=consultation_pk)
+    else:
+        form = LabResultForm(instance=lab_req)
+
+    return render(request, 'consultations/lab_result_form.html', {
+        'form': form,
+        'consultation': consultation,
+        'lab_request': lab_req,
+        'titulo': f'Resultado — {lab_req.exam_type}',
+    })

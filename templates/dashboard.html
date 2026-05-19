@@ -58,6 +58,20 @@
   </div>
 </div>
 
+<!-- ── Relatório IA (profissional) ── -->
+<div class="card mt-6"
+     style="background:linear-gradient(135deg,rgba(0,210,200,.07),rgba(0,140,255,.07));border:1px solid rgba(0,210,200,.2);cursor:pointer"
+     onclick="document.getElementById('modal-ia').style.display='flex'">
+  <div style="display:flex;align-items:center;gap:16px">
+    <div style="font-size:36px">🤖</div>
+    <div style="flex:1">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:3px">Relatório IA</h3>
+      <p style="font-size:12px;color:var(--muted)">Análise inteligente dos atendimentos e tendências clínicas</p>
+    </div>
+    <span class="badge badge-teal" style="font-size:11px;white-space:nowrap">Premium</span>
+  </div>
+</div>
+
 {% if atendimentos_recentes %}
 <div class="card mt-6">
   <h3 style="font-size:16px;font-weight:700;margin-bottom:20px">Atendimentos recentes</h3>
@@ -130,6 +144,20 @@
   {% endif %}
 </div>
 
+<!-- ── Relatório IA (paciente) ── -->
+<div class="card mt-6"
+     style="background:linear-gradient(135deg,rgba(0,210,200,.07),rgba(0,140,255,.07));border:1px solid rgba(0,210,200,.2);cursor:pointer"
+     onclick="document.getElementById('modal-ia').style.display='flex'">
+  <div style="display:flex;align-items:center;gap:16px">
+    <div style="font-size:36px">🤖</div>
+    <div style="flex:1">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:3px">Relatório IA</h3>
+      <p style="font-size:12px;color:var(--muted)">Análise inteligente do seu histórico e evolução de saúde</p>
+    </div>
+    <span class="badge badge-teal" style="font-size:11px;white-space:nowrap">Premium</span>
+  </div>
+</div>
+
 <!-- Card iniciar atendimento -->
 <div class="card mt-6" style="border-left:4px solid var(--teal)">
   <div style="display:flex;align-items:center;gap:16px">
@@ -161,11 +189,9 @@
       <div class="card" style="padding:16px 20px;transition:border-color .15s,background .15s;cursor:pointer;border:1px solid var(--border)"
            onmouseover="this.style.borderColor='var(--teal)';this.style.background='var(--surface-2)'"
            onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface)'">
-        <!-- Nome do local — elemento principal -->
         <div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:2px">
           {{ c.clinic_name|default:"Local não informado" }}
         </div>
-        <!-- Localização -->
         {% if c.clinic_neighborhood or c.clinic_city %}
         <div style="font-size:12px;color:var(--muted);margin-bottom:8px">
           📍
@@ -176,7 +202,6 @@
         {% elif c.clinic_address %}
         <div style="font-size:12px;color:var(--muted);margin-bottom:8px">📍 {{ c.clinic_address }}</div>
         {% endif %}
-        <!-- Profissional + detalhes -->
         <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:6px">
           <span style="font-size:13px;color:var(--muted)">👤 {{ c.professional_name }}</span>
           {% if c.specialty_label %}
@@ -202,4 +227,33 @@
   {% endif %}
 </div>
 {% endif %}
+
+<!-- ══════════════════════════════════════════════════════════
+     Modal — Relatório IA
+════════════════════════════════════════════════════════════ -->
+<div id="modal-ia"
+     style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.6);
+            align-items:center;justify-content:center;padding:20px"
+     onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:var(--surface);border:1px solid var(--border-soft);border-radius:20px;
+              max-width:420px;width:100%;padding:40px 32px;text-align:center;position:relative">
+    <button onclick="document.getElementById('modal-ia').style.display='none'"
+            style="position:absolute;top:14px;right:18px;background:none;border:none;
+                   font-size:20px;color:var(--muted);cursor:pointer;line-height:1">✕</button>
+    <div style="font-size:56px;margin-bottom:16px">🤖</div>
+    <h3 style="font-size:20px;font-weight:800;margin-bottom:10px">Relatório IA</h3>
+    <p style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:24px">
+      Função ainda não disponível.<br>
+      Entre em contato com um de nossos consultores para ativar esta funcionalidade premium.
+    </p>
+    <a href="mailto:liddis.org@gmail.com?subject=Interesse%20no%20Relat%C3%B3rio%20IA"
+       class="btn btn-primary btn-block" style="margin-bottom:10px">
+      Falar com consultor
+    </a>
+    <button onclick="document.getElementById('modal-ia').style.display='none'"
+            class="btn btn-secondary btn-block">
+      Fechar
+    </button>
+  </div>
+</div>
 {% endblock %}
