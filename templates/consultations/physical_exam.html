@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% block title %}Exame Físico — LIDDIS{% endblock %}
+{% block topbar_title %}Exame Físico{% endblock %}
+
+{% block extra_css %}
+<style>
+.exam-record{background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius);padding:20px 24px;margin-bottom:16px}
+.exam-record-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.exam-systems{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.system-block{background:var(--surface-2);border-radius:var(--radius-sm);padding:12px 16px}
+.system-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px}
+.system-value{font-size:13px;color:var(--text);line-height:1.6;white-space:pre-wrap}
+.form-section-title{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin:24px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--border-soft)}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2>Exame Físico</h2>
+    <p>Consulta de {{ consultation.date|date:"d/m/Y" }} — {{ consultation.professional_name }}</p>
+  </div>
+  <a href="{% url 'consultation_detail' consultation.pk %}" class="btn btn-secondary">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Voltar
+  </a>
+</div>
+
+{% if exams %}
+  {% for exam in exams %}
+  <div class="exam-record">
+    <div class="exam-record-header">
+      <div style="display:flex;align-items:center;gap:10px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;color:var(--teal)"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        <span style="font-size:13px;font-weight:600">
+          {% if exam.professional %}{{ exam.professional.get_full_name|default:exam.professional.username }}{% endif %}
+        </span>
+      </div>
+      <span style="font-size:11px;color:var(--muted)">{{ exam.created_at|date:"d/m/Y H:i" }}</span>
+    </div>
+    <div class="exam-systems">
+      {% if exam.general_state %}
+      <div class="system-block">
+        <div class="system-label">Estado Geral</div>
+        <div class="system-value">{{ exam.general_state }}</div>
+      </div>
+      {% endif %}
+      {% if exam.cardiovascular %}
+      <div class="system-block">
+        <div class="system-label">Cardiovascular</div>
+        <div class="system-value">{{ exam.cardiovascular }}</div>
+      </div>
+      {% endif %}
+      {% if exam.respiratory %}
+      <div class="system-block">
+        <div class="system-label">Respiratório</div>
+        <div class="system-value">{{ exam.respiratory }}</div>
+      </div>
+      {% endif %}
+      {% if exam.abdomen %}
+      <div class="system-block">
+        <div class="system-label">Abdome</div>
+        <div class="system-value">{{ exam.abdomen }}</div>
+      </div>
+      {% endif %}
+      {% if exam.neurological %}
+      <div class="system-block">
+        <div class="system-label">Neurológico</div>
+        <div class="system-value">{{ exam.neurological }}</div>
+      </div>
+      {% endif %}
+      {% if exam.musculoskeletal %}
+      <div class="system-block">
+        <div class="system-label">Musculoesquelético</div>
+        <div class="system-value">{{ exam.musculoskeletal }}</div>
+      </div>
+      {% endif %}
+      {% if exam.skin %}
+      <div class="system-block">
+        <div class="system-label">Pele e Anexos</div>
+        <div class="system-value">{{ exam.skin }}</div>
+      </div>
+      {% endif %}
+      {% if exam.orl %}
+      <div class="system-block">
+        <div class="system-label">ORL</div>
+        <div class="system-value">{{ exam.orl }}</div>
+      </div>
+      {% endif %}
+      {% if exam.other_systems %}
+      <div class="system-block" style="grid-column:1/-1">
+        <div class="system-label">Outros Sistemas</div>
+        <div class="system-value">{{ exam.other_systems }}</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+{% else %}
+  <div class="card" style="margin-bottom:24px">
+    <div class="empty-state">
+      <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      <p>Nenhum exame físico registrado ainda.</p>
+    </div>
+  </div>
+{% endif %}
+
+{% if can_create and form %}
+<div class="card">
+  <h3 style="font-size:14px;font-weight:600;margin-bottom:4px">Novo Exame Físico</h3>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:20px">Preencha apenas os sistemas avaliados.</p>
+  <form method="post">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger" style="margin-bottom:20px">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="form-section-title">Geral e Cardiopulmonar</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:4px">
+      <div class="form-group">
+        <label class="form-label">Estado Geral</label>
+        <textarea name="{{ form.general_state.html_name }}" rows="3" placeholder="Bom estado geral, lúcido, orientado..." style="width:100%;resize:vertical">{{ form.general_state.value|default:'' }}</textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cardiovascular</label>
+        <textarea name="{{ form.cardiovascular.html_name }}" rows="3" placeholder="Ritmo cardíaco regular, bulhas normofonéticas..." style="width:100%;resize:vertical">{{ form.cardiovascular.value|default:'' }}</textarea>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:4px">
+      <div class="form-group">
+        <label class="form-label">Respiratório</label>
+        <textarea name="{{ form.respiratory.html_name }}" rows="3" placeholder="Murmúrios vesiculares presentes, sem ruídos adventícios..." style="width:100%;resize:vertical">{{ form.respiratory.value|default:'' }}</textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Abdome</label>
+        <textarea name="{{ form.abdomen.html_name }}" rows="3" placeholder="Abdome plano, flácido, sem dor à palpação..." style="width:100%;resize:vertical">{{ form.abdomen.value|default:'' }}</textarea>
+      </div>
+    </div>
+
+    <div class="form-section-title">Sistemas Específicos</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:4px">
+      <div class="form-group">
+        <label class="form-label">Neurológico</label>
+        <textarea name="{{ form.neurological.html_name }}" rows="3" placeholder="Glasgow 15, reflexos preservados..." style="width:100%;resize:vertical">{{ form.neurological.value|default:'' }}</textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Musculoesquelético</label>
+        <textarea name="{{ form.musculoskeletal.html_name }}" rows="3" placeholder="Força muscular preservada, amplitude articular normal..." style="width:100%;resize:vertical">{{ form.musculoskeletal.value|default:'' }}</textarea>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:4px">
+      <div class="form-group">
+        <label class="form-label">Pele e Anexos</label>
+        <textarea name="{{ form.skin.html_name }}" rows="3" placeholder="Pele normocorada, turgor preservado..." style="width:100%;resize:vertical">{{ form.skin.value|default:'' }}</textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ORL</label>
+        <textarea name="{{ form.orl.html_name }}" rows="3" placeholder="Orofaringe sem hiperemia, tímpanos íntegros..." style="width:100%;resize:vertical">{{ form.orl.value|default:'' }}</textarea>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:24px">
+      <label class="form-label">Outros Sistemas</label>
+      <textarea name="{{ form.other_systems.html_name }}" rows="3" placeholder="Achados adicionais, observações gerais..." style="width:100%;resize:vertical">{{ form.other_systems.value|default:'' }}</textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17,21 17,13 7,13"/><polyline points="7,3 7,8 15,8"/></svg>
+      Registrar Exame Físico
+    </button>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

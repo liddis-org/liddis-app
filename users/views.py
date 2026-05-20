@@ -1,20 +1,77 @@
 import logging
+import functools
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.core.exceptions import PermissionDenied
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.views import View
+from django.http import HttpResponseForbidden
 
 # API views (REST)
 from rest_framework import generics, permissions
 from .serializers import RegisterSerializer, UserSerializer
-from .models import CustomUser, VerificationCode
-from .forms import RegisterForm, ProfileForm
+from .models import CustomUser, VerificationCode, PlatformFeedback
+from .forms import RegisterForm, ProfileForm, PlatformFeedbackForm
 
 logger = logging.getLogger('liddis')
+
+# Roles profissionais (não-paciente)
+PROFESSIONAL_ROLES = {
+    'DOCTOR', 'NURSE', 'NUTRITIONIST', 'PHYSIO',
+    'SPEECH_THERAPIST', 'PHYSICAL_EDUCATOR', 'PSYCHOLOGIST',
+    'DENTIST', 'OCC_THERAPIST', 'PHARMACIST', 'ADMIN',
+}
+
+
+# ── RBAC Decorators ────────────────────────────────────────────────────────────
+
+def require_role(*roles):
+    """
+    Decorator que restringe acesso a usuários com role específica.
+    Uso: @require_role('DOCTOR', 'NURSE')
+    """
+    def decorator(view_func):
+        @functools.wraps(view_func)
+        @login_required
+        def wrapper(request, *args, **kwargs):
+            if request.user.role not in roles:
+                logger.warning(
+                    'Acesso negado: user=%s role=%s tentou acessar view restrita a %s',
+                    request.user.username, request.user.role, roles,
+                )
+                messages.error(request, 'Você não tem permissão para acessar esta área.')
+                return redirect('dashboard')
+            return view_func(request, *args, **kwargs)
+        return wrapper
+    return decorator
+
+
+def require_professional(view_func):
+    """Atalho: restringe a qualquer role profissional (não-paciente)."""
+    @functools.wraps(view_func)
+    @login_required
+    def wrapper(request, *args, **kwargs):
+        if request.user.role == 'PATIENT':
+            messages.error(request, 'Esta área é exclusiva para profissionais de saúde.')
+            return redirect('dashboard')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
+def require_patient(view_func):
+    """Atalho: restringe apenas a pacientes."""
+    @functools.wraps(view_func)
+    @login_required
+    def wrapper(request, *args, **kwargs):
+        if request.user.role != 'PATIENT':
+            messages.error(request, 'Esta área é exclusiva para pacientes.')
+            return redirect('dashboard')
+        return view_func(request, *args, **kwargs)
+    return wrapper
 
 
 # ── Home ───────────────────────────────────────────────────────────────────────
@@ -147,8 +204,11 @@ def verificar_email(request):
 
         # Reenviar código
         if action == 'reenviar':
-            _send_email_code(user)
-            messages.success(request, f'Novo código enviado para {user.email}.')
+            try:
+                _send_email_code(user)
+                messages.success(request, f'Novo código enviado para {user.email}.')
+            except Exception:
+                messages.error(request, 'Não foi possível enviar o e-mail agora. Tente novamente em alguns minutos.')
             return redirect('verificar_email')
 
         # Confirmar código
@@ -233,14 +293,12 @@ def verificar_celular(request):
     })
 
 
-# ── Dashboard ──────────────────────────────────────────────────────────────────
+# ── Dashboard (Início) ─────────────────────────────────────────────────────────
 
 @login_required
 def dashboard(request):
-    import logging
     from consultations.models import Consultation, VitalSign
 
-    logger = logging.getLogger('liddis')
     is_professional = request.user.role != 'PATIENT'
 
     if is_professional:
@@ -270,7 +328,7 @@ def dashboard(request):
             Consultation.objects.filter(patient=request.user).order_by('-date')[:5]
         )
         vitals = list(VitalSign.objects.filter(patient=request.user).order_by('-date')[:1])
-        total = Consultation.objects.filter(patient=request.user).count()
+        total  = Consultation.objects.filter(patient=request.user).count()
     except Exception as exc:
         logger.error('Erro ao carregar dashboard paciente: %s', exc)
         messages.error(request, 'Não foi possível carregar os dados. Tente novamente.')
@@ -278,10 +336,134 @@ def dashboard(request):
 
     return render(request, 'dashboard.html', {
         'is_professional': False,
-        'consultations': consultations,
-        'latest_vital': vitals[0] if vitals else None,
+        'consultations':   consultations,
+        'latest_vital':    vitals[0] if vitals else None,
         'total_consultations': total,
     })
+
+
+# ── Analytics Dashboard ────────────────────────────────────────────────────────
+
+@login_required
+def analytics(request):
+    import json
+    from datetime import date
+    from django.db.models import Count
+    from django.db.models.functions import TruncMonth
+    from consultations.models import Consultation, VitalSign, SPECIALTY_CHOICES
+
+    is_professional = request.user.role != 'PATIENT'
+    today = date.today()
+    SPECIALTY_MAP = dict(SPECIALTY_CHOICES)
+    SEVERITY_MAP  = {'low': 'Leve', 'moderate': 'Moderada', 'high': 'Grave', 'critical': 'Crítica'}
+
+    # 12-month sequence (chronological)
+    months_seq = []
+    for i in range(11, -1, -1):
+        m = today.month - i
+        y = today.year
+        if m <= 0:
+            m += 12
+            y -= 1
+        months_seq.append(date(y, m, 1))
+
+    month_labels = [d.strftime('%b/%y') for d in months_seq]
+    month_keys   = [d.strftime('%Y-%m') for d in months_seq]
+
+    def monthly_values(qs):
+        raw = (
+            qs.annotate(month=TruncMonth('date'))
+            .values('month').annotate(count=Count('id'))
+        )
+        d = {item['month'].strftime('%Y-%m'): item['count'] for item in raw}
+        return [d.get(k, 0) for k in month_keys]
+
+    if is_professional:
+        try:
+            qs = Consultation.objects.filter(session__professional=request.user)
+            total  = qs.count()
+            ultimo = qs.order_by('-date').first()
+
+            spec_raw = qs.values('specialty').annotate(count=Count('id')).order_by('-count')[:8]
+            sev_raw  = qs.exclude(severity='').values('severity').annotate(count=Count('id'))
+
+            this_month        = qs.filter(date__year=today.year, date__month=today.month).count()
+            distinct_patients = qs.values('patient').distinct().count()
+
+            return render(request, 'analytics.html', {
+                'is_professional':    True,
+                'total_atendimentos': total,
+                'this_month':         this_month,
+                'distinct_patients':  distinct_patients,
+                'ultimo_atendimento': ultimo.date if ultimo else None,
+                'atendimentos_recentes': list(qs.order_by('-date')[:5]),
+                'chart_months':           json.dumps(month_labels),
+                'chart_monthly':          json.dumps(monthly_values(qs)),
+                'chart_specialty_labels': json.dumps([SPECIALTY_MAP.get(s['specialty'], s['specialty']) for s in spec_raw]),
+                'chart_specialty_values': json.dumps([s['count'] for s in spec_raw]),
+                'chart_severity_labels':  json.dumps([SEVERITY_MAP.get(s['severity'], s['severity']) for s in sev_raw]),
+                'chart_severity_values':  json.dumps([s['count'] for s in sev_raw]),
+            })
+        except Exception as exc:
+            logger.error('Erro ao carregar analytics profissional: %s', exc)
+            messages.error(request, 'Não foi possível carregar os dados. Tente novamente.')
+            return render(request, 'analytics.html', {
+                'is_professional': True,
+                'total_atendimentos': 0, 'this_month': 0,
+                'distinct_patients': 0, 'ultimo_atendimento': None,
+                'atendimentos_recentes': [],
+                'chart_months': json.dumps(month_labels),
+                'chart_monthly': json.dumps([0] * 12),
+                'chart_specialty_labels': json.dumps([]),
+                'chart_specialty_values': json.dumps([]),
+                'chart_severity_labels':  json.dumps([]),
+                'chart_severity_values':  json.dumps([]),
+            })
+
+    # ── Paciente ────────────────────────────────────────────────────────────────
+    try:
+        qs    = Consultation.objects.filter(patient=request.user)
+        total = qs.count()
+
+        spec_raw  = qs.values('specialty').annotate(count=Count('id')).order_by('-count')[:8]
+        vitals_qs = list(VitalSign.objects.filter(patient=request.user).order_by('date')[:12])
+        latest_vital = VitalSign.objects.filter(patient=request.user).order_by('-date').first()
+
+        this_month        = qs.filter(date__year=today.year, date__month=today.month).count()
+        specialties_count = qs.values('specialty').distinct().count()
+
+        return render(request, 'analytics.html', {
+            'is_professional':  False,
+            'consultations':    list(qs.order_by('-date')[:5]),
+            'latest_vital':     latest_vital,
+            'total_consultations': total,
+            'this_month':       this_month,
+            'specialties_count': specialties_count,
+            'chart_months':           json.dumps(month_labels),
+            'chart_monthly':          json.dumps(monthly_values(qs)),
+            'chart_specialty_labels': json.dumps([SPECIALTY_MAP.get(s['specialty'], s['specialty']) for s in spec_raw]),
+            'chart_specialty_values': json.dumps([s['count'] for s in spec_raw]),
+            'chart_vitals_dates':  json.dumps([v.date.strftime('%d/%m') for v in vitals_qs]),
+            'chart_vitals_weight': json.dumps([float(v.weight) if v.weight else None for v in vitals_qs]),
+            'chart_vitals_hr':     json.dumps([v.heart_rate for v in vitals_qs]),
+            'chart_vitals_o2':     json.dumps([v.oxygen_saturation for v in vitals_qs]),
+        })
+    except Exception as exc:
+        logger.error('Erro ao carregar analytics paciente: %s', exc)
+        messages.error(request, 'Não foi possível carregar os dados. Tente novamente.')
+        return render(request, 'analytics.html', {
+            'is_professional': False,
+            'consultations': [], 'latest_vital': None,
+            'total_consultations': 0, 'this_month': 0, 'specialties_count': 0,
+            'chart_months': json.dumps(month_labels),
+            'chart_monthly': json.dumps([0] * 12),
+            'chart_specialty_labels': json.dumps([]),
+            'chart_specialty_values': json.dumps([]),
+            'chart_vitals_dates':  json.dumps([]),
+            'chart_vitals_weight': json.dumps([]),
+            'chart_vitals_hr':     json.dumps([]),
+            'chart_vitals_o2':     json.dumps([]),
+        })
 
 
 # ── Perfil ─────────────────────────────────────────────────────────────────────
@@ -301,3 +483,133 @@ def profile(request):
 
 def quem_somos(request):
     return render(request, 'quem_somos.html')
+
+
+# ── Gestão de Vínculos Paciente-Profissional ───────────────────────────────────
+
+@login_required
+def my_accesses(request):
+    """
+    Paciente: visualiza e revoga vínculos com profissionais.
+    Profissional: visualiza seus pacientes vinculados.
+    """
+    from .models import PatientProfessionalAccess
+
+    user = request.user
+
+    if user.role == 'PATIENT':
+        accesses = PatientProfessionalAccess.objects.filter(
+            patient=user
+        ).select_related('professional').order_by('-granted_at')
+        return render(request, 'users/my_accesses.html', {
+            'accesses': accesses,
+            'is_patient': True,
+        })
+
+    # Profissional
+    accesses = PatientProfessionalAccess.objects.filter(
+        professional=user, is_active=True
+    ).select_related('patient').order_by('-granted_at')
+    return render(request, 'users/my_accesses.html', {
+        'accesses': accesses,
+        'is_patient': False,
+    })
+
+
+@login_required
+def grant_access(request):
+    """Paciente concede acesso explícito a um profissional pelo e-mail."""
+    if request.user.role != 'PATIENT':
+        messages.error(request, 'Apenas pacientes podem conceder vínculos.')
+        return redirect('my_accesses')
+
+    from .models import PatientProfessionalAccess
+
+    if request.method == 'POST':
+        email  = request.POST.get('professional_email', '').strip().lower()
+        reason = request.POST.get('reason', '').strip()[:200]
+
+        try:
+            professional = CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
+            messages.error(request, f'Profissional com e-mail "{email}" não encontrado.')
+            return redirect('my_accesses')
+
+        if professional.role == 'PATIENT':
+            messages.error(request, 'O e-mail informado pertence a um paciente, não a um profissional.')
+            return redirect('my_accesses')
+
+        obj, created = PatientProfessionalAccess.objects.get_or_create(
+            patient=request.user,
+            professional=professional,
+            defaults={'granted_by': request.user, 'access_reason': reason, 'is_active': True},
+        )
+        if not created:
+            if obj.is_active:
+                messages.info(request, f'{professional.get_full_name() or professional.email} já tem acesso.')
+            else:
+                obj.is_active   = True
+                obj.revoked_at  = None
+                obj.access_reason = reason
+                obj.save(update_fields=['is_active', 'revoked_at', 'access_reason'])
+                messages.success(request, f'Acesso reativado para {professional.get_full_name() or professional.email}.')
+        else:
+            messages.success(request, f'Acesso concedido a {professional.get_full_name() or professional.email}.')
+
+        from users.audit import log_access as audit
+        audit(request, 'create', 'patient_professional_access',
+              resource_id=obj.pk, patient=request.user)
+
+    return redirect('my_accesses')
+
+
+@login_required
+def revoke_access(request, access_id):
+    """Paciente revoga vínculo com um profissional."""
+    import uuid
+    from .models import PatientProfessionalAccess
+
+    if request.user.role != 'PATIENT':
+        messages.error(request, 'Apenas pacientes podem revogar vínculos.')
+        return redirect('my_accesses')
+
+    try:
+        obj = PatientProfessionalAccess.objects.get(
+            id=access_id, patient=request.user, is_active=True
+        )
+    except PatientProfessionalAccess.DoesNotExist:
+        messages.error(request, 'Vínculo não encontrado.')
+        return redirect('my_accesses')
+
+    obj.revoke()
+    from users.audit import log_access as audit
+    audit(request, 'delete', 'patient_professional_access',
+          resource_id=obj.pk, patient=request.user)
+    messages.success(request, f'Acesso de {obj.professional.get_full_name() or obj.professional.email} revogado.')
+    return redirect('my_accesses')
+
+
+# ── Feedback da Plataforma ─────────────────────────────────────────────────────
+
+@login_required
+def platform_feedback(request):
+    """Central de Feedback — pacientes e profissionais avaliam a plataforma."""
+    if request.method == 'POST':
+        form = PlatformFeedbackForm(request.POST)
+        if form.is_valid():
+            fb = form.save(commit=False)
+            fb.user = request.user
+            fb.role_at_time = request.user.role
+            fb.save()
+            messages.success(request, 'Obrigado pelo seu feedback! Sua avaliação foi registrada.')
+            return redirect('platform_feedback')
+    else:
+        form = PlatformFeedbackForm()
+
+    # Feedback anterior do usuário (último)
+    ultimo_feedback = PlatformFeedback.objects.filter(user=request.user).order_by('-created_at').first()
+
+    return render(request, 'users/feedback.html', {
+        'form': form,
+        'ultimo_feedback': ultimo_feedback,
+    })

@@ -37,8 +37,12 @@ COPY --from=builder /install /install
 # Copia o projeto
 COPY . .
 
-# Coleta arquivos estáticos (usa SECRET_KEY padrão — sem acesso ao banco)
-RUN python manage.py collectstatic --noinput
+# Coleta arquivos estáticos com variáveis temporárias de build (sem acesso ao banco)
+RUN SECRET_KEY="build-time-placeholder-key-only-for-collectstatic-xxxxxxxxxx" \
+    DEBUG=True \
+    DATABASE_URL="sqlite:///tmp/build.db" \
+    ALLOWED_HOSTS="*" \
+    python manage.py collectstatic --noinput
 
 # Usuário sem privilégios para segurança
 RUN adduser --disabled-password --gecos '' appuser \

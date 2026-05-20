@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% block title %}Sua Experiência — LIDDIS{% endblock %}
+{% block topbar_title %}Sua Experiência{% endblock %}
+{% block nav_feedback %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+.score-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+.score-row:last-of-type { border-bottom: none; }
+.score-label { font-size: 14px; font-weight: 600; flex: 1; }
+.score-label small { display: block; font-size: 11px; color: var(--muted); font-weight: 400; margin-top: 2px; }
+
+.star-group { display: flex; gap: 8px; }
+.star-group input[type=radio] { display: none; }
+.star-group label {
+  font-size: 28px;
+  cursor: pointer;
+  opacity: .3;
+  transition: opacity .15s, transform .1s;
+  line-height: 1;
+}
+.star-group label:hover,
+.star-group input[type=radio]:checked ~ label { opacity: 1; }
+.star-group label:hover { transform: scale(1.15); }
+
+/* Reverse trick: stars fill left-to-right on hover */
+.star-group { flex-direction: row-reverse; justify-content: flex-end; }
+.star-group label:hover ~ label { opacity: 1; }
+
+.feedback-card {
+  background: linear-gradient(135deg, rgba(0,212,255,.05), rgba(74,222,128,.05));
+  border: 1px solid rgba(0,212,255,.15);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-top: 20px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:640px;margin:0 auto">
+  <div style="text-align:center;margin-bottom:32px">
+    <div style="font-size:56px;margin-bottom:12px">💬</div>
+    <h2 style="font-size:22px;font-weight:800;margin-bottom:8px">Sua Experiência</h2>
+    <p style="color:var(--muted);font-size:14px;max-width:400px;margin:0 auto">
+      Sua opinião nos ajuda a melhorar a plataforma e oferecer um serviço cada vez mais eficiente.
+    </p>
+  </div>
+
+  {% if ultimo_feedback %}
+  <div class="card" style="margin-bottom:20px;border-left:3px solid var(--green)">
+    <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">
+      Seu último feedback — {{ ultimo_feedback.created_at|date:"d/m/Y" }}
+    </div>
+    <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:13px">
+      <span>Usabilidade: <strong>{{ ultimo_feedback.score_usability }}/5</strong></span>
+      <span>Desempenho: <strong>{{ ultimo_feedback.score_performance }}/5</strong></span>
+      <span>Atendimento: <strong>{{ ultimo_feedback.score_care_quality }}/5</strong></span>
+      <span style="margin-left:auto;color:var(--teal);font-weight:700">Média: {{ ultimo_feedback.average_score }}/5</span>
+    </div>
+    {% if ultimo_feedback.comment %}
+    <div style="margin-top:8px;font-size:13px;color:var(--muted);font-style:italic">"{{ ultimo_feedback.comment|truncatechars:100 }}"</div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:4px">Avalie a plataforma</h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:24px">Selecione de 1 (péssimo) a 5 (excelente) em cada critério.</p>
+
+    <form method="post">
+      {% csrf_token %}
+
+      <!-- Critério 1: Facilidade de uso -->
+      <div class="score-row">
+        <div class="score-label">
+          Facilidade de uso
+          <small>A plataforma é intuitiva e fácil de navegar?</small>
+        </div>
+        <div class="star-group">
+          {% for val, label in form.score_usability.field.choices reversed %}
+          <input type="radio" name="{{ form.score_usability.html_name }}" id="u{{ val }}" value="{{ val }}"
+                 {% if form.score_usability.value == val|stringformat:"s" %}checked{% endif %}>
+          <label for="u{{ val }}" title="{{ val }} estrela{{ val|pluralize }}">⭐</label>
+          {% endfor %}
+        </div>
+      </div>
+      {% if form.score_usability.errors %}<div class="errorlist">{{ form.score_usability.errors }}</div>{% endif %}
+
+      <!-- Critério 2: Velocidade/Desempenho -->
+      <div class="score-row">
+        <div class="score-label">
+          Velocidade / Desempenho
+          <small>O sistema é rápido e responsivo?</small>
+        </div>
+        <div class="star-group">
+          {% for val, label in form.score_performance.field.choices reversed %}
+          <input type="radio" name="{{ form.score_performance.html_name }}" id="p{{ val }}" value="{{ val }}"
+                 {% if form.score_performance.value == val|stringformat:"s" %}checked{% endif %}>
+          <label for="p{{ val }}" title="{{ val }} estrela{{ val|pluralize }}">⭐</label>
+          {% endfor %}
+        </div>
+      </div>
+      {% if form.score_performance.errors %}<div class="errorlist">{{ form.score_performance.errors }}</div>{% endif %}
+
+      <!-- Critério 3: Qualidade do atendimento -->
+      <div class="score-row" style="margin-bottom:20px">
+        <div class="score-label">
+          Qualidade do atendimento
+          <small>O atendimento clínico via plataforma atendeu às expectativas?</small>
+        </div>
+        <div class="star-group">
+          {% for val, label in form.score_care_quality.field.choices reversed %}
+          <input type="radio" name="{{ form.score_care_quality.html_name }}" id="c{{ val }}" value="{{ val }}"
+                 {% if form.score_care_quality.value == val|stringformat:"s" %}checked{% endif %}>
+          <label for="c{{ val }}" title="{{ val }} estrela{{ val|pluralize }}">⭐</label>
+          {% endfor %}
+        </div>
+      </div>
+      {% if form.score_care_quality.errors %}<div class="errorlist">{{ form.score_care_quality.errors }}</div>{% endif %}
+
+      <!-- Comentário livre -->
+      <div class="form-group">
+        <label>{{ form.comment.label }}</label>
+        {{ form.comment }}
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" style="margin-top:8px">
+        Enviar Feedback
+      </button>
+    </form>
+  </div>
+
+  <div class="feedback-card">
+    <div style="font-size:13px;color:var(--muted);text-align:center">
+      <strong style="color:var(--teal)">Obrigado por usar o LIDDIS!</strong><br>
+      Seus feedbacks são analisados pela equipe e usados para melhorar continuamente a plataforma.
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Destaca estrelas ao hover considerando a direção reversa do CSS
+document.querySelectorAll('.star-group').forEach(function(group) {
+  var labels = Array.from(group.querySelectorAll('label')).reverse();
+  labels.forEach(function(label, i) {
+    label.addEventListener('mouseenter', function() {
+      labels.forEach(function(l, j) { l.style.opacity = j <= i ? '1' : '.3'; });
+    });
+    label.addEventListener('mouseleave', function() {
+      labels.forEach(function(l) { l.style.opacity = ''; });
+    });
+  });
+});
+</script>
+{% endblock %}

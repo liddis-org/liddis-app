@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}{{ titulo }} — LIDDIS{% endblock %}
+{% block topbar_title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2>{{ titulo }}</h2>
+    <p>Consulta de {{ consultation.date|date:"d/m/Y" }} — {{ consultation.professional_name }}</p>
+  </div>
+  <a href="{% url 'evolution_list' consultation.pk %}" class="btn btn-secondary">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Voltar
+  </a>
+</div>
+
+<div class="card" style="max-width:720px">
+  <form method="post">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger" style="margin-bottom:20px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      {{ form.non_field_errors }}
+    </div>
+    {% endif %}
+
+    {% if form.category.field.widget.attrs.readonly or form.category.field.disabled %}
+    <div class="form-group" style="margin-bottom:20px">
+      <label class="form-label">Categoria</label>
+      <div style="padding:10px 14px;background:var(--surface-2);border:1px solid var(--border-soft);border-radius:var(--radius-sm);font-size:13px;color:var(--muted)">
+        {{ form.category.value|default:form.initial.category }}
+      </div>
+    </div>
+    {% else %}
+    <div class="form-group" style="margin-bottom:20px">
+      <label class="form-label" for="{{ form.category.id_for_label }}">Categoria</label>
+      {{ form.category }}
+      {% if form.category.errors %}<span class="form-error">{{ form.category.errors.0 }}</span>{% endif %}
+    </div>
+    {% endif %}
+
+    <div class="form-group" style="margin-bottom:20px">
+      <label class="form-label" for="{{ form.content.id_for_label }}">
+        Conteúdo da Evolução <span style="color:var(--danger)">*</span>
+      </label>
+      <textarea
+        name="{{ form.content.html_name }}"
+        id="{{ form.content.id_for_label }}"
+        rows="10"
+        placeholder="Descreva a evolução clínica do paciente..."
+        style="width:100%;resize:vertical"
+        class="{% if form.content.errors %}is-invalid{% endif %}"
+      >{{ form.content.value|default:'' }}</textarea>
+      {% if form.content.errors %}<span class="form-error">{{ form.content.errors.0 }}</span>{% endif %}
+    </div>
+
+    <div class="form-group" style="margin-bottom:28px">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+        <input type="checkbox" name="{{ form.is_visible_to_patient.html_name }}"
+          id="{{ form.is_visible_to_patient.id_for_label }}"
+          {% if form.is_visible_to_patient.value %}checked{% endif %}
+          style="width:16px;height:16px;accent-color:var(--teal)">
+        <span style="font-size:13px;color:var(--text)">Visível para o paciente</span>
+      </label>
+      <p style="font-size:11px;color:var(--muted);margin-top:6px;padding-left:26px">
+        Se desmarcado, apenas profissionais de saúde poderão visualizar esta evolução.
+      </p>
+    </div>
+
+    <div style="display:flex;gap:10px">
+      <button type="submit" class="btn btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17,21 17,13 7,13"/><polyline points="7,3 7,8 15,8"/></svg>
+        Salvar Evolução
+      </button>
+      <a href="{% url 'evolution_list' consultation.pk %}" class="btn btn-secondary">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

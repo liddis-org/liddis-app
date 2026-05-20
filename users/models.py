@@ -60,12 +60,19 @@ class Organization(models.Model):
 
 class CustomUser(AbstractUser):
     class Role(models.TextChoices):
-        PATIENT      = 'PATIENT',      'Paciente'
-        DOCTOR       = 'DOCTOR',       'Médico'
-        NURSE        = 'NURSE',        'Enfermeiro'
-        NUTRITIONIST = 'NUTRITIONIST', 'Nutricionista'
-        PHYSIO       = 'PHYSIO',       'Fisioterapeuta'
-        ADMIN        = 'ADMIN',        'Administrador'
+        PATIENT           = 'PATIENT',           'Paciente'
+        DOCTOR            = 'DOCTOR',            'Médico(a)'
+        NURSE             = 'NURSE',             'Enfermeiro(a)'
+        NUTRITIONIST      = 'NUTRITIONIST',      'Nutricionista'
+        PHYSIO            = 'PHYSIO',            'Fisioterapeuta'
+        SPEECH_THERAPIST  = 'SPEECH_THERAPIST',  'Fonoaudiólogo(a)'
+        PHYSICAL_EDUCATOR = 'PHYSICAL_EDUCATOR', 'Educador(a) Físico(a)'
+        PSYCHOLOGIST      = 'PSYCHOLOGIST',      'Psicólogo(a)'
+        DENTIST           = 'DENTIST',           'Dentista'
+        OCC_THERAPIST     = 'OCC_THERAPIST',     'Terapeuta Ocupacional'
+        PHARMACIST        = 'PHARMACIST',        'Farmacêutico(a)'
+        BIOMEDICO         = 'BIOMEDICO',         'Biomédico(a)'
+        ADMIN             = 'ADMIN',             'Administrador'
 
     # Identificador público seguro (não expõe PK sequencial em APIs)
     uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, verbose_name='UUID público')
@@ -283,3 +290,162 @@ class VerificationCode(models.Model):
 
     def __str__(self):
         return f'{self.user.username} — {self.get_purpose_display()} ({self.code})'
+
+
+# ── Vínculo Paciente-Profissional ──────────────────────────────────────────────
+
+class PatientProfessionalAccess(models.Model):
+    """Registra o vínculo explícito entre paciente e profissional de saúde."""
+
+    id           = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    patient      = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='professional_accesses',
+        verbose_name='Paciente',
+    )
+    professional = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='patient_accesses',
+        verbose_name='Profissional',
+    )
+    granted_by   = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='granted_accesses',
+        verbose_name='Concedido por',
+    )
+    access_reason = models.CharField(max_length=200, blank=True, verbose_name='Motivo do acesso')
+    is_active     = models.BooleanField(default=True, verbose_name='Ativo')
+    granted_at    = models.DateTimeField(auto_now_add=True, verbose_name='Concedido em')
+    revoked_at    = models.DateTimeField(null=True, blank=True, verbose_name='Revogado em')
+
+    class Meta:
+        db_table            = 'patient_professional_accesses'
+        unique_together     = [['patient', 'professional']]
+        verbose_name        = 'Vínculo Paciente-Profissional'
+        verbose_name_plural = 'Vínculos Paciente-Profissional'
+        indexes = [
+            models.Index(fields=['patient', 'is_active']),
+            models.Index(fields=['professional', 'is_active']),
+        ]
+
+    def revoke(self):
+        self.is_active = False
+        self.revoked_at = timezone.now()
+        self.save(update_fields=['is_active', 'revoked_at'])
+
+    def __str__(self):
+        return f'{self.professional} → {self.patient} ({"ativo" if self.is_active else "revogado"})'
+
+
+# ── Log de Auditoria (LGPD) ────────────────────────────────────────────────────
+
+class AuditLog(models.Model):
+    """Registro imutável de acessos e ações sensíveis (LGPD art. 37)."""
+
+    ACTION_VIEW   = 'view'
+    ACTION_CREATE = 'create'
+    ACTION_EDIT   = 'edit'
+    ACTION_DELETE = 'delete'
+    ACTION_LOGIN  = 'login'
+    ACTION_LOGOUT = 'logout'
+    ACTION_EXPORT = 'export'
+    ACTION_ACCESS_DENIED = 'access_denied'
+
+    ACTION_CHOICES = [
+        (ACTION_VIEW,          'Visualização'),
+        (ACTION_CREATE,        'Criação'),
+        (ACTION_EDIT,          'Edição'),
+        (ACTION_DELETE,        'Exclusão'),
+        (ACTION_LOGIN,         'Login'),
+        (ACTION_LOGOUT,        'Logout'),
+        (ACTION_EXPORT,        'Exportação'),
+        (ACTION_ACCESS_DENIED, 'Acesso negado'),
+    ]
+
+    id            = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    actor         = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='audit_logs',
+        verbose_name='Ator',
+    )
+    action        = models.CharField(max_length=20, choices=ACTION_CHOICES, verbose_name='Ação')
+    resource_type = models.CharField(max_length=50, verbose_name='Tipo de recurso')
+    resource_id   = models.CharField(max_length=100, blank=True, verbose_name='ID do recurso')
+    patient       = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='audit_logs_as_patient',
+        verbose_name='Paciente envolvido',
+    )
+    ip_address    = models.GenericIPAddressField(null=True, blank=True, verbose_name='IP')
+    user_agent    = models.CharField(max_length=300, blank=True, verbose_name='User-Agent')
+    success       = models.BooleanField(default=True, verbose_name='Sucesso')
+    detail        = models.JSONField(default=dict, blank=True, verbose_name='Detalhes')
+    timestamp     = models.DateTimeField(auto_now_add=True, verbose_name='Momento')
+
+    class Meta:
+        db_table            = 'audit_logs'
+        ordering            = ['-timestamp']
+        verbose_name        = 'Log de Auditoria'
+        verbose_name_plural = 'Logs de Auditoria'
+        indexes = [
+            models.Index(fields=['actor', 'timestamp']),
+            models.Index(fields=['patient', 'timestamp']),
+            models.Index(fields=['resource_type', 'timestamp']),
+            models.Index(fields=['action', 'success']),
+        ]
+
+    def __str__(self):
+        actor = self.actor.username if self.actor else '(deletado)'
+        return f'[{self.timestamp:%d/%m/%Y %H:%M}] {actor} — {self.get_action_display()} {self.resource_type}'
+
+
+# ── Feedback da Plataforma ─────────────────────────────────────────────────────
+
+class PlatformFeedback(models.Model):
+    """Avaliações da plataforma por pacientes e profissionais."""
+
+    SCORE_CHOICES = [(i, str(i)) for i in range(1, 6)]
+
+    id        = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user      = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='feedbacks',
+        verbose_name='Usuário',
+    )
+    role_at_time = models.CharField(max_length=20, blank=True, verbose_name='Papel na época')
+
+    # Três critérios de avaliação
+    score_usability    = models.PositiveSmallIntegerField(choices=SCORE_CHOICES, verbose_name='Facilidade de uso (1-5)')
+    score_performance  = models.PositiveSmallIntegerField(choices=SCORE_CHOICES, verbose_name='Velocidade/Desempenho (1-5)')
+    score_care_quality = models.PositiveSmallIntegerField(choices=SCORE_CHOICES, verbose_name='Qualidade do atendimento (1-5)')
+
+    comment    = models.TextField(blank=True, verbose_name='Comentário livre')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table            = 'platform_feedbacks'
+        ordering            = ['-created_at']
+        verbose_name        = 'Feedback da Plataforma'
+        verbose_name_plural = 'Feedbacks da Plataforma'
+        indexes = [
+            models.Index(fields=['created_at']),
+            models.Index(fields=['role_at_time']),
+        ]
+
+    @property
+    def average_score(self):
+        return round((self.score_usability + self.score_performance + self.score_care_quality) / 3, 1)
+
+    def __str__(self):
+        user = self.user.username if self.user else '(anônimo)'
+        return f'Feedback de {user} — média {self.average_score}'

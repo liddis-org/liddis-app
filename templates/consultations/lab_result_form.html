@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% block title %}{{ titulo }} — LIDDIS{% endblock %}
+{% block topbar_title %}Registrar Resultado{% endblock %}
+
+{% block extra_css %}
+<style>
+.request-summary{background:var(--surface-2);border:1px solid var(--border-soft);border-radius:var(--radius);padding:16px 20px;margin-bottom:24px}
+.request-summary-title{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px}
+.request-summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.rs-item{font-size:12px}
+.rs-label{color:var(--muted);margin-bottom:2px}
+.rs-value{color:var(--text);font-weight:500}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2>{{ titulo }}</h2>
+    <p>Consulta de {{ consultation.date|date:"d/m/Y" }} — {{ consultation.professional_name }}</p>
+  </div>
+  <a href="{% url 'lab_request_list' consultation.pk %}" class="btn btn-secondary">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Voltar
+  </a>
+</div>
+
+<div class="request-summary">
+  <div class="request-summary-title">Informações da Solicitação</div>
+  <div class="request-summary-grid">
+    <div class="rs-item">
+      <div class="rs-label">Exame</div>
+      <div class="rs-value">{{ lab_request.exam_type }}</div>
+    </div>
+    {% if lab_request.requesting_professional %}
+    <div class="rs-item">
+      <div class="rs-label">Solicitante</div>
+      <div class="rs-value">{{ lab_request.requesting_professional.get_full_name|default:lab_request.requesting_professional.username }}</div>
+    </div>
+    {% endif %}
+    <div class="rs-item">
+      <div class="rs-label">Solicitado em</div>
+      <div class="rs-value">{{ lab_request.created_at|date:"d/m/Y H:i" }}</div>
+    </div>
+    <div class="rs-item">
+      <div class="rs-label">Status atual</div>
+      <div class="rs-value">{{ lab_request.get_status_display }}</div>
+    </div>
+    {% if lab_request.urgency %}
+    <div class="rs-item">
+      <div class="rs-label">Prioridade</div>
+      <div class="rs-value" style="color:#f87171">Urgente</div>
+    </div>
+    {% endif %}
+  </div>
+  {% if lab_request.exam_description %}
+    <div style="margin-top:12px;font-size:12px;color:var(--muted);line-height:1.6">
+      <span style="color:var(--muted-2);font-weight:600">Indicação: </span>{{ lab_request.exam_description }}
+    </div>
+  {% endif %}
+</div>
+
+<div class="card" style="max-width:640px">
+  <h3 style="font-size:14px;font-weight:600;margin-bottom:20px;color:var(--text)">Registrar Resultado</h3>
+  <form method="post">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger" style="margin-bottom:20px">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="form-group" style="margin-bottom:20px">
+      <label class="form-label" for="{{ form.result.id_for_label }}">
+        Resultado <span style="color:var(--danger)">*</span>
+      </label>
+      <textarea
+        name="{{ form.result.html_name }}"
+        id="{{ form.result.id_for_label }}"
+        rows="8"
+        placeholder="Descreva o resultado do exame em detalhes..."
+        style="width:100%;resize:vertical"
+        class="{% if form.result.errors %}is-invalid{% endif %}"
+      >{{ form.result.value|default:'' }}</textarea>
+      {% if form.result.errors %}<span class="form-error">{{ form.result.errors.0 }}</span>{% endif %}
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+      <div class="form-group">
+        <label class="form-label" for="{{ form.result_date.id_for_label }}">Data do Resultado</label>
+        {{ form.result_date }}
+        {% if form.result_date.errors %}<span class="form-error">{{ form.result_date.errors.0 }}</span>{% endif %}
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="{{ form.status.id_for_label }}">Status</label>
+        {{ form.status }}
+        {% if form.status.errors %}<span class="form-error">{{ form.status.errors.0 }}</span>{% endif %}
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:24px">
+      <label class="form-label" for="{{ form.reference_values.id_for_label }}">Valores de Referência</label>
+      <textarea
+        name="{{ form.reference_values.html_name }}"
+        id="{{ form.reference_values.id_for_label }}"
+        rows="3"
+        placeholder="Ex.: Hemoglobina: 12–16 g/dL (mulheres), 13,5–17,5 g/dL (homens)..."
+        style="width:100%;resize:vertical"
+      >{{ form.reference_values.value|default:'' }}</textarea>
+      {% if form.reference_values.errors %}<span class="form-error">{{ form.reference_values.errors.0 }}</span>{% endif %}
+    </div>
+
+    <div style="display:flex;gap:10px">
+      <button type="submit" class="btn btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17,21 17,13 7,13"/><polyline points="7,3 7,8 15,8"/></svg>
+        Salvar Resultado
+      </button>
+      <a href="{% url 'lab_request_list' consultation.pk %}" class="btn btn-secondary">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

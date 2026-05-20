@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guia de Deploy — LIDDIS</title>
+  <style>
+    :root {
+      --azul:      #2563eb;
+      --azul-esc:  #1d4ed8;
+      --verde:     #16a34a;
+      --verde-cl:  #dcfce7;
+      --amarelo:   #ca8a04;
+      --amarelo-cl:#fef9c3;
+      --vermelho:  #dc2626;
+      --vermelho-cl:#fee2e2;
+      --cinza-1:   #f8fafc;
+      --cinza-2:   #f1f5f9;
+      --cinza-3:   #e2e8f0;
+      --cinza-6:   #475569;
+      --cinza-9:   #0f172a;
+      --fonte:     'Segoe UI', system-ui, sans-serif;
+      --mono:      'Consolas', 'Courier New', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--fonte);
+      background: var(--cinza-2);
+      color: var(--cinza-9);
+      line-height: 1.6;
+    }
+
+    /* ── TOPO ── */
+    header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+      color: #fff;
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+    header .badge {
+      display: inline-block;
+      background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.35);
+      border-radius: 999px;
+      padding: .25rem 1rem;
+      font-size: .8rem;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+    header h1 { font-size: 2.4rem; font-weight: 800; margin-bottom: .5rem; }
+    header p  { font-size: 1.1rem; opacity: .85; max-width: 600px; margin: 0 auto; }
+
+    /* ── TEMPO ESTIMADO ── */
+    .tempo-bar {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      background: #fff;
+      padding: 1.2rem 2rem;
+      border-bottom: 1px solid var(--cinza-3);
+    }
+    .tempo-item {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      font-size: .9rem;
+      color: var(--cinza-6);
+    }
+    .tempo-item .icon { font-size: 1.2rem; }
+    .tempo-item strong { color: var(--cinza-9); }
+
+    /* ── LAYOUT ── */
+    .wrapper {
+      max-width: 860px;
+      margin: 2rem auto;
+      padding: 0 1rem 4rem;
+    }
+
+    /* ── AVISOS / CALLOUTS ── */
+    .callout {
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
+      margin: 1.5rem 0;
+      display: flex;
+      gap: .8rem;
+      align-items: flex-start;
+    }
+    .callout .ci { font-size: 1.4rem; flex-shrink: 0; line-height: 1; }
+    .callout p, .callout li { font-size: .92rem; }
+    .callout ul { padding-left: 1.2rem; }
+    .callout.info   { background: #eff6ff; border: 1px solid #bfdbfe; }
+    .callout.warn   { background: var(--amarelo-cl); border: 1px solid #fde68a; }
+    .callout.danger { background: var(--vermelho-cl); border: 1px solid #fca5a5; }
+    .callout.ok     { background: var(--verde-cl); border: 1px solid #86efac; }
+
+    /* ── SEÇÕES ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: 3rem 0 1.5rem;
+    }
+    .section-num {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: var(--azul);
+      color: #fff;
+      font-weight: 800;
+      font-size: 1.3rem;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .section-header h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+    .section-header .tag {
+      font-size: .75rem;
+      background: var(--cinza-3);
+      color: var(--cinza-6);
+      border-radius: 999px;
+      padding: .2rem .7rem;
+      font-weight: 600;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    /* ── PASSOS ── */
+    .steps { counter-reset: step; }
+    .step {
+      background: #fff;
+      border: 1px solid var(--cinza-3);
+      border-radius: 12px;
+      padding: 1.4rem 1.6rem;
+      margin-bottom: 1rem;
+      position: relative;
+      counter-increment: step;
+    }
+    .step::before {
+      content: counter(step);
+      position: absolute;
+      top: 1.2rem; left: -1px;
+      background: var(--azul);
+      color: #fff;
+      font-weight: 700;
+      font-size: .75rem;
+      width: 22px; height: 22px;
+      border-radius: 0 6px 6px 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .step h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: .5rem;
+      padding-left: .3rem;
+    }
+    .step p, .step li { font-size: .92rem; color: var(--cinza-6); }
+    .step ul, .step ol { padding-left: 1.4rem; margin-top: .4rem; }
+    .step li { margin-bottom: .3rem; }
+    .step li strong { color: var(--cinza-9); }
+
+    /* ── CAMPO COPIÁVEL ── */
+    .copy-block {
+      background: #0f172a;
+      border-radius: 8px;
+      padding: 1rem 1.2rem;
+      margin: .8rem 0;
+      position: relative;
+    }
+    .copy-block code {
+      font-family: var(--mono);
+      font-size: .84rem;
+      color: #7dd3fc;
+      white-space: pre-wrap;
+      word-break: break-all;
+      display: block;
+    }
+    .copy-block .copy-btn {
+      position: absolute;
+      top: .6rem; right: .6rem;
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.2);
+      color: #fff;
+      border-radius: 6px;
+      padding: .25rem .6rem;
+      font-size: .75rem;
+      cursor: pointer;
+      font-family: var(--fonte);
+      transition: background .2s;
+    }
+    .copy-block .copy-btn:hover { background: rgba(255,255,255,.2); }
+    .copy-block .copy-btn.copied { background: var(--verde); border-color: var(--verde); }
+
+    .inline-code {
+      font-family: var(--mono);
+      background: var(--cinza-2);
+      border: 1px solid var(--cinza-3);
+      border-radius: 4px;
+      padding: .1rem .35rem;
+      font-size: .85em;
+      color: #b45309;
+    }
+
+    /* ── CAMPOS DE FORMULÁRIO / PREENCHIMENTO ── */
+    .form-fields {
+      display: grid;
+      gap: .6rem;
+      margin: .8rem 0;
+    }
+    .field-row {
+      display: flex;
+      align-items: flex-start;
+      gap: .8rem;
+      background: var(--cinza-1);
+      border: 1px solid var(--cinza-3);
+      border-radius: 8px;
+      padding: .7rem 1rem;
+    }
+    .field-row .label {
+      font-weight: 600;
+      font-size: .85rem;
+      min-width: 160px;
+      color: var(--cinza-9);
+    }
+    .field-row .value {
+      font-size: .85rem;
+      color: var(--cinza-6);
+    }
+    .field-row .value .inline-code { font-size: .82rem; }
+
+    /* ── CHECKLIST FINAL ── */
+    .checklist { list-style: none; }
+    .checklist li {
+      display: flex;
+      align-items: flex-start;
+      gap: .8rem;
+      padding: .7rem 1rem;
+      background: #fff;
+      border: 1px solid var(--cinza-3);
+      border-radius: 8px;
+      margin-bottom: .5rem;
+      font-size: .92rem;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .checklist li:hover { background: var(--cinza-1); }
+    .checklist li input[type=checkbox] {
+      width: 18px; height: 18px;
+      accent-color: var(--verde);
+      flex-shrink: 0;
+      margin-top: .1rem;
+    }
+    .checklist li.done { opacity: .55; text-decoration: line-through; }
+    .checklist .group-label {
+      font-weight: 700;
+      font-size: .8rem;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--cinza-6);
+      padding: 1rem 0 .3rem;
+      margin-bottom: 0;
+      background: none;
+      border: none;
+      cursor: default;
+    }
+    .checklist .group-label:hover { background: none; }
+
+    /* ── TABELA VARIÁVEIS ── */
+    .var-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .88rem;
+      margin: .8rem 0;
+    }
+    .var-table th {
+      background: var(--cinza-2);
+      text-align: left;
+      padding: .6rem .9rem;
+      font-size: .78rem;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--cinza-6);
+      border-bottom: 2px solid var(--cinza-3);
+    }
+    .var-table td {
+      padding: .6rem .9rem;
+      border-bottom: 1px solid var(--cinza-3);
+      vertical-align: top;
+    }
+    .var-table tr:last-child td { border-bottom: none; }
+    .var-table tr:hover td { background: var(--cinza-1); }
+    .badge-req {
+      display: inline-block;
+      padding: .1rem .5rem;
+      border-radius: 999px;
+      font-size: .72rem;
+      font-weight: 700;
+    }
+    .badge-req.sim  { background: var(--verde-cl); color: var(--verde); }
+    .badge-req.rec  { background: var(--amarelo-cl); color: var(--amarelo); }
+
+    /* ── DIVISOR ── */
+    hr.divider {
+      border: none;
+      border-top: 1px solid var(--cinza-3);
+      margin: 2.5rem 0;
+    }
+
+    /* ── RODAPÉ ── */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      font-size: .82rem;
+      color: var(--cinza-6);
+      border-top: 1px solid var(--cinza-3);
+      background: #fff;
+    }
+
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.7rem; }
+      .field-row { flex-direction: column; gap: .3rem; }
+      .field-row .label { min-width: unset; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ CABEÇALHO ══════════════ -->
+<header>
+  <div class="badge">Guia de Deploy</div>
+  <h1>🚀 LIDDIS — Do Zero ao Ar</h1>
+  <p>Passo a passo completo para quem nunca fez deploy: criar contas, configurar serviços e publicar o sistema.</p>
+</header>
+
+<div class="tempo-bar">
+  <div class="tempo-item"><span class="icon">⏱️</span><span>Tempo estimado: <strong>2–3 horas</strong></span></div>
+  <div class="tempo-item"><span class="icon">💡</span><span>Nível: <strong>Iniciante</strong></span></div>
+  <div class="tempo-item"><span class="icon">💰</span><span>Custo inicial: <strong>Gratuito</strong> (dentro dos limites free)</span></div>
+  <div class="tempo-item"><span class="icon">🖥️</span><span>OS: <strong>Windows / Mac / Linux</strong></span></div>
+</div>
+
+<!-- ══════════════ CONTEÚDO ══════════════ -->
+<div class="wrapper">
+
+  <div class="callout info">
+    <span class="ci">📌</span>
+    <div>
+      <p><strong>Antes de começar, separe:</strong></p>
+      <ul>
+        <li>Uma conta Google (Gmail) que será usada para o Google Cloud</li>
+        <li>Um bloco de notas ou gerenciador de senhas para salvar chaves e URLs</li>
+        <li>Conexão estável com a internet</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ══ ETAPA 0 — INSTALAR FERRAMENTAS ══ -->
+  <div class="section-header">
+    <div class="section-num">0</div>
+    <div>
+      <h2>Instalar Ferramentas no seu Computador</h2>
+      <span class="tag">Pré-requisito</span>
+    </div>
+  </div>
+
+  <div class="steps">
+
+    <div class="step">
+      <h3>Instalar o Python (se ainda não tiver)</h3>
+      <p>Acesse <strong>python.org/downloads</strong>, baixe a versão mais recente e instale.</p>
+      <div class="callout warn" style="margin-top:.6rem">
+        <span class="ci">⚠️</span>
+        <p>Durante a instalação, marque a opção <strong>"Add Python to PATH"</strong> antes de clicar em Install.</p>
+      </div>
+      <p>Verifique se funcionou abrindo o terminal e digitando:</p>
+      <div class="copy-block">
+        <code>python --version</code>
+        <button class="copy-btn" onclick="copiar(this)">Copiar</button>
+      </div>
+    </div>
+
+    <div class="step">
+      <h3>Instalar o Google Cloud CLI (gcloud)</h3>
+      <p>É a ferramenta que usaremos para enviar o sistema para o Google Cloud.</p>
+      <ol>
+        <li>Acesse: <strong>cloud.google.com/sdk/docs/install</strong></li>
+        <li>Escolha seu sistema operacional e baixe o instalador</li>
+        <li>Execute o instalador e siga as telas (Next → Next → Install)</li>
+        <li>Ao final, o instalador vai abrir um terminal automaticamente — feche-o</li>
+      </ol>
+      <p style="margin-top:.6rem">Verifique se funcionou:</p>
+      <div class="copy-block">
+        <code>gcloud --version</code>
+        <button class="copy-btn" onclick="copiar(this)">Copiar</button>
+      </div>
+    </div>
+
+    <div class="step">
+      <h3>Instalar o Git (se ainda não tiver)</h3>
+      <p>Acesse <strong>git-scm.com</strong>, baixe e instale. Todas as opções padrão estão corretas.</p>
+    </div>
+
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ══ ETAPA 1 — SUPABASE ══ -->
+  <div class="section-header">
+    <div class="section-num">1</div>
+    <div>
+      <h2>Supabase — Banco de Dados</h2>
+      <span class="tag">~15 minutos</span>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <span class="ci">ℹ️</span>
+    <p>O Supabase vai guardar todos os dados do sistema (pacientes, consultas, usuários). É gratuito para projetos pequenos e fica em servidores no Brasil.</p>
+  </div>
+
+  <div class="steps">
+
+    <div class="step">
+      <h3>Criar conta no Supabase</h3>
+      <ol>
+        <li>Acesse <strong>supabase.com</strong></li>
+        <li>Clique em <strong>Start your project</strong></li>
+        <li>Clique em <strong>Continue with GitHub</strong> (ou crie uma conta com e-mail)</li>
+        <li>Autorize o acesso quando solicitado</li>
+      </ol>
+    </div>
+
+    <div class="step">
+      <h3>Criar o projeto do banco de dados</h3>
+      <ol>
+        <li>No painel do Supabase, clique em <strong>New project</strong></li>
+        <li>Preencha assim:</li>
+      </ol>
+      <div class="form-fields">
+        <div class="field-row">
+          <span class="label">Name</span>
+          <span class="value"><span class="inline-code">liddis-producao</span></span>
+        </div>
+        <div class="field-row">
+          <span class="label">Database Password</span>
+          <span class="value">Gere uma senha forte — <strong>salve em local seguro!</strong> Não tem como recuperar depois.</span>
+        </div>
+        <div class="field-row">
+          <span class="label">Region</span>
+          <span class="value"><span class="inline-code">South America (São Paulo)</span> — escolha essa para menor latência no Brasil</span>
+        </div>
+      </div>
+      <ol start="3">
+        <li>Clique em <strong>Create new project</strong></li>
+        <li>Aguarde cerca de 2 minutos enquanto o projeto é criado</li>
+      </ol>
+    </div>
+
+    <div class="step">
+      <h3>Copiar a URL de conexão do banco</h3>
+      <p>Essa URL é o endereço que o sistema usa para se conectar ao banco.</p>
+      <ol>
+        <li>Dentro do projeto, clique no ícone de engrenagem ⚙️ (<strong>Project Settings</strong>) no menu lateral</li>
+        <li>Clique em <strong>Database</strong></li>
+        <li>Role a página até encontrar <strong>Connection string</strong></li>
+        <li>Clique na aba <strong>URI</strong></li>
+        <li>Localize a seção <strong>Connection Pooler</strong> (importante!)</li>
+        <li>Copie a URL — ela terá este formato:</li>
+      </ol>
+      <div class="copy-block">
+        <code>postgresql://postgres.[REF]:[SUA_SENHA]@aws-0-sa-east-1.pooler.supabase.com:6543/postgres</code>
+      </div>
+      <div class="callout warn" style="margin-top:.5rem">
+        <span class="ci">⚠️</span>
+        <p>Use a porta <strong>6543</strong> (Connection Pooler), não a porta 5432. Isso é essencial para funcionar no Cloud Run.</p>
+      </div>
+      <p>📋 <strong>Salve essa URL — você vai precisar dela mais adiante.</strong></p>
+    </div>
+
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ══ ETAPA 2 — GOOGLE CLOUD ══ -->
+  <div class="section-header">
+    <div class="section-num">2</div>
+    <div>
+      <h2>Google Cloud — Criar Conta e Projeto</h2>
+      <span class="tag">~20 minutos</span>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <span class="ci">ℹ️</span>
+    <p>O Google Cloud hospeda o sistema online. O plano gratuito inclui créditos iniciais de <strong>$300 por 90 dias</strong> e um nível gratuito permanente para o Cloud Run.</p>
+  </div>
+
+  <div class="steps">
+
+    <div class="step">
+      <h3>Criar conta no Google Cloud</h3>
+      <ol>
+        <li>Acesse <strong>console.cloud.google.com</strong></li>
+        <li>Faça login com sua conta Google (Gmail)</li>
+        <li>Aceite os termos de serviço</li>
+        <li>Quando perguntado sobre <strong>Free Trial</strong>, clique em <strong>Activate</strong> — será necessário um cartão de crédito para verificação, <strong>mas não será cobrado nada automaticamente</strong></li>
+      </ol>
+      <div class="callout ok" style="margin-top:.5rem">
+        <span class="ci">✅</span>
+        <p>O cartão é usado apenas para verificar identidade. Você recebe $300 de créditos e o Cloud Run tem um nível gratuito permanente.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <h3>Criar um novo projeto</h3>
+      <ol>
+        <li>No topo da tela, clique no seletor de projeto (ao lado do logo do Google Cloud)</li>
+        <li>Clique em <strong>New Project</strong></li>
+        <li>Preencha:
+          <ul>
+            <li><strong>Project name:</strong> <span class="inline-code">liddis</span></li>
+            <li><strong>Organization:</strong> deixe como está (No organization)</li>
+          </ul>
+        </li>
+        <li>Clique em <strong>Create</strong></li>
+        <li>Aguarde alguns segundos e selecione o projeto criado</li>
+      </ol>
+      <p style="margin-top:.6rem">📋 <strong>Anote o Project ID</strong> — aparece abaixo do nome do projeto (ex: <span class="inline-code">liddis-123456</span>). Você vai usar em vários comandos.</p>
+    </div>
+
+    <div class="step">
+      <h3>Fazer login com o gcloud no terminal</h3>
+      <p>Abra o terminal (CMD ou PowerShell no Windows, Terminal no Mac) e execute:</p>
+      <div class="copy-block">
+        <code>gcloud auth login</code>
+        <button class="copy-btn" onclick="copiar(this)">Copiar</button>
+      </div>
+      <p>Uma janela do navegador vai abrir — faça login com a mesma conta Google. Depois execute:</p>
+      <div class="copy-block">
+        <code>gcloud config set project SEU-PROJECT-ID</code>
+        <button class="copy-btn" onclick="copiar(this)">Copiar</button>
+      </div>
+      <div class="callout warn">
+        <span class="ci">⚠️</span>
+        <p>Substitua <strong>SEU-PROJECT-ID</strong> pelo ID anotado no passo anterior (ex: <span class="inline-code">liddis-123456</span>).</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <h3>Habilitar os serviços necessários</h3>
+      <p>Este comando ativa os serviços do Google Cloud que o LIDDIS precisa. Execute no terminal:</p>
+      <div class="copy-block">
+        <code>gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com secretmanager.googleapis.com</code>
+        <button class="copy-btn" onclick="copiar(this)">Copiar</button>
+      </div>
+      <p>Aguarde até aparecer a mensagem de sucesso. Pode levar 1–2 minutos.</p>
+    </div>
+
+    <div class="step">
+      <h3>Criar repositório para as imagens Docker</h3>
+      <p>O sistema é empacotado em uma "imagem Docker" antes de ser publicado. Execute:</p>
+      <div class="copy-block">
+        <code>gcloud artifacts repositories create liddis --repository-format=docker --location=southamerica-east1 --description="Imagens Docker do LIDDIS"</code>
+        <button class="copy-btn" onclick="copiar(this)">Copiar</button>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ══ ETAPA 3 — GOOGLE OAUTH ══ -->
+  <div class="section-header">
+    <div class="section-num">3</div>
+    <div>
+      <h2>Google OAuth — Login com Google</h2>
+      <span class="tag">~15 minutos</span>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <span class="ci">ℹ️</span>
+    <p>O OAuth permite que os usuários do LIDDIS façam login usando a conta Google deles, sem precisar criar uma senha separada.</p>
+  </div>
+
+  <div class="steps">
+
+    <div class="step">
+      <h3>Configurar a tela de consentimento OAuth</h3>
+      <ol>
+        <li>No Google Cloud Console, clique no menu ☰ (três linhas no topo esquerdo)</li>
+        <li>Vá em <strong>APIs &amp; Services</strong> → <strong>OAuth consent screen</strong></li>
+        <li>Selecione <strong>External</strong> e clique em <strong>Create</strong></li>
+        <li>Preencha:
+          <ul>
+            <li><strong>App name:</strong> <span class="inline-code">LIDDIS</span></li>
+            <li><strong>User support email:</strong> seu e-mail</li>
+            <li><strong>Developer contact email:</strong> seu e-mail</li>
+          </ul>
+        </li>
+        <li>Clique em <strong>Save and Continue</strong> em todas as próximas telas (sem mudar nada)</li>
+        <li>Na última tela, clique em <strong>Back to Dashboard</strong></li>
+      </ol>
+    </div>
+
+    <div class="step">
+      <h3>Criar as credenciais OAuth</h3>
+      <ol>
+        <li>Ainda em <strong>APIs &amp; Services</strong>, clique em <strong>Credentials</strong></li>
+        <li>Clique em <strong>+ Create Credentials</strong> → <strong>OAuth 2.0 Client IDs</strong></li>
+        <li>Em <strong>Application type</strong>, selecione <strong>Web application</strong></li>
+        <li>Em <strong>Name</strong>, coloque: <span class="inline-code">LIDDIS Web</span></li>
+      </ol>
+    </div>
+
+    <div class="step">
+      <h3>Configurar as URLs autorizadas</h3>
+      <p>Ainda na mesma tela de criação das credenciais:</p>
+      <p><strong>Authorized JavaScript origins</strong> — clique em "+ Add URI" e adicione:</p>
+      <div class="copy-block">
+        <code>http://localhost:8000</code>
+        <button class="copy-btn" onclick="copiar(this)">Copiar</button>
+      </div>
+      <p style="margin-top:.6rem"><strong>Authorized redirect URIs</strong> — clique em "+ Add URI" e adicione:</p>
+      <div class="copy-block">
+        <code>http://localhost:8000/accounts/google/login/callback/</code>
+        <button class="copy-btn" onclick="copiar(this)">Copiar</button>
+      </div>
+      <div class="callout info" style="margin-top:.6rem">
+        <span class="ci">📌</span>
+        <p>Depois do deploy você vai adicionar a URL real do Cloud Run. Por enquanto, coloque apenas o localhost para testar localmente.</p>
+      </div>
+      <ol start="5">
+        <li>Clique em <strong>Create</strong></li>
+        <li>Uma janela vai aparecer com o <strong>Client ID</strong> e o <strong>Client Secret</strong></li>
+        <li>📋 <strong>Copie e salve ambos agora</strong> — o secret não aparece novamente!</li>
+      </ol>
+    </div>
+
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ══ ETAPA 4 — RESEND (E-MAIL) ══ -->
+  <div class="section-header">
+    <div class="section-num">4</div>
+    <div>
+      <h2>Resend — Envio de E-mails</h2>
+      <span class="tag">~10 minutos</span>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <span class="ci">ℹ️</span>
+    <p>O Resend envia os e-mails de verificação de conta para os usuários. O plano gratuito suporta 100 e-mails/dia.</p>
+  </div>
+
+  <div class="steps">
+
+    <div class="step">
+      <h3>Criar conta no Resend</h3>
+      <ol>
+        <li>Acesse <strong>resend.com</strong></li>
+        <li>Clique em <strong>Sign Up</strong> e crie uma conta (pode usar GitHub ou e-mail)</li>
+        <li>Verifique seu e-mail se solicitado</li>
+      </ol>
+    </div>
+
+    <div class="step">
+      <h3>Criar uma API Key</h3>
+      <ol>
+        <li>No painel do Resend, clique em <strong>API Keys</strong> no menu lateral</li>
+        <li>Clique em <strong>Create API Key</strong></li>
+        <li>Em <strong>Name</strong>, coloque: <span class="inline-code">liddis-prod</span></li>
+        <li>Deixe as permissões padrão e clique em <strong>Add</strong></li>
+        <li>📋 <strong>Copie a API Key gerada</strong> — começa com <span class="inline-code">re_</span></li>
+      </ol>
+      <div class="callout warn">
+        <span class="ci">⚠️</span>
+        <p>A API Key só aparece uma vez! Salve imediatamente no seu bloco de notas.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ══ ETAPA 5 — SECRET MANAGER ══ -->
+  <div class="section-header">
+    <div class="section-num">5</div>
+    <div>
+      <h2>Secret Manager — Guardar Senhas com Segurança</h2>
+      <span class="tag">~15 minutos</span>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <span class="ci">ℹ️</span>
+    <p>O Secret Manager guarda as senhas e chaves do sistema de forma segura no Google Cloud. Nunca deixe senhas no código!</p>
+  </div>
+
+  <div class="steps">
+
+    <div class="step">
+      <h3>Gerar uma SECRET_KEY forte para o Django</h3>
+      <p>Execute este comando no terminal para gerar uma chave aleatória segura:</p>
+      <div class="copy-block">
+        <code>python -c "import secrets; print(secrets.token_urlsafe(50))"</code>
+        <button class="copy-btn" onclick="copiar(this)">Copiar</button>
+      </div>
+      <p>📋 Copie e salve a chave gerada.</p>
+    </div>
+
+    <div class="step">
+      <h3>Criar os secrets no Google Cloud</h3>
+      <p>Execute cada comando abaixo no terminal, substituindo os valores pelos que você salvou:</p>
+      <p><strong>Secret Key do Django:</strong></p>
+      <div class="copy-block">
+        <code>echo -n "SUA_SECRET_KEY_AQUI" | gcloud secrets create liddis-secret-key --data-file=-</code>
+        <button class="copy-btn" onclick="copiar(this)">Copiar</button>
+      </div>
+      <p><strong>URL do banco Supabase:</strong></p>
+      <div class="copy-block">
+        <code>echo -n "postgresql://postgres.[REF]:[SENHA]@aws-0-sa-east-1.pooler.supabase.com:6543/postgres" | gcloud secrets create liddis-database-url --data-file=-</code>
+        <button class="copy-btn" onclick="copiar(this)">Copiar</button>
+      </div>
+      <p><strong>Client ID do Google OAuth:</strong></p>
+      <div class="copy-block">
+        <code>echo -n "SEU_CLIENT_ID.apps.googleusercontent.com" | gcloud secrets create liddis-google-client-id --data-file=-</code>
+        <button class="copy-btn" onclick="copiar(this)">Copiar</button>
+      </div>
+      <p><strong>Client Secret do Google OAuth:</strong></p>
+      <div class="copy-block">
+        <code>echo -n "GOCSPX-SEU_SECRET_AQUI" | gcloud secrets create liddis-google-secret --data-file=-</code>
+        <button class="copy-btn" onclick="copiar(this)">Copiar</button>
+      </div>
+      <p><strong>API Key do Resend:</strong></p>
+      <div class="copy-block">
+        <code>echo -n "re_SUA_API_KEY_AQUI" | gcloud secrets create liddis-resend-key --data-file=-</code>
+        <button class="copy-btn" onclick="copiar(this)">Copiar</button>
+      </div>
+    </div>
+
+    <div class="step">
+      <h3>Dar permissões ao Cloud Build para acessar os secrets</h3>
+      <p>Execute esses comandos em sequência no terminal:</p>
+      <div class="copy-block">
+        <code>PROJECT_NUMBER=$(gcloud projects describe $(gcloud config get-value project) --format='value(projectNumber)')
+SA="$PROJECT_NUMBER@cloudbuild.gserviceaccount.com"
+
+gcloud projects add-iam-policy-binding $(gcloud config get-value project) --member="serviceAccount:$SA" --role="roles/run.admin"
+
+gcloud projects add-iam-policy-binding $(gcloud config get-value project) --member="serviceAccount:$SA" --role="roles/secretmanager.secretAccessor"
+
+gcloud projects add-iam-policy-binding $(gcloud config get-value project) --member="serviceAccount:$SA" --role="roles/iam.serviceAccountUser"</code>
+        <button class="copy-btn" onclick="copiar(this)">Copiar</button>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ══ ETAPA 6 — APLICAR MIGRAÇÕES ══ -->
+  <div class="section-header">
+    <div class="section-num">6</div>
+    <div>
+      <h2>Preparar o Banco de Dados</h2>
+      <span class="tag">~10 minutos</span>
+    </div>
+  </div>
+
+  <div class="steps">
+
+    <div class="step">
+      <h3>Abrir a pasta do projeto no terminal</h3>
+      <p>No Windows, abra o terminal na pasta do projeto. Se você usar VS Code, pressione <strong>Ctrl + `</strong> para abrir o terminal integrado.</p>
+    </div>
+
+    <div class="step">
+      <h3>Configurar o arquivo .env de produção</h3>
+      <ol>
+        <li>Abra o arquivo <span class="inline-code">dev-env/.env.production</span> no VS Code</li>
+        <li>Preencha cada variável com os valores que você salvou:</li>
+      </ol>
+      <table class="var-table" style="margin-top:.6rem">
+        <thead>
+          <tr>
+            <th>Variável</th>
+            <th>Valor</th>
+            <th>Req.</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="inline-code">SECRET_KEY</span></td>
+            <td>A chave gerada no passo anterior</td>
+            <td><span class="badge-req sim">Sim</span></td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">DATABASE_URL</span></td>
+            <td>URL do Supabase (porta 6543)</td>
+            <td><span class="badge-req sim">Sim</span></td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">GOOGLE_CLIENT_ID</span></td>
+            <td>Client ID do Google OAuth</td>
+            <td><span class="badge-req sim">Sim</span></td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">GOOGLE_SECRET</span></td>
+            <td>Client Secret do Google OAuth</td>
+            <td><span class="badge-req sim">Sim</span></td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">RESEND_API_KEY</span></td>
+            <td>API Key do Resend (re_...)</td>
+            <td><span class="badge-req sim">Sim</span></td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">DEBUG</span></td>
+            <td><span class="inline-code">False</span></td>
+            <td><span class="badge-req sim">Sim</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="step">
+      <h3>Copiar o .env de produção e aplicar as migrações</h3>
+      <p>No terminal (na pasta do projeto), execute:</p>
+      <div class="copy-block">
+        <code># Windows — copiar o .env
+copy dev-env\.env.production .env
+
+# Mac/Linux
+cp dev-env/.env.production .env</code>
+        <button class="copy-btn" onclick="copiar(this)">Copiar</button>
+      </div>
+      <p>Agora aplique as migrações no banco Supabase:</p>
+      <div class="copy-block">
+        <code>python manage.py migrate</code>
+        <button class="copy-btn" onclick="copiar(this)">Copiar</button>
+      </div>
+      <p>Crie o administrador do sistema:</p>
+      <div class="copy-block">
+        <code>python manage.py createsuperuser</code>
+        <button class="copy-btn" onclick="copiar(this)">Copiar</button>
+      </div>
+      <p>O terminal vai pedir nome de usuário, e-mail e senha — preencha e guarde essas informações.</p>
+    </div>
+
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ══ ETAPA 7 — DEPLOY ══ -->
+  <div class="section-header">
+    <div class="section-num">7</div>
+    <div>
+      <h2>Publicar o Sistema (Deploy)</h2>
+      <span class="tag">~20 minutos</span>
+    </div>
+  </div>
+
+  <div class="steps">
+
+    <div class="step">
+      <h3>Fazer o primeiro deploy manual</h3>
+      <p>Na pasta raiz do projeto, execute:</p>
+      <div class="copy-block">
+        <code>gcloud builds submit --config cloudbuild.yaml</code>
+        <button class="copy-btn" onclick="copiar(this)">Copiar</button>
+      </div>
+      <p>Esse processo leva entre 5 e 10 minutos. Você vai ver logs rolando no terminal — é normal.</p>
+      <div class="callout ok">
+        <span class="ci">✅</span>
+        <p>Quando aparecer <strong>"Finished successfully"</strong>, o deploy foi concluído!</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <h3>Descobrir a URL do seu sistema</h3>
+      <div class="copy-block">
+        <code>gcloud run services describe liddis-backend --region=southamerica-east1 --format="value(status.url)"</code>
+        <button class="copy-btn" onclick="copiar(this)">Copiar</button>
+      </div>
+      <p>A URL terá um formato como: <span class="inline-code">https://liddis-backend-xxxxxxxx-rj.a.run.app</span></p>
+      <p>📋 <strong>Salve essa URL!</strong> Você vai precisar dela para configurar o OAuth.</p>
+    </div>
+
+    <div class="step">
+      <h3>Adicionar a URL real no Google OAuth</h3>
+      <ol>
+        <li>Volte ao Google Cloud Console → <strong>APIs &amp; Services</strong> → <strong>Credentials</strong></li>
+        <li>Clique no lápis ✏️ para editar o OAuth Client ID criado anteriormente</li>
+        <li>Em <strong>Authorized JavaScript origins</strong>, adicione sua URL real:</li>
+      </ol>
+      <div class="copy-block">
+        <code>https://liddis-backend-xxxxxxxx-rj.a.run.app</code>
+      </div>
+      <ol start="4">
+        <li>Em <strong>Authorized redirect URIs</strong>, adicione:</li>
+      </ol>
+      <div class="copy-block">
+        <code>https://liddis-backend-xxxxxxxx-rj.a.run.app/accounts/google/login/callback/</code>
+      </div>
+      <ol start="5">
+        <li>Clique em <strong>Save</strong></li>
+      </ol>
+    </div>
+
+    <div class="step">
+      <h3>Configurar o Site no painel de administração</h3>
+      <ol>
+        <li>Acesse <span class="inline-code">https://SUA-URL.run.app/admin/</span></li>
+        <li>Faça login com o superusuário criado no passo 6</li>
+        <li>Clique em <strong>Sites</strong></li>
+        <li>Clique no site existente (<span class="inline-code">example.com</span>)</li>
+        <li>Mude para:</li>
+      </ol>
+      <div class="form-fields">
+        <div class="field-row">
+          <span class="label">Domain name</span>
+          <span class="value">Sua URL sem o <span class="inline-code">https://</span> (ex: <span class="inline-code">liddis-backend-xxx.a.run.app</span>)</span>
+        </div>
+        <div class="field-row">
+          <span class="label">Display name</span>
+          <span class="value"><span class="inline-code">LIDDIS</span></span>
+        </div>
+      </div>
+      <ol start="6">
+        <li>Clique em <strong>Save</strong></li>
+      </ol>
+    </div>
+
+    <div class="step">
+      <h3>Configurar o Google OAuth no painel</h3>
+      <ol>
+        <li>Ainda no Admin, procure por <strong>Social Applications</strong></li>
+        <li>Clique em <strong>Add Social Application</strong></li>
+        <li>Preencha:</li>
+      </ol>
+      <div class="form-fields">
+        <div class="field-row">
+          <span class="label">Provider</span>
+          <span class="value"><span class="inline-code">Google</span></span>
+        </div>
+        <div class="field-row">
+          <span class="label">Name</span>
+          <span class="value"><span class="inline-code">Google OAuth</span></span>
+        </div>
+        <div class="field-row">
+          <span class="label">Client ID</span>
+          <span class="value">Cole o Client ID do Google</span>
+        </div>
+        <div class="field-row">
+          <span class="label">Secret Key</span>
+          <span class="value">Cole o Client Secret do Google</span>
+        </div>
+        <div class="field-row">
+          <span class="label">Sites</span>
+          <span class="value">Mova o site da caixa da esquerda para a da direita clicando nele e depois em →</span>
+        </div>
+      </div>
+      <ol start="4">
+        <li>Clique em <strong>Save</strong></li>
+      </ol>
+    </div>
+
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ══ ETAPA 8 — CI/CD AUTOMÁTICO ══ -->
+  <div class="section-header">
+    <div class="section-num">8</div>
+    <div>
+      <h2>Deploy Automático a cada Push (opcional)</h2>
+      <span class="tag">~10 minutos</span>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <span class="ci">ℹ️</span>
+    <p>Após configurar isso, toda vez que você enviar código para o GitHub na branch <strong>main</strong>, o sistema será atualizado automaticamente, sem precisar rodar comandos.</p>
+  </div>
+
+  <div class="steps">
+
+    <div class="step">
+      <h3>Conectar o repositório GitHub ao Cloud Build</h3>
+      <ol>
+        <li>No Cloud Console, vá no menu ☰ → <strong>Cloud Build</strong> → <strong>Triggers</strong></li>
+        <li>Clique em <strong>Create Trigger</strong></li>
+        <li>Clique em <strong>Connect Repository</strong></li>
+        <li>Selecione <strong>GitHub (Cloud Build GitHub App)</strong></li>
+        <li>Autorize o acesso ao GitHub quando solicitado</li>
+        <li>Selecione o repositório do LIDDIS e clique em <strong>Connect</strong></li>
+      </ol>
+    </div>
+
+    <div class="step">
+      <h3>Configurar o trigger de deploy</h3>
+      <ol>
+        <li>De volta na tela de criação do trigger, preencha:</li>
+      </ol>
+      <div class="form-fields">
+        <div class="field-row">
+          <span class="label">Name</span>
+          <span class="value"><span class="inline-code">deploy-main</span></span>
+        </div>
+        <div class="field-row">
+          <span class="label">Event</span>
+          <span class="value">Push to a branch</span>
+        </div>
+        <div class="field-row">
+          <span class="label">Branch</span>
+          <span class="value"><span class="inline-code">^main$</span></span>
+        </div>
+        <div class="field-row">
+          <span class="label">Configuration</span>
+          <span class="value">Cloud Build configuration file → <span class="inline-code">cloudbuild.yaml</span></span>
+        </div>
+      </div>
+      <ol start="2">
+        <li>Clique em <strong>Save</strong></li>
+      </ol>
+      <div class="callout ok" style="margin-top:.6rem">
+        <span class="ci">✅</span>
+        <p>Pronto! Agora cada <span class="inline-code">git push origin main</span> faz o deploy automático.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ══ CHECKLIST FINAL ══ -->
+  <div class="section-header">
+    <div class="section-num" style="background:#16a34a">✓</div>
+    <div>
+      <h2>Checklist Final</h2>
+      <span class="tag">Marque cada item ao concluir</span>
+    </div>
+  </div>
+
+  <ul class="checklist" id="checklist">
+    <li class="group-label">Ferramentas e Contas</li>
+    <li onclick="toggle(this)"><input type="checkbox" /> Python instalado e funcionando no terminal</li>
+    <li onclick="toggle(this)"><input type="checkbox" /> Google Cloud CLI (gcloud) instalado</li>
+    <li onclick="toggle(this)"><input type="checkbox" /> Conta no Supabase criada</li>
+    <li onclick="toggle(this)"><input type="checkbox" /> Conta no Google Cloud criada com créditos ativados</li>
+    <li onclick="toggle(this)"><input type="checkbox" /> Conta no Resend criada</li>
+
+    <li class="group-label">Supabase</li>
+    <li onclick="toggle(this)"><input type="checkbox" /> Projeto criado na região São Paulo (sa-east-1)</li>
+    <li onclick="toggle(this)"><input type="checkbox" /> URL do Connection Pooler copiada (porta 6543)</li>
+
+    <li class="group-label">Google Cloud</li>
+    <li onclick="toggle(this)"><input type="checkbox" /> Projeto criado e Project ID anotado</li>
+    <li onclick="toggle(this)"><input type="checkbox" /> Login feito com <span class="inline-code">gcloud auth login</span></li>
+    <li onclick="toggle(this)"><input type="checkbox" /> APIs habilitadas (Cloud Run, Cloud Build, Artifact Registry, Secret Manager)</li>
+    <li onclick="toggle(this)"><input type="checkbox" /> Repositório Docker criado no Artifact Registry</li>
+    <li onclick="toggle(this)"><input type="checkbox" /> Todos os secrets criados no Secret Manager</li>
+    <li onclick="toggle(this)"><input type="checkbox" /> Permissões do Cloud Build configuradas</li>
+
+    <li class="group-label">Google OAuth</li>
+    <li onclick="toggle(this)"><input type="checkbox" /> Tela de consentimento configurada</li>
+    <li onclick="toggle(this)"><input type="checkbox" /> OAuth Client ID e Secret criados e salvos</li>
+    <li onclick="toggle(this)"><input type="checkbox" /> URLs de produção adicionadas ao OAuth após o deploy</li>
+
+    <li class="group-label">Banco de Dados e Deploy</li>
+    <li onclick="toggle(this)"><input type="checkbox" /> Arquivo .env.production preenchido completamente</li>
+    <li onclick="toggle(this)"><input type="checkbox" /> <span class="inline-code">python manage.py migrate</span> executado com sucesso</li>
+    <li onclick="toggle(this)"><input type="checkbox" /> Superusuário criado</li>
+    <li onclick="toggle(this)"><input type="checkbox" /> <span class="inline-code">gcloud builds submit</span> executado com sucesso</li>
+    <li onclick="toggle(this)"><input type="checkbox" /> URL do sistema anotada</li>
+
+    <li class="group-label">Pós-Deploy</li>
+    <li onclick="toggle(this)"><input type="checkbox" /> Site configurado no Admin (/admin/ → Sites)</li>
+    <li onclick="toggle(this)"><input type="checkbox" /> Social Application do Google configurada no Admin</li>
+    <li onclick="toggle(this)"><input type="checkbox" /> Login normal testado e funcionando</li>
+    <li onclick="toggle(this)"><input type="checkbox" /> Login com Google testado e funcionando</li>
+    <li onclick="toggle(this)"><input type="checkbox" /> Envio de e-mail de verificação testado</li>
+    <li onclick="toggle(this)"><input type="checkbox" /> CI/CD automático configurado (opcional)</li>
+  </ul>
+
+  <hr class="divider" />
+
+  <!-- ══ PROBLEMAS COMUNS ══ -->
+  <div class="section-header">
+    <div class="section-num" style="background:#dc2626">!</div>
+    <div>
+      <h2>Problemas Comuns e Soluções</h2>
+      <span class="tag">Troubleshooting</span>
+    </div>
+  </div>
+
+  <div class="step" style="counter-increment: none;">
+    <h3>Erro: "gcloud: command not found"</h3>
+    <p>O Google Cloud CLI não foi instalado corretamente ou não está no PATH. Reinstale seguindo o guia oficial e reinicie o terminal.</p>
+  </div>
+
+  <div class="step" style="counter-increment: none;">
+    <h3>Erro de conexão com o banco (OperationalError)</h3>
+    <p>Verifique se a DATABASE_URL usa a porta <strong>6543</strong> (Connection Pooler) e não 5432. Confirme que a senha está correta.</p>
+  </div>
+
+  <div class="step" style="counter-increment: none;">
+    <h3>Login com Google redireciona para erro 400</h3>
+    <p>A URL de callback não está cadastrada no Google OAuth. Certifique-se que <strong>Authorized redirect URIs</strong> inclui exatamente: <span class="inline-code">https://SUA-URL.run.app/accounts/google/login/callback/</span> (com a barra no final).</p>
+  </div>
+
+  <div class="step" style="counter-increment: none;">
+    <h3>O sistema abre mas dá erro 500</h3>
+    <p>Veja os logs para entender o erro:</p>
+    <div class="copy-block">
+      <code>gcloud run logs tail liddis-backend --region=southamerica-east1</code>
+      <button class="copy-btn" onclick="copiar(this)">Copiar</button>
+    </div>
+  </div>
+
+  <div class="step" style="counter-increment: none;">
+    <h3>Migrations falharam</h3>
+    <p>Verifique se o arquivo <span class="inline-code">.env</span> está na raiz do projeto (não dentro de dev-env) e se DATABASE_URL está preenchida corretamente.</p>
+  </div>
+
+</div><!-- /wrapper -->
+
+<footer>
+  LIDDIS — Guia de Deploy v1.0 &nbsp;·&nbsp; Gerado em 2026-05-01 &nbsp;·&nbsp; Stack: Django + Supabase + Google Cloud Run
+</footer>
+
+<script>
+  function copiar(btn) {
+    const code = btn.parentElement.querySelector('code').innerText;
+    navigator.clipboard.writeText(code).then(() => {
+      btn.textContent = 'Copiado!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'Copiar';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+
+  function toggle(li) {
+    if (li.classList.contains('group-label')) return;
+    const cb = li.querySelector('input[type=checkbox]');
+    cb.checked = !cb.checked;
+    li.classList.toggle('done', cb.checked);
+    salvarChecklist();
+  }
+
+  function salvarChecklist() {
+    const items = document.querySelectorAll('#checklist li:not(.group-label)');
+    const estado = Array.from(items).map(li => li.querySelector('input').checked);
+    try { localStorage.setItem('liddis-deploy-checklist', JSON.stringify(estado)); } catch(e) {}
+  }
+
+  function carregarChecklist() {
+    try {
+      const estado = JSON.parse(localStorage.getItem('liddis-deploy-checklist') || '[]');
+      const items = document.querySelectorAll('#checklist li:not(.group-label)');
+      items.forEach((li, i) => {
+        if (estado[i]) {
+          li.querySelector('input').checked = true;
+          li.classList.add('done');
+        }
+      });
+    } catch(e) {}
+  }
+
+  carregarChecklist();
+</script>
+</body>
+</html>

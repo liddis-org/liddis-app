@@ -1,5 +1,9 @@
 from django import forms
-from .models import Consultation, VitalSign, Anamnese, ExameLaboratorial
+from .models import (
+    Consultation, VitalSign, Anamnese, ExameLaboratorial,
+    Evolution, Prescription, DiagnosisCID, PhysicalExam, LabRequest,
+    PatientClinicalSummary,
+)
 
 _I = {'class': 'input'}
 _TA = lambda rows=3: {'class': 'input', 'rows': rows}
@@ -82,17 +86,73 @@ class ExameLaboratorialForm(forms.ModelForm):
 
 
 class VitalSignForm(forms.ModelForm):
+    """Formulário de sinais vitais para o próprio paciente."""
     class Meta:
         model = VitalSign
-        fields = ['date', 'blood_pressure', 'heart_rate', 'weight', 'temperature', 'oxygen_saturation', 'notes']
+        fields = ['date', 'blood_pressure', 'heart_rate', 'weight', 'height', 'temperature', 'oxygen_saturation', 'glucose', 'notes']
         widgets = {
             'date':              forms.DateInput(attrs={'type': 'date', **_I}),
-            'blood_pressure':    forms.TextInput(attrs={**_I, 'placeholder': '120/80'}),
-            'heart_rate':        forms.NumberInput(attrs={**_I, 'placeholder': '72'}),
+            'blood_pressure':    forms.TextInput(attrs={**_I, 'placeholder': '120/80 mmHg'}),
+            'heart_rate':        forms.NumberInput(attrs={**_I, 'placeholder': '72 bpm'}),
             'weight':            forms.NumberInput(attrs={**_I, 'placeholder': '70.5', 'step': '0.1'}),
+            'height':            forms.NumberInput(attrs={**_I, 'placeholder': '170', 'step': '0.1'}),
             'temperature':       forms.NumberInput(attrs={**_I, 'placeholder': '36.5', 'step': '0.1'}),
             'oxygen_saturation': forms.NumberInput(attrs={**_I, 'placeholder': '98'}),
+            'glucose':           forms.NumberInput(attrs={**_I, 'placeholder': '100', 'step': '0.1'}),
             'notes':             forms.TextInput(attrs={**_I, 'placeholder': 'Observações opcionais'}),
+        }
+
+
+class VitalSignProfessionalForm(forms.ModelForm):
+    """Formulário de sinais vitais preenchido pelo profissional durante a consulta."""
+    class Meta:
+        model = VitalSign
+        fields = [
+            'date', 'blood_pressure', 'heart_rate', 'respiratory_rate',
+            'weight', 'height', 'temperature', 'oxygen_saturation', 'glucose', 'notes',
+        ]
+        widgets = {
+            'date':              forms.DateInput(attrs={'type': 'date', **_I}),
+            'blood_pressure':    forms.TextInput(attrs={**_I, 'placeholder': '120/80 mmHg'}),
+            'heart_rate':        forms.NumberInput(attrs={**_I, 'placeholder': 'bpm'}),
+            'respiratory_rate':  forms.NumberInput(attrs={**_I, 'placeholder': 'irpm'}),
+            'weight':            forms.NumberInput(attrs={**_I, 'placeholder': 'kg', 'step': '0.1'}),
+            'height':            forms.NumberInput(attrs={**_I, 'placeholder': 'cm', 'step': '0.1'}),
+            'temperature':       forms.NumberInput(attrs={**_I, 'placeholder': '°C', 'step': '0.1'}),
+            'oxygen_saturation': forms.NumberInput(attrs={**_I, 'placeholder': '%'}),
+            'glucose':           forms.NumberInput(attrs={**_I, 'placeholder': 'mg/dL', 'step': '0.1'}),
+            'notes':             forms.TextInput(attrs={**_I, 'placeholder': 'Observações clínicas'}),
+        }
+        labels = {
+            'blood_pressure':    'Pressão Arterial (PA)',
+            'heart_rate':        'Freq. Cardíaca (FC)',
+            'respiratory_rate':  'Freq. Respiratória (FR)',
+            'weight':            'Peso (kg)',
+            'height':            'Altura (cm)',
+            'temperature':       'Temperatura (°C)',
+            'oxygen_saturation': 'Saturação O₂ (%)',
+            'glucose':           'Glicemia (mg/dL)',
+        }
+
+
+class PatientClinicalSummaryForm(forms.ModelForm):
+    """Perfil clínico permanente do paciente — editado pelos profissionais."""
+    class Meta:
+        model = PatientClinicalSummary
+        fields = ['allergies', 'continuous_medications', 'comorbidities', 'smokes', 'drinks']
+        widgets = {
+            'allergies':              forms.Textarea(attrs={**_TA(3), 'placeholder': 'Penicilina, dipirona, látex, amendoim...'}),
+            'continuous_medications': forms.Textarea(attrs={**_TA(3), 'placeholder': 'Metformina 850mg 2x/dia, Losartana 50mg...'}),
+            'comorbidities':          forms.Textarea(attrs={**_TA(3), 'placeholder': 'DM2, HAS, Hipotireoidismo, Asma...'}),
+            'smokes':                 forms.Select(attrs=_I),
+            'drinks':                 forms.Select(attrs=_I),
+        }
+        labels = {
+            'allergies':              'Alergias conhecidas',
+            'continuous_medications': 'Medicamentos de uso contínuo',
+            'comorbidities':          'Comorbidades / Condições crônicas',
+            'smokes':                 'Tabagismo',
+            'drinks':                 'Etilismo',
         }
 
 
@@ -126,4 +186,144 @@ class AtendimentoForm(forms.ModelForm):
             'diagnosis':      forms.Textarea(attrs={**_TA(3), 'placeholder': 'Diagnóstico'}),
             'notes':          forms.Textarea(attrs={**_TA(4), 'placeholder': 'Anotações, evolução clínica...'}),
             'prescription':   forms.Textarea(attrs={**_TA(4), 'placeholder': 'Medicamentos prescritos...'}),
+        }
+
+
+# ── Formulários dos novos modelos clínicos ────────────────────────────────────
+
+class EvolutionForm(forms.ModelForm):
+    class Meta:
+        model  = Evolution
+        fields = ['category', 'content', 'is_visible_to_patient']
+        widgets = {
+            'category': forms.Select(attrs=_I),
+            'content':  forms.Textarea(attrs={**_TA(6), 'placeholder': 'Registre a evolução clínica aqui...'}),
+        }
+        labels = {
+            'category':             'Categoria',
+            'content':              'Evolução',
+            'is_visible_to_patient':'Visível ao paciente',
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if user:
+            from users.permissions import get_evolution_create_category
+            cat = get_evolution_create_category(user)
+            if cat:
+                # Pré-seleciona e desabilita a categoria — profissional só cria a própria
+                self.fields['category'].initial = cat
+                self.fields['category'].widget.attrs['disabled'] = True
+                self.fields['category'].choices = [
+                    c for c in Evolution.CATEGORY_CHOICES if c[0] == cat
+                ]
+
+
+class PrescriptionForm(forms.ModelForm):
+    class Meta:
+        model  = Prescription
+        fields = [
+            'prescription_type', 'medication_name', 'dosage',
+            'frequency', 'duration', 'route', 'content', 'is_active',
+        ]
+        widgets = {
+            'prescription_type': forms.Select(attrs=_I),
+            'medication_name':   forms.TextInput(attrs={**_I, 'placeholder': 'Ex: Amoxicilina 500mg'}),
+            'dosage':            forms.TextInput(attrs={**_I, 'placeholder': 'Ex: 500mg'}),
+            'frequency':         forms.TextInput(attrs={**_I, 'placeholder': 'Ex: 8/8h'}),
+            'duration':          forms.TextInput(attrs={**_I, 'placeholder': 'Ex: 7 dias'}),
+            'route':             forms.TextInput(attrs={**_I, 'placeholder': 'Ex: Via oral'}),
+            'content':           forms.Textarea(attrs={**_TA(4), 'placeholder': 'Prescrição completa / orientações...'}),
+        }
+        labels = {
+            'prescription_type': 'Tipo de prescrição',
+            'medication_name':   'Medicamento / Item',
+            'dosage':            'Dose',
+            'frequency':         'Frequência',
+            'duration':          'Duração',
+            'route':             'Via de administração',
+            'content':           'Prescrição completa',
+            'is_active':         'Ativa',
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if user:
+            from users.permissions import get_prescription_allowed_types
+            allowed = get_prescription_allowed_types(user)
+            self.fields['prescription_type'].choices = [
+                (k, v) for k, v in Prescription.TYPE_CHOICES if k in allowed
+            ]
+
+
+class DiagnosisCIDForm(forms.ModelForm):
+    class Meta:
+        model  = DiagnosisCID
+        fields = ['icd_code', 'description', 'notes', 'is_primary', 'certainty']
+        widgets = {
+            'icd_code':    forms.TextInput(attrs={**_I, 'placeholder': 'Ex: J18.9'}),
+            'description': forms.TextInput(attrs={**_I, 'placeholder': 'Ex: Pneumonia não especificada'}),
+            'notes':       forms.Textarea(attrs={**_TA(3), 'placeholder': 'Observações clínicas adicionais...'}),
+            'certainty':   forms.Select(attrs=_I),
+        }
+        labels = {
+            'icd_code':    'Código CID-10',
+            'description': 'Descrição',
+            'notes':       'Observações',
+            'is_primary':  'Diagnóstico principal',
+            'certainty':   'Certeza diagnóstica',
+        }
+
+
+class PhysicalExamForm(forms.ModelForm):
+    class Meta:
+        model  = PhysicalExam
+        fields = [
+            'general_state', 'cardiovascular', 'respiratory', 'abdomen',
+            'neurological', 'musculoskeletal', 'skin', 'orl', 'other_systems',
+        ]
+        widgets = {
+            'general_state':   forms.Textarea(attrs={**_TA(2), 'placeholder': 'Estado geral, nível de consciência, hidratação...'}),
+            'cardiovascular':  forms.Textarea(attrs={**_TA(2), 'placeholder': 'Bulhas cardíacas, ritmo, sopros...'}),
+            'respiratory':     forms.Textarea(attrs={**_TA(2), 'placeholder': 'MV, ruídos adventícios, expansibilidade...'}),
+            'abdomen':         forms.Textarea(attrs={**_TA(2), 'placeholder': 'Indolor, peristalse, hepatoesplenomegalia...'}),
+            'neurological':    forms.Textarea(attrs={**_TA(2), 'placeholder': 'Orientado, pupilas, reflexos...'}),
+            'musculoskeletal': forms.Textarea(attrs={**_TA(2), 'placeholder': 'Força muscular, amplitude de movimento, dor...'}),
+            'skin':            forms.Textarea(attrs={**_TA(2), 'placeholder': 'Coloração, turgor, lesões...'}),
+            'orl':             forms.Textarea(attrs={**_TA(2), 'placeholder': 'Orofaringe, linfonodos, tireoide...'}),
+            'other_systems':   forms.Textarea(attrs={**_TA(2), 'placeholder': 'Outros achados relevantes...'}),
+        }
+
+
+class LabRequestForm(forms.ModelForm):
+    class Meta:
+        model  = LabRequest
+        fields = ['exam_type', 'exam_description', 'urgency']
+        widgets = {
+            'exam_type':        forms.TextInput(attrs={**_I, 'placeholder': 'Ex: Hemograma completo, PCR, HbA1c...'}),
+            'exam_description': forms.Textarea(attrs={**_TA(3), 'placeholder': 'Parâmetros específicos, contexto clínico...'}),
+        }
+        labels = {
+            'exam_type':        'Tipo de exame',
+            'exam_description': 'Descrição / parâmetros',
+            'urgency':          'Urgência',
+        }
+
+
+class LabResultForm(forms.ModelForm):
+    """Preenchimento de resultado — exclusivo para biomédico / laboratorista."""
+    class Meta:
+        model  = LabRequest
+        fields = ['result', 'result_date', 'reference_values', 'status']
+        widgets = {
+            'result':           forms.Textarea(attrs={**_TA(5), 'placeholder': 'Resultado completo do exame...'}),
+            'result_date':      forms.DateInput(attrs={'type': 'date', **_I}),
+            'reference_values': forms.Textarea(attrs={**_TA(3), 'placeholder': 'Valores de referência utilizados...'}),
+            'status':           forms.Select(attrs=_I),
+        }
+        labels = {
+            'result':           'Resultado',
+            'result_date':      'Data do resultado',
+            'reference_values': 'Valores de referência',
+            'status':           'Status',
         }

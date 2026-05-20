@@ -1,0 +1,593 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — LIDDIS{% endblock %}
+{% block topbar_title %}Dashboard{% endblock %}
+{% block nav_analytics %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── KPI Cards ────────────────────────────────────────────────────────────── */
+.kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  padding: 20px 22px 16px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .2s, box-shadow .2s;
+}
+.kpi-card:hover { border-color: var(--border); box-shadow: var(--shadow-teal) }
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--kpi-accent, linear-gradient(90deg, var(--teal), var(--green)));
+}
+.kpi-icon {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  background: var(--kpi-icon-bg, var(--teal-glow));
+  margin-bottom: 14px;
+}
+.kpi-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px }
+.kpi-value { font-size: 30px; font-weight: 800; color: var(--text); line-height: 1 }
+.kpi-sub   { font-size: 11px; color: var(--muted-2); margin-top: 6px }
+
+/* ── Period Filter ────────────────────────────────────────────────────────── */
+.period-strip {
+  display: flex; gap: 4px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  padding: 3px;
+}
+.period-btn {
+  padding: 5px 14px; border: none; border-radius: 6px;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  color: var(--muted); background: transparent;
+  font-family: inherit; transition: all .15s;
+}
+.period-btn.active { background: var(--teal); color: #070e1a }
+.period-btn:not(.active):hover { background: var(--surface-3); color: var(--text) }
+
+/* ── Chart Cards ──────────────────────────────────────────────────────────── */
+.chart-card { background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius); padding: 20px 22px; }
+.chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.chart-header h3 { font-size: 13px; font-weight: 700; color: var(--text) }
+.chart-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted) }
+.legend-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0 }
+
+/* ── Activity List ────────────────────────────────────────────────────────── */
+.activity-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; border-radius: 8px;
+  border: 1px solid var(--border-soft);
+  text-decoration: none; color: inherit;
+  transition: background .15s, border-color .15s;
+  margin-bottom: 8px;
+}
+.activity-item:hover { background: var(--surface-2); border-color: var(--border); }
+.activity-avatar {
+  width: 38px; height: 38px; border-radius: 9px;
+  background: var(--teal-glow); border: 1px solid rgba(0,212,255,.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; flex-shrink: 0;
+}
+.activity-info { flex: 1; min-width: 0 }
+.activity-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.activity-sub  { font-size: 11px; color: var(--muted); margin-top: 1px }
+.activity-meta { text-align: right; flex-shrink: 0 }
+.activity-date { font-size: 11px; color: var(--muted-2) }
+
+/* ── Vitals chips ─────────────────────────────────────────────────────────── */
+.vital-chip {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 2px; padding: 10px 14px;
+  background: var(--surface-2); border: 1px solid var(--border-soft);
+  border-radius: 9px; flex: 1;
+}
+.vital-chip .vc-label { font-size: 9px; color: var(--muted-2); font-weight: 700; text-transform: uppercase; letter-spacing: .6px }
+.vital-chip .vc-value { font-size: 17px; font-weight: 800; color: var(--text) }
+.vital-chip .vc-unit  { font-size: 10px; color: var(--muted) }
+
+@media (max-width: 900px) {
+  .kpi-value { font-size: 24px }
+  .chart-header { flex-direction: column; align-items: flex-start; gap: 10px }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% if is_professional %}
+{# ═══════════════════ PROFISSIONAL ═══════════════════ #}
+
+<div class="page-header">
+  <div>
+    <h2>Dashboard</h2>
+    <p>Análise dos seus atendimentos — {{ user.get_role_display }}</p>
+  </div>
+  <a href="{% url 'entrar_atendimento' %}" class="btn btn-primary">▶ Atender Paciente</a>
+</div>
+
+<div class="card-grid card-grid-4">
+  <div class="kpi-card" style="--kpi-accent:linear-gradient(90deg,var(--teal),var(--green));--kpi-icon-bg:var(--teal-glow)">
+    <div class="kpi-icon">📋</div>
+    <div class="kpi-label">Total de Atendimentos</div>
+    <div class="kpi-value">{{ total_atendimentos }}</div>
+    <div class="kpi-sub">histórico completo</div>
+  </div>
+  <div class="kpi-card" style="--kpi-accent:linear-gradient(90deg,var(--green),#22c55e);--kpi-icon-bg:var(--green-glow)">
+    <div class="kpi-icon">📅</div>
+    <div class="kpi-label">Este Mês</div>
+    <div class="kpi-value">{{ this_month }}</div>
+    <div class="kpi-sub">atendimentos no mês atual</div>
+  </div>
+  <div class="kpi-card" style="--kpi-accent:linear-gradient(90deg,#a78bfa,#7c3aed);--kpi-icon-bg:rgba(167,139,250,.12)">
+    <div class="kpi-icon">👥</div>
+    <div class="kpi-label">Pacientes Distintos</div>
+    <div class="kpi-value">{{ distinct_patients }}</div>
+    <div class="kpi-sub">atendidos pelo sistema</div>
+  </div>
+  <div class="kpi-card" style="--kpi-accent:linear-gradient(90deg,var(--warning),#f59e0b);--kpi-icon-bg:rgba(251,191,36,.1)">
+    <div class="kpi-icon">🕐</div>
+    <div class="kpi-label">Último Atendimento</div>
+    <div class="kpi-value" style="font-size:19px">{{ ultimo_atendimento|date:"d/m/Y"|default:"—" }}</div>
+    <div class="kpi-sub">via token de sessão</div>
+  </div>
+</div>
+
+<div class="card-grid card-grid-2 mt-6">
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3>Atendimentos ao longo do tempo</h3>
+      <div class="period-strip" id="period-timeline">
+        <button class="period-btn" data-period="3">3M</button>
+        <button class="period-btn" data-period="6">6M</button>
+        <button class="period-btn active" data-period="12">12M</button>
+      </div>
+    </div>
+    <canvas id="chartTimeline" height="220"></canvas>
+  </div>
+  <div class="chart-card">
+    <div class="chart-header"><h3>Por Especialidade</h3></div>
+    {% if chart_specialty_labels != "[]" %}
+    <canvas id="chartSpecialty" height="220"></canvas>
+    <div class="chart-legend" id="legendSpecialty"></div>
+    {% else %}
+    <div class="empty-state" style="padding:40px 0">
+      <div class="empty-icon" style="font-size:32px">🩺</div>
+      <p style="font-size:13px">Nenhuma especialidade registrada ainda</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card-grid card-grid-2 mt-6" style="margin-bottom:32px">
+  <div class="chart-card">
+    <div class="chart-header"><h3>Distribuição por Gravidade</h3></div>
+    {% if chart_severity_labels != "[]" %}
+    <canvas id="chartSeverity" height="220"></canvas>
+    {% else %}
+    <div class="empty-state" style="padding:40px 0">
+      <div class="empty-icon" style="font-size:32px">📊</div>
+      <p style="font-size:13px">Nenhuma gravidade registrada ainda</p>
+    </div>
+    {% endif %}
+  </div>
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3>Atendimentos Recentes</h3>
+      <a href="{% url 'consultation_list' %}" class="btn btn-secondary btn-sm">Ver todos</a>
+    </div>
+    {% if atendimentos_recentes %}
+      {% for c in atendimentos_recentes %}
+      <a class="activity-item" href="{% url 'consultation_detail' c.pk %}">
+        <div class="activity-avatar">👤</div>
+        <div class="activity-info">
+          <div class="activity-name">{{ c.patient.display_name }}</div>
+          <div class="activity-sub">{{ c.specialty_label }}</div>
+        </div>
+        <div class="activity-meta">
+          <div class="activity-date">{{ c.date|date:"d/m/Y" }}</div>
+          <span class="badge badge-teal" style="font-size:9px;margin-top:3px">{{ c.get_status_display }}</span>
+        </div>
+      </a>
+      {% endfor %}
+    {% else %}
+    <div class="empty-state" style="padding:32px 0">
+      <div class="empty-icon">📋</div>
+      <p>Nenhum atendimento registrado</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% else %}
+{# ═══════════════════ PACIENTE ═══════════════════ #}
+
+<div class="page-header">
+  <div>
+    <h2>Dashboard</h2>
+    <p>Análise e evolução da sua saúde</p>
+  </div>
+  <a href="{% url 'iniciar_atendimento' %}" class="btn btn-primary">🔑 Gerar Código</a>
+</div>
+
+<div class="card-grid card-grid-4">
+  <div class="kpi-card" style="--kpi-accent:linear-gradient(90deg,var(--teal),var(--green));--kpi-icon-bg:var(--teal-glow)">
+    <div class="kpi-icon">📋</div>
+    <div class="kpi-label">Consultas Registradas</div>
+    <div class="kpi-value">{{ total_consultations }}</div>
+    <div class="kpi-sub">no histórico completo</div>
+  </div>
+  <div class="kpi-card" style="--kpi-accent:linear-gradient(90deg,var(--green),#22c55e);--kpi-icon-bg:var(--green-glow)">
+    <div class="kpi-icon">📅</div>
+    <div class="kpi-label">Este Mês</div>
+    <div class="kpi-value">{{ this_month }}</div>
+    <div class="kpi-sub">consultas realizadas</div>
+  </div>
+  <div class="kpi-card" style="--kpi-accent:linear-gradient(90deg,#a78bfa,#7c3aed);--kpi-icon-bg:rgba(167,139,250,.12)">
+    <div class="kpi-icon">🩺</div>
+    <div class="kpi-label">Especialidades</div>
+    <div class="kpi-value">{{ specialties_count }}</div>
+    <div class="kpi-sub">áreas médicas visitadas</div>
+  </div>
+  <div class="kpi-card" style="--kpi-accent:linear-gradient(90deg,var(--warning),#f59e0b);--kpi-icon-bg:rgba(251,191,36,.1)">
+    <div class="kpi-icon">❤️</div>
+    <div class="kpi-label">Pressão Arterial</div>
+    {% if latest_vital and latest_vital.blood_pressure %}
+    <div class="kpi-value" style="font-size:21px">{{ latest_vital.blood_pressure }}</div>
+    <div class="kpi-sub">em {{ latest_vital.date|date:"d/m/Y" }}</div>
+    {% else %}
+    <div class="kpi-value" style="font-size:21px">—</div>
+    <div class="kpi-sub"><a href="{% url 'vitals' %}" style="color:var(--teal)">Registrar agora</a></div>
+    {% endif %}
+  </div>
+</div>
+
+{% if latest_vital %}
+<div class="card mt-6" style="padding:16px 20px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <span style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px">Últimos Sinais Vitais — {{ latest_vital.date|date:"d/m/Y" }}</span>
+    <a href="{% url 'vitals' %}" class="btn btn-secondary btn-sm">Ver histórico</a>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    {% if latest_vital.blood_pressure %}
+    <div class="vital-chip"><span class="vc-label">Pressão</span><span class="vc-value">{{ latest_vital.blood_pressure }}</span><span class="vc-unit">mmHg</span></div>
+    {% endif %}
+    {% if latest_vital.heart_rate %}
+    <div class="vital-chip"><span class="vc-label">Freq. Cardíaca</span><span class="vc-value">{{ latest_vital.heart_rate }}</span><span class="vc-unit">bpm</span></div>
+    {% endif %}
+    {% if latest_vital.weight %}
+    <div class="vital-chip"><span class="vc-label">Peso</span><span class="vc-value">{{ latest_vital.weight }}</span><span class="vc-unit">kg</span></div>
+    {% endif %}
+    {% if latest_vital.temperature %}
+    <div class="vital-chip"><span class="vc-label">Temperatura</span><span class="vc-value">{{ latest_vital.temperature }}</span><span class="vc-unit">°C</span></div>
+    {% endif %}
+    {% if latest_vital.oxygen_saturation %}
+    <div class="vital-chip"><span class="vc-label">Saturação O₂</span><span class="vc-value">{{ latest_vital.oxygen_saturation }}</span><span class="vc-unit">%</span></div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<div class="card-grid card-grid-2 mt-6">
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3>Consultas ao longo do tempo</h3>
+      <div class="period-strip" id="period-timeline">
+        <button class="period-btn" data-period="3">3M</button>
+        <button class="period-btn" data-period="6">6M</button>
+        <button class="period-btn active" data-period="12">12M</button>
+      </div>
+    </div>
+    <canvas id="chartTimeline" height="220"></canvas>
+  </div>
+  <div class="chart-card">
+    <div class="chart-header"><h3>Por Especialidade</h3></div>
+    {% if chart_specialty_labels != "[]" %}
+    <canvas id="chartSpecialty" height="220"></canvas>
+    <div class="chart-legend" id="legendSpecialty"></div>
+    {% else %}
+    <div class="empty-state" style="padding:40px 0">
+      <div class="empty-icon" style="font-size:32px">🩺</div>
+      <p style="font-size:13px">Nenhuma consulta registrada ainda</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card-grid card-grid-2 mt-6" style="margin-bottom:32px">
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3>Evolução dos Sinais Vitais</h3>
+      <a href="{% url 'vitals' %}" class="btn btn-secondary btn-sm">+ Registrar</a>
+    </div>
+    {% if chart_vitals_dates != "[]" %}
+    <div style="display:flex;gap:6px;margin-bottom:10px">
+      <button class="period-btn active" onclick="switchVitalsDataset(0,this)" style="font-size:10px;padding:3px 10px">Peso</button>
+      <button class="period-btn" onclick="switchVitalsDataset(1,this)" style="font-size:10px;padding:3px 10px">Freq. Card.</button>
+      <button class="period-btn" onclick="switchVitalsDataset(2,this)" style="font-size:10px;padding:3px 10px">Saturação</button>
+    </div>
+    <canvas id="chartVitals" height="200"></canvas>
+    {% else %}
+    <div class="empty-state" style="padding:40px 0">
+      <div class="empty-icon" style="font-size:32px">📈</div>
+      <p style="font-size:13px">Nenhum sinal vital registrado ainda</p>
+      <a href="{% url 'vitals' %}" class="btn btn-primary" style="margin-top:12px">Registrar agora</a>
+    </div>
+    {% endif %}
+  </div>
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3>Consultas Recentes</h3>
+      <a href="{% url 'consultation_list' %}" class="btn btn-secondary btn-sm">Ver todas</a>
+    </div>
+    {% if consultations %}
+      {% for c in consultations %}
+      <a class="activity-item" href="{% url 'consultation_detail' c.pk %}">
+        <div class="activity-avatar">🏥</div>
+        <div class="activity-info">
+          <div class="activity-name">{{ c.clinic_name|default:"Local não informado" }}</div>
+          <div class="activity-sub">{{ c.professional_name }} · {{ c.specialty_label }}</div>
+        </div>
+        <div class="activity-meta">
+          <div class="activity-date">{{ c.date|date:"d/m/Y" }}</div>
+        </div>
+      </a>
+      {% endfor %}
+    {% else %}
+    <div class="empty-state" style="padding:32px 0">
+      <div class="empty-icon">📋</div>
+      <p>Nenhuma consulta registrada</p>
+      <a href="{% url 'iniciar_atendimento' %}" class="btn btn-primary mt-4">Iniciar atendimento</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  const C = {
+    teal:    '#00d4ff',
+    green:   '#4ade80',
+    purple:  '#a78bfa',
+    orange:  '#fb923c',
+    yellow:  '#fbbf24',
+    danger:  '#f87171',
+    muted:   '#6b8caa',
+    grid:    'rgba(255,255,255,0.05)',
+    palette: ['#00d4ff','#4ade80','#a78bfa','#fb923c','#fbbf24','#f87171','#38bdf8','#34d399'],
+  };
+
+  Chart.defaults.color       = C.muted;
+  Chart.defaults.borderColor = 'rgba(0,212,255,0.08)';
+  Chart.defaults.font.family = "Inter, system-ui, sans-serif";
+  Chart.defaults.font.size   = 11;
+  Chart.defaults.plugins.legend.display = false;
+  Chart.defaults.plugins.tooltip.backgroundColor = '#0d1b2e';
+  Chart.defaults.plugins.tooltip.borderColor      = 'rgba(0,212,255,0.3)';
+  Chart.defaults.plugins.tooltip.borderWidth      = 1;
+  Chart.defaults.plugins.tooltip.padding          = 10;
+  Chart.defaults.plugins.tooltip.cornerRadius     = 8;
+  Chart.defaults.plugins.tooltip.titleColor       = '#e8f4ff';
+  Chart.defaults.plugins.tooltip.bodyColor        = '#6b8caa';
+
+  function hexGrad(ctx, hex, h) {
+    const g = ctx.createLinearGradient(0, 0, 0, h || 250);
+    g.addColorStop(0, hex + '40');
+    g.addColorStop(1, hex + '00');
+    return g;
+  }
+
+  const allMonths  = {{ chart_months|safe }};
+  const allMonthly = {{ chart_monthly|safe }};
+  const specLabels = {{ chart_specialty_labels|safe }};
+  const specValues = {{ chart_specialty_values|safe }};
+
+  {% if is_professional %}
+  const sevLabels = {{ chart_severity_labels|safe }};
+  const sevValues = {{ chart_severity_values|safe }};
+  {% else %}
+  const vitDates  = {{ chart_vitals_dates|safe }};
+  const vitWeight = {{ chart_vitals_weight|safe }};
+  const vitHR     = {{ chart_vitals_hr|safe }};
+  const vitO2     = {{ chart_vitals_o2|safe }};
+  {% endif %}
+
+  /* ── Timeline ── */
+  const tlCanvas = document.getElementById('chartTimeline');
+  let timelineChart = null;
+  if (tlCanvas) {
+    const tlCtx = tlCanvas.getContext('2d');
+    {% if is_professional %}
+    timelineChart = new Chart(tlCtx, {
+      type: 'bar',
+      data: {
+        labels: allMonths,
+        datasets: [{
+          label: 'Atendimentos',
+          data:  allMonthly,
+          backgroundColor: C.teal + '33',
+          borderColor:     C.teal,
+          borderWidth: 1.5,
+          borderRadius: 5,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: true,
+        scales: {
+          x: { grid: { color: C.grid }, ticks: { maxRotation: 0 } },
+          y: { grid: { color: C.grid }, beginAtZero: true, ticks: { stepSize: 1, precision: 0 } }
+        },
+        plugins: { tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} atendimento(s)` } } }
+      }
+    });
+    {% else %}
+    timelineChart = new Chart(tlCtx, {
+      type: 'line',
+      data: {
+        labels: allMonths,
+        datasets: [{
+          label: 'Consultas',
+          data:  allMonthly,
+          borderColor:     C.teal,
+          backgroundColor: hexGrad(tlCtx, '#00d4ff', 220),
+          borderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          pointBackgroundColor: C.teal,
+          tension: 0.4,
+          fill: true,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: true,
+        scales: {
+          x: { grid: { color: C.grid }, ticks: { maxRotation: 0 } },
+          y: { grid: { color: C.grid }, beginAtZero: true, ticks: { stepSize: 1, precision: 0 } }
+        },
+        plugins: { tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} consulta(s)` } } }
+      }
+    });
+    {% endif %}
+  }
+
+  /* Period filter */
+  const periodStrip = document.getElementById('period-timeline');
+  if (periodStrip && timelineChart) {
+    periodStrip.querySelectorAll('.period-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        periodStrip.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const n = parseInt(btn.dataset.period, 10);
+        timelineChart.data.labels = allMonths.slice(-n);
+        timelineChart.data.datasets[0].data = allMonthly.slice(-n);
+        timelineChart.update();
+      });
+    });
+  }
+
+  /* ── Specialty donut ── */
+  const specCanvas = document.getElementById('chartSpecialty');
+  if (specCanvas && specLabels.length) {
+    new Chart(specCanvas.getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels:   specLabels,
+        datasets: [{
+          data:            specValues,
+          backgroundColor: C.palette,
+          borderColor:     '#0d1b2e',
+          borderWidth:     3,
+          hoverOffset:     6,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: true,
+        cutout: '62%',
+        plugins: { tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed}` } } }
+      }
+    });
+    const legend = document.getElementById('legendSpecialty');
+    if (legend) {
+      specLabels.forEach((label, i) => {
+        legend.innerHTML += `<div class="legend-item"><div class="legend-dot" style="background:${C.palette[i % C.palette.length]}"></div><span>${label} (${specValues[i]})</span></div>`;
+      });
+    }
+  }
+
+  {% if is_professional %}
+  /* ── Severity bar ── */
+  const sevCanvas = document.getElementById('chartSeverity');
+  if (sevCanvas && sevLabels.length) {
+    const sevColors = { 'Leve': C.green, 'Moderada': C.yellow, 'Grave': C.orange, 'Crítica': C.danger };
+    new Chart(sevCanvas.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: sevLabels,
+        datasets: [{
+          label: 'Casos',
+          data:  sevValues,
+          backgroundColor: sevLabels.map(l => (sevColors[l] || C.teal) + '44'),
+          borderColor:     sevLabels.map(l => sevColors[l] || C.teal),
+          borderWidth: 1.5,
+          borderRadius: 6,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: true,
+        scales: {
+          x: { grid: { color: C.grid } },
+          y: { grid: { color: C.grid }, beginAtZero: true, ticks: { stepSize: 1, precision: 0 } }
+        },
+        plugins: { tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} caso(s)` } } }
+      }
+    });
+  }
+  {% else %}
+  /* ── Vitals line ── */
+  const vitCanvas = document.getElementById('chartVitals');
+  let vitChart = null;
+  if (vitCanvas && vitDates.length) {
+    const vitCtx = vitCanvas.getContext('2d');
+    const datasets = [
+      { label: 'Peso (kg)',         data: vitWeight, color: C.teal,   unit: 'kg'  },
+      { label: 'Freq. Card. (bpm)', data: vitHR,     color: C.green,  unit: 'bpm' },
+      { label: 'Saturação O₂ (%)', data: vitO2,     color: C.purple, unit: '%'   },
+    ];
+    vitChart = new Chart(vitCtx, {
+      type: 'line',
+      data: {
+        labels: vitDates,
+        datasets: datasets.map((ds, i) => ({
+          label:           ds.label,
+          data:            ds.data,
+          borderColor:     ds.color,
+          backgroundColor: hexGrad(vitCtx, ds.color, 200),
+          borderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          pointBackgroundColor: ds.color,
+          tension: 0.4,
+          fill: true,
+          hidden: i !== 0,
+          spanGaps: true,
+        }))
+      },
+      options: {
+        responsive: true, maintainAspectRatio: true,
+        scales: {
+          x: { grid: { color: C.grid } },
+          y: { grid: { color: C.grid }, beginAtZero: false }
+        },
+        plugins: { tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} ${datasets[ctx.datasetIndex]?.unit || ''}` } } }
+      }
+    });
+  }
+
+  window.switchVitalsDataset = function (idx, btn) {
+    if (!vitChart) return;
+    vitChart.data.datasets.forEach((ds, i) => { ds.hidden = i !== idx; });
+    vitChart.update();
+    btn.parentElement.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  };
+  {% endif %}
+
+})();
+</script>
+{% endblock %}

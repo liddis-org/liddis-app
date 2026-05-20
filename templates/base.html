@@ -84,7 +84,7 @@ body::before{
 }
 .nav-link:hover{background:var(--surface-3);color:var(--text)}
 .nav-link.active{background:var(--teal-glow);color:var(--teal);border:1px solid var(--border)}
-.nav-link .ico{width:18px;text-align:center;font-size:15px;flex-shrink:0}
+.nav-icon{width:16px;height:16px;flex-shrink:0;stroke:currentColor}
 
 .sidebar-footer{
   padding:16px 20px;
@@ -244,7 +244,7 @@ tbody tr:hover td{background:var(--surface-2)}
 .mt-4{margin-top:16px}
 .mt-6{margin-top:24px}
 .empty-state{text-align:center;padding:56px 20px;color:var(--muted)}
-.empty-state .empty-icon{font-size:44px;margin-bottom:12px;opacity:.5}
+.empty-icon{width:48px;height:48px;margin:0 auto 12px;opacity:.35;display:block}
 .empty-state p{font-size:14px}
 .divider{border:none;border-top:1px solid var(--border-soft);margin:20px 0}
 
@@ -350,35 +350,62 @@ tbody tr:hover td{background:var(--surface-2)}
   <div class="sidebar-nav">
     <div class="nav-section">Principal</div>
     <a class="nav-link {% block nav_dashboard %}{% endblock %}" href="{% url 'dashboard' %}">
-      <span class="ico">⬡</span> Início
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+      Início
     </a>
 
     {% if user.role == 'PATIENT' %}
       <a class="nav-link {% block nav_consultations %}{% endblock %}" href="{% url 'consultation_list' %}">
-        <span class="ico">📋</span> Minhas Consultas
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+        Minhas Consultas
       </a>
       <a class="nav-link {% block nav_vitals %}{% endblock %}" href="{% url 'vitals' %}">
-        <span class="ico">📊</span> Sinais Vitais
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+        Sinais Vitais
+      </a>
+      <a class="nav-link {% block nav_analytics %}{% endblock %}" href="{% url 'analytics' %}">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-link {% block nav_accesses %}{% endblock %}" href="{% url 'my_accesses' %}">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        Vínculos
       </a>
       <div class="nav-section">Atendimento</div>
       <a class="nav-link {% block nav_atendimento %}{% endblock %}" href="{% url 'iniciar_atendimento' %}">
-        <span class="ico">🔑</span> Iniciar Atendimento
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16 10,8"/></svg>
+        Iniciar Atendimento
       </a>
     {% else %}
+      <a class="nav-link {% block nav_accesses_pro %}{% endblock %}" href="{% url 'my_accesses' %}">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Meus Pacientes
+      </a>
+      <a class="nav-link {% block nav_meus_atendimentos %}{% endblock %}" href="{% url 'meus_atendimentos' %}">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><polyline points="9,11 9,17"/><polyline points="12,11 12,17"/><polyline points="15,11 15,17"/></svg>
+        Meus Atendimentos
+      </a>
       <div class="nav-section">Atendimento</div>
       <a class="nav-link {% block nav_entrar %}{% endblock %}" href="{% url 'entrar_atendimento' %}">
-        <span class="ico">▶</span> Atender Paciente
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><polyline points="16,11 18,13 22,9"/></svg>
+        Atender Paciente
       </a>
     {% endif %}
 
     <div class="nav-section">Conta</div>
     <a class="nav-link {% block nav_profile %}{% endblock %}" href="{% url 'profile' %}">
-      <span class="ico">👤</span> Meu Perfil
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Meu Perfil
     </a>
 
     <div class="nav-section">Sobre</div>
     <a class="nav-link {% block nav_quem_somos %}{% endblock %}" href="{% url 'quem_somos' %}">
-      <span class="ico">💡</span> Quem Somos
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      Quem Somos
+    </a>
+    <a class="nav-link {% block nav_feedback %}{% endblock %}" href="{% url 'platform_feedback' %}">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="9" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="15" y1="10" x2="15" y2="10"/></svg>
+      Sua Experiência
     </a>
   </div>
 
@@ -394,7 +421,8 @@ tbody tr:hover td{background:var(--surface-2)}
     <form method="post" action="{% url 'logout' %}" style="margin:0">
       {% csrf_token %}
       <button type="submit" style="background:none;border:none;cursor:pointer;padding:0;margin-top:4px;color:var(--muted-2);font-family:inherit;font-size:inherit;display:flex;align-items:center;gap:6px;width:100%">
-        <span>⎋</span> Sair
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex-shrink:0"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sair
       </button>
     </form>
   </div>
@@ -419,13 +447,25 @@ tbody tr:hover td{background:var(--surface-2)}
   <div class="content">
     {% for message in messages %}
       {% if 'error' in message.tags %}
-        <div class="alert alert-error"><span>⚠</span><span>{{ message }}</span></div>
+        <div class="alert alert-error" role="alert">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>{{ message }}</span>
+        </div>
       {% elif 'warning' in message.tags %}
-        <div class="alert alert-warning"><span>⚠</span><span>{{ message }}</span></div>
+        <div class="alert alert-warning" role="alert">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>{{ message }}</span>
+        </div>
       {% elif 'info' in message.tags %}
-        <div class="alert alert-info"><span>ℹ</span><span>{{ message }}</span></div>
+        <div class="alert alert-info" role="alert">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <span>{{ message }}</span>
+        </div>
       {% else %}
-        <div class="alert alert-success"><span>✓</span><span>{{ message }}</span></div>
+        <div class="alert alert-success" role="alert">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
+          <span>{{ message }}</span>
+        </div>
       {% endif %}
     {% endfor %}
 

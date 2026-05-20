@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block title %}Meus Atendimentos — LIDDIS{% endblock %}
+{% block topbar_title %}Meus Atendimentos{% endblock %}
+{% block nav_meus_atendimentos %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2>Meus Atendimentos</h2>
+    <p>{{ total }} atendimento{{ total|pluralize }} realizad{{ total|pluralize:"o,os" }}</p>
+  </div>
+  <a href="{% url 'entrar_atendimento' %}" class="btn btn-primary">▶ Novo Atendimento</a>
+</div>
+
+<!-- Filtros -->
+<div class="card" style="margin-bottom:20px">
+  <form method="get" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+    <div class="form-group" style="flex:1;min-width:180px;margin:0">
+      <label>Buscar paciente / diagnóstico</label>
+      <input name="q" type="text" class="input" placeholder="Nome, e-mail, diagnóstico..." value="{{ q }}">
+    </div>
+    <div class="form-group" style="min-width:160px;margin:0">
+      <label>Especialidade</label>
+      <select name="specialty" class="input">
+        <option value="">Todas</option>
+        {% for val, label in specialty_choices %}
+        <option value="{{ val }}" {% if specialty == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group" style="min-width:140px;margin:0">
+      <label>De</label>
+      <input name="date_from" type="date" class="input" value="{{ date_from }}">
+    </div>
+    <div class="form-group" style="min-width:140px;margin:0">
+      <label>Até</label>
+      <input name="date_to" type="date" class="input" value="{{ date_to }}">
+    </div>
+    <div style="display:flex;gap:8px">
+      <button type="submit" class="btn btn-primary">Filtrar</button>
+      <a href="{% url 'meus_atendimentos' %}" class="btn btn-secondary">Limpar</a>
+    </div>
+  </form>
+</div>
+
+{% if consultations %}
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Paciente</th>
+          <th>Especialidade</th>
+          <th>Diagnóstico</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in consultations %}
+        <tr>
+          <td style="white-space:nowrap;font-weight:600">{{ c.date|date:"d/m/Y" }}</td>
+          <td>
+            <div style="font-weight:600">{{ c.patient.display_name }}</div>
+            <div style="font-size:11px;color:var(--muted)">{{ c.patient.email }}</div>
+          </td>
+          <td><span class="badge badge-teal">{{ c.specialty_label }}</span></td>
+          <td class="text-muted" style="max-width:200px">{{ c.diagnosis|default:"—"|truncatechars:50 }}</td>
+          <td>
+            {% if c.status == 'completed' %}<span class="badge badge-green">Concluída</span>
+            {% elif c.status == 'active' %}<span class="badge badge-teal">Ativa</span>
+            {% elif c.status == 'cancelled' %}<span class="badge badge-red">Cancelada</span>
+            {% else %}<span class="badge badge-gray">{{ c.get_status_display }}</span>{% endif %}
+          </td>
+          <td>
+            <a href="{% url 'consultation_detail' c.pk %}" class="btn btn-secondary btn-sm">Ver</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card">
+  <div class="empty-state">
+    <div class="empty-icon">📋</div>
+    <p>
+      {% if q or specialty or date_from or date_to %}
+        Nenhum atendimento encontrado com os filtros aplicados.
+      {% else %}
+        Você ainda não realizou nenhum atendimento.<br>Use o fluxo de token para atender seu primeiro paciente.
+      {% endif %}
+    </p>
+    <a href="{% url 'entrar_atendimento' %}" class="btn btn-primary mt-4">Iniciar atendimento</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

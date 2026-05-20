@@ -18,11 +18,12 @@ _log = logging.getLogger('liddis')
 from .models import (
     Consultation, VitalSign, ConsultationSession, Anamnese, ExameLaboratorial,
     ConsultationImage, Evolution, Prescription, DiagnosisCID, PhysicalExam, LabRequest,
+    PatientClinicalSummary,
 )
 from .forms import (
     ConsultationForm, VitalSignForm, AnamneseForm, ExameLaboratorialForm, AtendimentoForm,
     EvolutionForm, PrescriptionForm, DiagnosisCIDForm, PhysicalExamForm,
-    LabRequestForm, LabResultForm,
+    LabRequestForm, LabResultForm, VitalSignProfessionalForm, PatientClinicalSummaryForm,
 )
 from users.permissions import (
     has_permission, can_access_patient,
@@ -33,6 +34,28 @@ from users.audit import log_access
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
+
+# Mapeamento de perfil profissional → nome clínico da avaliação
+_EVALUATION_LABEL = {
+    'DOCTOR':            'Avaliação Médica',
+    'NURSE':             'Avaliação de Enfermagem',
+    'PHYSIO':            'Avaliação Fisioterapêutica',
+    'NUTRITIONIST':      'Avaliação Nutricional',
+    'SPEECH_THERAPIST':  'Avaliação Fonoaudiológica',
+    'PHYSICAL_EDUCATOR': 'Avaliação de Educação Física',
+    'PSYCHOLOGIST':      'Avaliação Psicológica',
+    'DENTIST':           'Avaliação Odontológica',
+    'OCC_THERAPIST':     'Avaliação de Terapia Ocupacional',
+    'PHARMACIST':        'Avaliação Farmacêutica',
+    'BIOMEDICO':         'Avaliação Biomédica',
+    'ADMIN':             'Avaliação Clínica',
+    'PATIENT':           'Anamnese',
+}
+
+
+def _evaluation_label(user):
+    return _EVALUATION_LABEL.get(user.role, 'Avaliação Clínica')
+
 
 def _is_professional(user):
     return user.role != 'PATIENT'
@@ -171,6 +194,7 @@ class ConsultationDetailView(LoginRequiredMixin, DetailView):
         ctx = super().get_context_data(**kwargs)
         anamnese, exames = _get_or_init_sub_models(self.object)
         user = self.request.user
+        patient = self.object.patient
         ctx['anamnese'] = anamnese if has_permission(user, 'anamnese', 'view') else None
         ctx['exames']   = exames   if has_permission(user, 'exams',    'view') else None
         ctx['images_by_tab'] = (
@@ -183,6 +207,20 @@ class ConsultationDetailView(LoginRequiredMixin, DetailView):
         ctx['tab_choices']   = ConsultationImage.TAB_CHOICES
         ctx['active_tab']    = self.request.GET.get('tab', 'geral')
         ctx['is_professional'] = _is_professional(user)
+        ctx['evaluation_label'] = _evaluation_label(user)
+
+        # Perfil clínico permanente do paciente (Descrição do Paciente)
+        try:
+            ctx['clinical_summary'] = patient.clinical_summary
+        except PatientClinicalSummary.DoesNotExist:
+            ctx['clinical_summary'] = None
+        ctx['can_edit_clinical_summary'] = _is_professional(user)
+
+        # Sinais vitais recentes do paciente
+        ctx['vitals_recentes'] = VitalSign.objects.filter(
+            patient=patient
+        ).order_by('-date', '-created_at')[:5]
+
         ctx['allowed_actions'] = {
             'edit':             has_permission(user, 'consultation', 'edit'),
             'delete':           has_permission(user, 'consultation', 'delete'),
@@ -526,10 +564,26 @@ def atendimento_consulta(request, token):
     )
     patient = session.patient
 
+    # Histórico clínico anterior (somente leitura) — últimas 10 consultas
+    historico_anterior = Consultation.objects.filter(
+        patient=patient
+    ).select_related('session').order_by('-date')[:10]
+
+    # Perfil clínico permanente do paciente
+    try:
+        clinical_summary = patient.clinical_summary
+    except PatientClinicalSummary.DoesNotExist:
+        clinical_summary = None
+
+    # Último sinal vital registrado
+    ultimo_vital = VitalSign.objects.filter(patient=patient).order_by('-date', '-created_at').first()
+
     if request.method == 'POST':
         form = AtendimentoForm(request.POST)
         anamnese_form = AnamneseForm(request.POST, prefix='anamnese')
         exames_form = ExameLaboratorialForm(request.POST, prefix='exames')
+        vitals_form = VitalSignProfessionalForm(request.POST, prefix='vitais')
+
         if form.is_valid():
             consultation = form.save(commit=False)
             consultation.patient = patient
@@ -539,13 +593,24 @@ def atendimento_consulta(request, token):
             consultation.save()
             _save_sub_forms(request, consultation, anamnese_form, exames_form)
             _handle_image_uploads(request, consultation)
+
+            # Salva sinais vitais se algum campo foi preenchido
+            if vitals_form.is_valid():
+                vitals_data = {k: v for k, v in vitals_form.cleaned_data.items() if v not in (None, '')}
+                vitals_data.pop('date', None)
+                if any(vitals_data.values()):
+                    vital = vitals_form.save(commit=False)
+                    vital.patient = patient
+                    vital.consultation = consultation
+                    vital.recorded_by = request.user
+                    vital.save()
+
             session.consultation = consultation
             session.status = 'closed'
             session.closed_at = timezone.now()
             session.save()
 
-            # Cria vínculo clínico para que o profissional possa acessar
-            # o prontuário do paciente nas consultas futuras (RBAC middleware exige)
+            # Cria vínculo clínico para RBAC
             try:
                 from users.models import PatientProfessionalAccess
                 ppa, _ = PatientProfessionalAccess.objects.get_or_create(
@@ -565,27 +630,31 @@ def atendimento_consulta(request, token):
                 _log.error('Falha ao criar vínculo clínico: professional=%s patient=%s erro=%s',
                            request.user.pk, patient.pk, exc)
 
-            log_access(
-                request, 'create', 'consultation',
-                resource_id=consultation.pk,
-                patient=patient,
-            )
-            messages.success(request, f'Consulta de {patient.display_name} registrada!')
-            return redirect('dashboard')
+            log_access(request, 'create', 'consultation', resource_id=consultation.pk, patient=patient)
+            messages.success(request, f'Consulta de {patient.display_name} registrada com sucesso!')
+            return redirect('consultation_detail', pk=consultation.pk)
     else:
-        form = AtendimentoForm()
+        form = AtendimentoForm(initial={'date': timezone.now().date()})
         anamnese_form = AnamneseForm(prefix='anamnese')
         exames_form = ExameLaboratorialForm(prefix='exames')
+        vitals_form = VitalSignProfessionalForm(
+            prefix='vitais', initial={'date': timezone.now().date()}
+        )
 
     return render(request, 'atendimento/consulta.html', {
-        'session': session,
-        'patient': patient,
-        'form': form,
-        'anamnese_form': anamnese_form,
-        'exames_form': exames_form,
-        'tab_choices': ConsultationImage.TAB_CHOICES,
-        'active_tab': request.POST.get('active_tab', 'geral'),
-        'professional': request.user,
+        'session':            session,
+        'patient':            patient,
+        'form':               form,
+        'anamnese_form':      anamnese_form,
+        'exames_form':        exames_form,
+        'vitals_form':        vitals_form,
+        'tab_choices':        ConsultationImage.TAB_CHOICES,
+        'active_tab':         request.POST.get('active_tab', 'geral'),
+        'professional':       request.user,
+        'evaluation_label':   _evaluation_label(request.user),
+        'historico_anterior': historico_anterior,
+        'clinical_summary':   clinical_summary,
+        'ultimo_vital':       ultimo_vital,
     })
 
 
@@ -878,6 +947,85 @@ def lab_request_create(request, consultation_pk):
         'form': form,
         'consultation': consultation,
         'titulo': 'Solicitar Exame',
+    })
+
+
+@login_required
+def meus_atendimentos(request):
+    """
+    Tela exclusiva do profissional — lista todas as consultas realizadas por ele,
+    com filtro por paciente, data e especialidade.
+    """
+    if not _is_professional(request.user):
+        return redirect('consultation_list')
+
+    qs = Consultation.objects.filter(
+        session__professional=request.user
+    ).select_related('patient', 'session').order_by('-date')
+
+    q = request.GET.get('q', '').strip()
+    if q:
+        qs = qs.filter(
+            Q(patient__first_name__icontains=q) |
+            Q(patient__last_name__icontains=q) |
+            Q(patient__username__icontains=q) |
+            Q(patient__email__icontains=q) |
+            Q(specialty__icontains=q) |
+            Q(specialty_other__icontains=q) |
+            Q(diagnosis__icontains=q)
+        )
+
+    specialty = request.GET.get('specialty', '').strip()
+    if specialty:
+        qs = qs.filter(specialty=specialty)
+
+    date_from = request.GET.get('date_from', '').strip()
+    date_to   = request.GET.get('date_to', '').strip()
+    if date_from:
+        qs = qs.filter(date__gte=date_from)
+    if date_to:
+        qs = qs.filter(date__lte=date_to)
+
+    from .models import SPECIALTY_CHOICES
+    return render(request, 'consultations/meus_atendimentos.html', {
+        'consultations':   qs,
+        'q':               q,
+        'specialty':       specialty,
+        'date_from':       date_from,
+        'date_to':         date_to,
+        'specialty_choices': SPECIALTY_CHOICES,
+        'total':           qs.count(),
+    })
+
+
+@login_required
+def patient_clinical_summary(request, consultation_pk):
+    """Edição do perfil clínico permanente do paciente — acesso exclusivo para profissionais."""
+    if not _is_professional(request.user):
+        messages.error(request, 'Apenas profissionais podem editar o perfil clínico do paciente.')
+        return redirect('consultation_list')
+
+    consultation = _get_accessible_consultation(request.user, consultation_pk)
+    patient = consultation.patient
+
+    summary, _ = PatientClinicalSummary.objects.get_or_create(patient=patient)
+
+    if request.method == 'POST':
+        form = PatientClinicalSummaryForm(request.POST, instance=summary)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.updated_by = request.user
+            obj.save()
+            log_access(request, 'edit', 'clinical_summary', resource_id=str(patient.pk), patient=patient)
+            messages.success(request, 'Perfil clínico do paciente atualizado com sucesso.')
+            return redirect('consultation_detail', pk=consultation_pk)
+    else:
+        form = PatientClinicalSummaryForm(instance=summary)
+
+    return render(request, 'consultations/clinical_summary_form.html', {
+        'form':         form,
+        'consultation': consultation,
+        'patient':      patient,
     })
 
 

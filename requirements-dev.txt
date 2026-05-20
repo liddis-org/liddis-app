@@ -1,0 +1,23 @@
+# ── Dependências de Desenvolvimento ─────────────────────────────────────────
+# Instale com: pip install -r requirements-dev.txt
+# (inclui tudo do requirements.txt + ferramentas de dev)
+
+-r requirements.txt
+
+# ── Testes ────────────────────────────────────────────────────────────────────
+pytest>=8.0
+pytest-django>=4.8
+pytest-cov>=5.0           # cobertura de código
+factory-boy>=3.3          # fixtures de dados de teste
+faker>=24.0               # dados falsos realistas (CPF, nomes, etc.)
+
+# ── Qualidade de Código ───────────────────────────────────────────────────────
+ruff>=0.4                 # linter extremamente rápido (substitui flake8 + isort)
+black>=24.0               # formatação automática
+
+# ── Debug ─────────────────────────────────────────────────────────────────────
+django-debug-toolbar>=4.3
+ipython>=8.0              # shell interativo melhorado (python manage.py shell_plus)
+
+# ── Banco local sem Docker ─────────────────────────────────────────────────────
+# SQLite é suficiente para dev — USE_SQLITE=True no .env.dev

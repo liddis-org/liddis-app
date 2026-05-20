@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}Vínculos de Acesso — LIDDIS{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">
+    {% if is_patient %}Profissionais com Acesso{% else %}Meus Pacientes{% endif %}
+  </h1>
+  <p class="page-subtitle">
+    {% if is_patient %}
+      Controle quais profissionais podem visualizar seus dados de saúde.
+    {% else %}
+      Pacientes que concederam acesso à sua conta.
+    {% endif %}
+  </p>
+</div>
+
+{% if messages %}
+  {% for msg in messages %}
+    <div class="alert alert-{{ msg.tags }}" role="alert">{{ msg }}</div>
+  {% endfor %}
+{% endif %}
+
+{% if is_patient %}
+<!-- ── Conceder novo acesso ──────────────────────────────────────────────── -->
+<div class="card mb-4">
+  <div class="card-header">
+    <h2 class="card-title">Conceder acesso a um profissional</h2>
+  </div>
+  <div class="card-body">
+    <form method="post" action="{% url 'grant_access' %}">
+      {% csrf_token %}
+      <div class="form-row">
+        <div class="form-group" style="flex:2">
+          <label class="form-label" for="professional_email">E-mail do profissional</label>
+          <input type="email" id="professional_email" name="professional_email"
+                 class="input" placeholder="profissional@clinica.com"
+                 required autocomplete="off" aria-required="true"/>
+        </div>
+        <div class="form-group" style="flex:2">
+          <label class="form-label" for="reason">Motivo (opcional)</label>
+          <input type="text" id="reason" name="reason"
+                 class="input" placeholder="Ex: Consulta de rotina"
+                 maxlength="200"/>
+        </div>
+        <div class="form-group" style="flex:0;align-self:flex-end">
+          <button type="submit" class="btn btn-primary">Conceder acesso</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<!-- ── Lista de vínculos ─────────────────────────────────────────────────── -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">
+      {% if is_patient %}Vínculos ativos e histórico{% else %}Pacientes vinculados{% endif %}
+    </h2>
+  </div>
+  <div class="card-body p-0">
+    {% if accesses %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              {% if is_patient %}
+                <th>Profissional</th>
+                <th>Especialidade</th>
+                <th>Motivo</th>
+                <th>Concedido em</th>
+                <th>Status</th>
+                <th></th>
+              {% else %}
+                <th>Paciente</th>
+                <th>Motivo</th>
+                <th>Vínculo desde</th>
+              {% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for access in accesses %}
+            <tr>
+              {% if is_patient %}
+                <td>
+                  <strong>{{ access.professional.get_full_name|default:access.professional.email }}</strong><br>
+                  <small style="color:#6b8caa">{{ access.professional.email }}</small>
+                </td>
+                <td>{{ access.professional.get_professional_specialty_display|default:"—" }}</td>
+                <td>{{ access.access_reason|default:"—" }}</td>
+                <td>{{ access.granted_at|date:"d/m/Y" }}</td>
+                <td>
+                  {% if access.is_active %}
+                    <span class="badge badge-success">Ativo</span>
+                  {% else %}
+                    <span class="badge badge-error">Revogado</span>
+                    {% if access.revoked_at %}
+                      <br><small style="color:#6b8caa">{{ access.revoked_at|date:"d/m/Y" }}</small>
+                    {% endif %}
+                  {% endif %}
+                </td>
+                <td>
+                  {% if access.is_active %}
+                    <form method="post" action="{% url 'revoke_access' access.id %}"
+                          onsubmit="return confirm('Revogar acesso de {{ access.professional.get_full_name|default:access.professional.email }}?')">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-danger">Revogar</button>
+                    </form>
+                  {% endif %}
+                </td>
+              {% else %}
+                <td>
+                  <strong>{{ access.patient.get_full_name|default:access.patient.email }}</strong><br>
+                  <small style="color:#6b8caa">{{ access.patient.email }}</small>
+                </td>
+                <td>{{ access.access_reason|default:"—" }}</td>
+                <td>{{ access.granted_at|date:"d/m/Y" }}</td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state" style="padding:40px;text-align:center;color:#6b8caa">
+        {% if is_patient %}
+          <p>Nenhum profissional tem acesso aos seus dados ainda.</p>
+          <p style="margin-top:8px;font-size:13px">Use o formulário acima para conceder acesso a um profissional de saúde.</p>
+        {% else %}
+          <p>Nenhum paciente vinculado ainda.</p>
+          <p style="margin-top:8px;font-size:13px">O paciente deve conceder acesso a você pelo painel dele.</p>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+.form-row{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+.form-group{display:flex;flex-direction:column;gap:6px;min-width:180px}
+.form-label{font-size:13px;font-weight:600;color:#aac4de}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
+.badge-success{background:rgba(74,222,128,.15);color:#4ade80}
+.badge-error{background:rgba(248,113,113,.15);color:#f87171}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn-danger{background:rgba(248,113,113,.15);color:#f87171;border:1px solid rgba(248,113,113,.3)}
+.btn-danger:hover{background:rgba(248,113,113,.3)}
+.table-responsive{overflow-x:auto}
+.table{width:100%;border-collapse:collapse;font-size:13px}
+.table th{padding:10px 16px;text-align:left;color:#6b8caa;font-weight:600;border-bottom:1px solid rgba(255,255,255,.06)}
+.table td{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+.mb-4{margin-bottom:24px}
+</style>
+{% endblock %}
