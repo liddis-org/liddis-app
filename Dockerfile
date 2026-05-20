@@ -51,8 +51,4 @@ USER appuser
 
 EXPOSE 8080
 
-CMD exec gunicorn config.wsgi:application \
-    --workers 2 \
-    --threads 2 \
-    --timeout 60 \
-    --bind "0.0.0.0:${PORT}"
+CMD ["sh", "-c", "python manage.py migrate --noinput && exec gunicorn config.wsgi:application --workers 2 --threads 2 --timeout 60 --bind 0.0.0.0:$PORT"]
