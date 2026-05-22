@@ -137,6 +137,21 @@ class VitalSignProfessionalForm(forms.ModelForm):
 
 class PatientClinicalSummaryForm(forms.ModelForm):
     """Perfil clínico permanente do paciente — editado pelos profissionais."""
+
+    # Sobrescreve os campos choice para incluir opção vazia e usar RadioSelect
+    smokes = forms.ChoiceField(
+        choices=[('', 'Não informado')] + PatientClinicalSummary.SMOKE_CHOICES,
+        required=False,
+        widget=forms.RadioSelect(),
+        label='Tabagismo',
+    )
+    drinks = forms.ChoiceField(
+        choices=[('', 'Não informado')] + PatientClinicalSummary.DRINK_CHOICES,
+        required=False,
+        widget=forms.RadioSelect(),
+        label='Etilismo',
+    )
+
     class Meta:
         model = PatientClinicalSummary
         fields = ['allergies', 'continuous_medications', 'comorbidities', 'smokes', 'drinks']
@@ -144,15 +159,11 @@ class PatientClinicalSummaryForm(forms.ModelForm):
             'allergies':              forms.Textarea(attrs={**_TA(3), 'placeholder': 'Penicilina, dipirona, látex, amendoim...'}),
             'continuous_medications': forms.Textarea(attrs={**_TA(3), 'placeholder': 'Metformina 850mg 2x/dia, Losartana 50mg...'}),
             'comorbidities':          forms.Textarea(attrs={**_TA(3), 'placeholder': 'DM2, HAS, Hipotireoidismo, Asma...'}),
-            'smokes':                 forms.Select(attrs=_I),
-            'drinks':                 forms.Select(attrs=_I),
         }
         labels = {
             'allergies':              'Alergias conhecidas',
             'continuous_medications': 'Medicamentos de uso contínuo',
             'comorbidities':          'Comorbidades / Condições crônicas',
-            'smokes':                 'Tabagismo',
-            'drinks':                 'Etilismo',
         }
 
 

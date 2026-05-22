@@ -531,6 +531,10 @@ class PatientClinicalSummary(models.Model):
         db_table            = 'patient_clinical_summaries'
         verbose_name        = 'Perfil Clínico do Paciente'
         verbose_name_plural = 'Perfis Clínicos dos Pacientes'
+        indexes = [
+            models.Index(fields=['updated_at'], name='clinical_updated_at_idx'),
+            models.Index(fields=['smokes', 'drinks'], name='clinical_habits_idx'),
+        ]
 
     def __str__(self):
         return f'Perfil Clínico — {self.patient.display_name}'

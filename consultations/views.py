@@ -594,11 +594,15 @@ def atendimento_consulta(request, token):
             _save_sub_forms(request, consultation, anamnese_form, exames_form)
             _handle_image_uploads(request, consultation)
 
-            # Salva sinais vitais se algum campo foi preenchido
+            # Salva sinais vitais apenas se ao menos um campo clínico foi preenchido
             if vitals_form.is_valid():
-                vitals_data = {k: v for k, v in vitals_form.cleaned_data.items() if v not in (None, '')}
-                vitals_data.pop('date', None)
-                if any(vitals_data.values()):
+                cd = vitals_form.cleaned_data
+                clinical_fields = {k: v for k, v in cd.items() if k != 'date'}
+                has_any_vital = any(
+                    v is not None and v != '' and v is not False
+                    for v in clinical_fields.values()
+                )
+                if has_any_vital:
                     vital = vitals_form.save(commit=False)
                     vital.patient = patient
                     vital.consultation = consultation

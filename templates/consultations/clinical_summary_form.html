@@ -2,6 +2,57 @@
 {% block title %}Perfil Clínico — {{ patient.display_name }} — LIDDIS{% endblock %}
 {% block topbar_title %}Perfil Clínico do Paciente{% endblock %}
 
+{% block extra_css %}
+<style>
+/* ── Toggle pill (Tabagismo / Etilismo) ───────────────────────────── */
+.toggle-group {
+  display: flex;
+  gap: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border-soft);
+  width: fit-content;
+  margin-top: 8px;
+}
+.toggle-group input[type="radio"] { display: none; }
+.toggle-group label {
+  padding: 9px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  background: var(--surface-2);
+  border-right: 1px solid var(--border-soft);
+  transition: background .15s, color .15s;
+  user-select: none;
+  white-space: nowrap;
+}
+.toggle-group label:last-of-type { border-right: none; }
+.toggle-group label:hover { background: var(--surface-3, #2a2a2a); color: var(--text); }
+
+/* Estado selecionado por cor semântica */
+.toggle-group input[value="no"]:checked   + label { background: var(--green);  color: #fff; }
+.toggle-group input[value="yes"]:checked  + label { background: var(--danger); color: #fff; }
+.toggle-group input[value="former"]:checked + label { background: #f59e0b; color: #fff; }
+.toggle-group input[value="occasionally"]:checked + label { background: #f59e0b; color: #fff; }
+.toggle-group input[value=""]:checked + label { background: var(--surface-3, #2a2a2a); color: var(--muted); }
+
+/* Alerta de alergia */
+.allergy-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(248,113,113,.08);
+  border: 1px solid rgba(248,113,113,.25);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--danger);
+  margin-top: 6px;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div style="max-width:720px;margin:0 auto">
 
@@ -17,78 +68,100 @@
 
   <div class="card" style="margin-bottom:16px;border-left:3px solid var(--orange);padding:14px 20px">
     <div style="font-size:12px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">
-      Atenção
+      Dados permanentes do paciente
     </div>
     <div style="font-size:13px;color:var(--muted)">
-      As informações abaixo fazem parte do perfil clínico <strong>permanente</strong> do paciente
-      e ficam visíveis em todos os atendimentos. Preencha apenas dados confirmados.
+      Essas informações ficam disponíveis em <strong>todos</strong> os atendimentos futuros.
+      Preencha apenas dados confirmados clinicamente.
     </div>
   </div>
 
   <div class="card">
-    <form method="post">
+    <form method="post" novalidate>
       {% csrf_token %}
 
-      <div style="display:grid;gap:20px">
+      <div style="display:grid;gap:24px">
 
-        <!-- Alergias -->
+        <!-- ── Alergias ── -->
         <div class="form-group" style="margin:0">
           <label style="font-weight:700;font-size:14px">
-            🚨 Alergias
-            <span style="font-weight:400;color:var(--muted);font-size:12px"> — medicamentos, alimentos, látex, etc.</span>
+            ⚠ Alergias conhecidas
           </label>
+          <div class="allergy-hint">
+            Medicamentos, alimentos, látex, contraste, etc. Seja específico.
+          </div>
           {{ form.allergies }}
-          {% if form.allergies.errors %}<div class="errorlist">{{ form.allergies.errors }}</div>{% endif %}
+          {% if form.allergies.errors %}
+          <div class="errorlist">{{ form.allergies.errors }}</div>
+          {% endif %}
         </div>
 
-        <!-- Medicamentos contínuos -->
+        <!-- ── Medicamentos contínuos ── -->
         <div class="form-group" style="margin:0">
           <label style="font-weight:700;font-size:14px">
-            💊 Medicamentos de Uso Contínuo
+            💊 Medicamentos de uso contínuo
           </label>
+          <div style="font-size:12px;color:var(--muted);margin:4px 0 6px">
+            Inclua nome, dose e frequência quando possível
+          </div>
           {{ form.continuous_medications }}
-          {% if form.continuous_medications.errors %}<div class="errorlist">{{ form.continuous_medications.errors }}</div>{% endif %}
+          {% if form.continuous_medications.errors %}
+          <div class="errorlist">{{ form.continuous_medications.errors }}</div>
+          {% endif %}
         </div>
 
-        <!-- Comorbidades -->
+        <!-- ── Comorbidades ── -->
         <div class="form-group" style="margin:0">
           <label style="font-weight:700;font-size:14px">
-            🏥 Comorbidades
-            <span style="font-weight:400;color:var(--muted);font-size:12px"> — HAS, DM, doenças crônicas, etc.</span>
+            🏥 Comorbidades / Condições crônicas
           </label>
+          <div style="font-size:12px;color:var(--muted);margin:4px 0 6px">
+            HAS, DM2, Hipotireoidismo, Asma, DPOC, doenças autoimunes, etc.
+          </div>
           {{ form.comorbidities }}
-          {% if form.comorbidities.errors %}<div class="errorlist">{{ form.comorbidities.errors }}</div>{% endif %}
+          {% if form.comorbidities.errors %}
+          <div class="errorlist">{{ form.comorbidities.errors }}</div>
+          {% endif %}
         </div>
 
-        <!-- Tabagismo + Etilismo lado a lado -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <!-- ── Tabagismo + Etilismo ── -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+
+          <!-- Tabagismo -->
           <div class="form-group" style="margin:0">
-            <label style="font-weight:700;font-size:14px">🚬 Tabagismo</label>
-            <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
-              {% for radio in form.smokes %}
-              <label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:14px;cursor:pointer">
-                {{ radio.tag }}
-                {{ radio.choice_label }}
-              </label>
+            <label style="font-weight:700;font-size:14px;display:block;margin-bottom:2px">
+              🚬 Tabagismo
+            </label>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Uso atual ou passado de cigarro/charuto/narguilé</div>
+            <div class="toggle-group">
+              {% for widget in form.smokes %}
+              {{ widget.tag }}
+              <label for="{{ widget.id_for_label }}">{{ widget.choice_label }}</label>
               {% endfor %}
             </div>
-            {% if form.smokes.errors %}<div class="errorlist">{{ form.smokes.errors }}</div>{% endif %}
+            {% if form.smokes.errors %}
+            <div class="errorlist" style="margin-top:6px">{{ form.smokes.errors }}</div>
+            {% endif %}
           </div>
 
+          <!-- Etilismo -->
           <div class="form-group" style="margin:0">
-            <label style="font-weight:700;font-size:14px">🍺 Etilismo</label>
-            <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
-              {% for radio in form.drinks %}
-              <label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:14px;cursor:pointer">
-                {{ radio.tag }}
-                {{ radio.choice_label }}
-              </label>
+            <label style="font-weight:700;font-size:14px;display:block;margin-bottom:2px">
+              🍺 Etilismo
+            </label>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Frequência de consumo de bebidas alcoólicas</div>
+            <div class="toggle-group">
+              {% for widget in form.drinks %}
+              {{ widget.tag }}
+              <label for="{{ widget.id_for_label }}">{{ widget.choice_label }}</label>
               {% endfor %}
             </div>
-            {% if form.drinks.errors %}<div class="errorlist">{{ form.drinks.errors }}</div>{% endif %}
+            {% if form.drinks.errors %}
+            <div class="errorlist" style="margin-top:6px">{{ form.drinks.errors }}</div>
+            {% endif %}
           </div>
+
         </div>
-
       </div>
 
       <div style="display:flex;gap:12px;margin-top:28px;padding-top:20px;border-top:1px solid var(--border-soft)">
