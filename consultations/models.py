@@ -540,6 +540,90 @@ class PatientClinicalSummary(models.Model):
         return f'Perfil Clínico — {self.patient.display_name}'
 
 
+class ClinicalIntervention(models.Model):
+    """
+    Intervenção clínica registrada pelo profissional durante a consulta.
+    Registra condutas, procedimentos, orientações e ações executadas.
+    Preparado para uso em pipelines de IA (sumarização, análise de padrões).
+    """
+    id           = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    consultation = models.ForeignKey(
+        Consultation,
+        on_delete=models.CASCADE,
+        related_name='clinical_interventions',
+        verbose_name='Consulta',
+    )
+    professional = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='interventions_written',
+        verbose_name='Profissional',
+    )
+    conducts          = models.TextField(blank=True, verbose_name='Condutas clínicas')
+    procedures        = models.TextField(blank=True, verbose_name='Procedimentos realizados')
+    guidelines        = models.TextField(blank=True, verbose_name='Orientações ao paciente')
+    clinical_actions  = models.TextField(blank=True, verbose_name='Ações clínicas executadas')
+    created_at        = models.DateTimeField(auto_now_add=True)
+    updated_at        = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table            = 'clinical_interventions'
+        ordering            = ['-created_at']
+        verbose_name        = 'Intervenção Clínica'
+        verbose_name_plural = 'Intervenções Clínicas'
+        indexes = [
+            models.Index(fields=['consultation'], name='intervention_consultation_idx'),
+            models.Index(fields=['professional'], name='intervention_professional_idx'),
+            models.Index(fields=['created_at'],   name='intervention_created_at_idx'),
+        ]
+
+    def __str__(self):
+        return f'Intervenção — {self.consultation}'
+
+
+class ExpectedEvolution(models.Model):
+    """
+    Evolução clínica esperada — prognóstico, metas terapêuticas e plano de acompanhamento.
+    Estruturado para análise longitudinal por IA: cruzamento de meta vs. evolução real.
+    """
+    id           = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    consultation = models.ForeignKey(
+        Consultation,
+        on_delete=models.CASCADE,
+        related_name='expected_evolutions',
+        verbose_name='Consulta',
+    )
+    professional = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='expected_evolutions_written',
+        verbose_name='Profissional',
+    )
+    clinical_evolution   = models.TextField(blank=True, verbose_name='Evolução clínica esperada')
+    therapeutic_goals    = models.TextField(blank=True, verbose_name='Metas terapêuticas')
+    follow_up_plan       = models.TextField(blank=True, verbose_name='Plano de acompanhamento')
+    prognosis            = models.TextField(blank=True, verbose_name='Prognóstico')
+    treatment_response   = models.TextField(blank=True, verbose_name='Resposta esperada ao tratamento')
+    created_at           = models.DateTimeField(auto_now_add=True)
+    updated_at           = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table            = 'expected_evolutions'
+        ordering            = ['-created_at']
+        verbose_name        = 'Evolução Esperada'
+        verbose_name_plural = 'Evoluções Esperadas'
+        indexes = [
+            models.Index(fields=['consultation'], name='exp_evolution_consultation_idx'),
+            models.Index(fields=['professional'], name='exp_evolution_professional_idx'),
+            models.Index(fields=['created_at'],   name='exp_evolution_created_at_idx'),
+        ]
+
+    def __str__(self):
+        return f'Evolução Esperada — {self.consultation}'
+
+
 class ConsultationSession(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Aguardando profissional'),

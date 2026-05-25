@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     Consultation, VitalSign, Anamnese, ExameLaboratorial, ConsultationImage,
     ConsultationSession, Evolution, Prescription, DiagnosisCID, PhysicalExam, LabRequest,
-    PatientClinicalSummary,
+    PatientClinicalSummary, ClinicalIntervention, ExpectedEvolution,
 )
 
 
@@ -83,6 +83,24 @@ class PhysicalExamAdmin(admin.ModelAdmin):
     search_fields  = ('professional__email', 'general_state')
     readonly_fields = ('id', 'created_at', 'updated_at')
     raw_id_fields  = ('consultation', 'professional')
+
+
+@admin.register(ClinicalIntervention)
+class ClinicalInterventionAdmin(admin.ModelAdmin):
+    list_display   = ('consultation', 'professional', 'created_at')
+    search_fields  = ('professional__email', 'conducts', 'procedures')
+    readonly_fields = ('id', 'created_at', 'updated_at')
+    raw_id_fields  = ('consultation', 'professional')
+    date_hierarchy = 'created_at'
+
+
+@admin.register(ExpectedEvolution)
+class ExpectedEvolutionAdmin(admin.ModelAdmin):
+    list_display   = ('consultation', 'professional', 'created_at')
+    search_fields  = ('professional__email', 'clinical_evolution', 'therapeutic_goals')
+    readonly_fields = ('id', 'created_at', 'updated_at')
+    raw_id_fields  = ('consultation', 'professional')
+    date_hierarchy = 'created_at'
 
 
 @admin.register(PatientClinicalSummary)

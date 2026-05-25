@@ -18,12 +18,13 @@ _log = logging.getLogger('liddis')
 from .models import (
     Consultation, VitalSign, ConsultationSession, Anamnese, ExameLaboratorial,
     ConsultationImage, Evolution, Prescription, DiagnosisCID, PhysicalExam, LabRequest,
-    PatientClinicalSummary,
+    PatientClinicalSummary, ClinicalIntervention, ExpectedEvolution,
 )
 from .forms import (
     ConsultationForm, VitalSignForm, AnamneseForm, ExameLaboratorialForm, AtendimentoForm,
     EvolutionForm, PrescriptionForm, DiagnosisCIDForm, PhysicalExamForm,
     LabRequestForm, LabResultForm, VitalSignProfessionalForm, PatientClinicalSummaryForm,
+    ClinicalInterventionForm, ExpectedEvolutionForm,
 )
 from users.permissions import (
     has_permission, can_access_patient,
@@ -215,6 +216,22 @@ class ConsultationDetailView(LoginRequiredMixin, DetailView):
         except PatientClinicalSummary.DoesNotExist:
             ctx['clinical_summary'] = None
         ctx['can_edit_clinical_summary'] = _is_professional(user)
+
+        # Dados demográficos do paciente (carregados automaticamente do banco)
+        try:
+            ctx['patient_profile'] = patient.patient_profile
+        except Exception:
+            ctx['patient_profile'] = None
+
+        # Intervenção clínica registrada nesta consulta
+        ctx['clinical_intervention'] = ClinicalIntervention.objects.filter(
+            consultation=self.object
+        ).select_related('professional').first()
+
+        # Evolução esperada registrada nesta consulta
+        ctx['expected_evolution'] = ExpectedEvolution.objects.filter(
+            consultation=self.object
+        ).select_related('professional').first()
 
         # Sinais vitais recentes do paciente
         ctx['vitals_recentes'] = VitalSign.objects.filter(
@@ -580,9 +597,11 @@ def atendimento_consulta(request, token):
 
     if request.method == 'POST':
         form = AtendimentoForm(request.POST)
-        anamnese_form = AnamneseForm(request.POST, prefix='anamnese')
-        exames_form = ExameLaboratorialForm(request.POST, prefix='exames')
-        vitals_form = VitalSignProfessionalForm(request.POST, prefix='vitais')
+        anamnese_form      = AnamneseForm(request.POST, prefix='anamnese')
+        exames_form        = ExameLaboratorialForm(request.POST, prefix='exames')
+        vitals_form        = VitalSignProfessionalForm(request.POST, prefix='vitais')
+        intervention_form  = ClinicalInterventionForm(request.POST, prefix='interv')
+        evolution_form     = ExpectedEvolutionForm(request.POST, prefix='evolucao')
 
         if form.is_valid():
             consultation = form.save(commit=False)
@@ -593,6 +612,24 @@ def atendimento_consulta(request, token):
             consultation.save()
             _save_sub_forms(request, consultation, anamnese_form, exames_form)
             _handle_image_uploads(request, consultation)
+
+            # Salva intervenção clínica se algum campo foi preenchido
+            if intervention_form.is_valid():
+                icd = intervention_form.cleaned_data
+                if any(v for v in icd.values() if v):
+                    interv = intervention_form.save(commit=False)
+                    interv.consultation = consultation
+                    interv.professional = request.user
+                    interv.save()
+
+            # Salva evolução esperada se algum campo foi preenchido
+            if evolution_form.is_valid():
+                ecd = evolution_form.cleaned_data
+                if any(v for v in ecd.values() if v):
+                    ev = evolution_form.save(commit=False)
+                    ev.consultation = consultation
+                    ev.professional = request.user
+                    ev.save()
 
             # Salva sinais vitais apenas se ao menos um campo clínico foi preenchido
             if vitals_form.is_valid():
@@ -638,12 +675,14 @@ def atendimento_consulta(request, token):
             messages.success(request, f'Consulta de {patient.display_name} registrada com sucesso!')
             return redirect('consultation_detail', pk=consultation.pk)
     else:
-        form = AtendimentoForm(initial={'date': timezone.now().date()})
-        anamnese_form = AnamneseForm(prefix='anamnese')
-        exames_form = ExameLaboratorialForm(prefix='exames')
-        vitals_form = VitalSignProfessionalForm(
+        form               = AtendimentoForm(initial={'date': timezone.now().date()})
+        anamnese_form      = AnamneseForm(prefix='anamnese')
+        exames_form        = ExameLaboratorialForm(prefix='exames')
+        vitals_form        = VitalSignProfessionalForm(
             prefix='vitais', initial={'date': timezone.now().date()}
         )
+        intervention_form  = ClinicalInterventionForm(prefix='interv')
+        evolution_form     = ExpectedEvolutionForm(prefix='evolucao')
 
     return render(request, 'atendimento/consulta.html', {
         'session':            session,
@@ -652,6 +691,8 @@ def atendimento_consulta(request, token):
         'anamnese_form':      anamnese_form,
         'exames_form':        exames_form,
         'vitals_form':        vitals_form,
+        'intervention_form':  intervention_form,
+        'evolution_form':     evolution_form,
         'tab_choices':        ConsultationImage.TAB_CHOICES,
         'active_tab':         request.POST.get('active_tab', 'geral'),
         'professional':       request.user,

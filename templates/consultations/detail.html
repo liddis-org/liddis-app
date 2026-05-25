@@ -249,6 +249,84 @@
       {% endif %}
 
       {% include "consultations/_tab_images.html" with tab_key="anamnese" tab_label="Anamnese" imgs=images_by_tab.anamnese consultation=consultation %}
+
+      <!-- ── Intervenção Clínica ── -->
+      {% if clinical_intervention %}
+      <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--border-soft)">
+        <div style="font-size:13px;font-weight:700;color:#818cf8;margin-bottom:16px;text-transform:uppercase;letter-spacing:.5px">
+          Intervenção Clínica
+        </div>
+        {% if clinical_intervention.conducts %}
+        <div style="margin-bottom:16px">
+          <div class="field-label">Condutas clínicas</div>
+          <p class="field-value">{{ clinical_intervention.conducts }}</p>
+        </div>
+        {% endif %}
+        {% if clinical_intervention.procedures %}
+        <div style="margin-bottom:16px">
+          <div class="field-label">Procedimentos realizados</div>
+          <p class="field-value">{{ clinical_intervention.procedures }}</p>
+        </div>
+        {% endif %}
+        {% if clinical_intervention.guidelines %}
+        <div style="margin-bottom:16px;background:rgba(74,222,128,.05);border-left:3px solid var(--green);padding:14px;border-radius:0 8px 8px 0">
+          <div class="field-label" style="margin-bottom:6px">Orientações ao paciente</div>
+          <p class="field-value">{{ clinical_intervention.guidelines }}</p>
+        </div>
+        {% endif %}
+        {% if clinical_intervention.clinical_actions %}
+        <div style="margin-bottom:16px">
+          <div class="field-label">Outras ações clínicas</div>
+          <p class="field-value">{{ clinical_intervention.clinical_actions }}</p>
+        </div>
+        {% endif %}
+        <div style="font-size:11px;color:var(--muted)">
+          Registrado por {{ clinical_intervention.professional.display_name|default:"profissional" }} em {{ clinical_intervention.created_at|date:"d/m/Y H:i" }}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- ── Evolução Esperada ── -->
+      {% if expected_evolution %}
+      <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--border-soft)">
+        <div style="font-size:13px;font-weight:700;color:#fbbf24;margin-bottom:16px;text-transform:uppercase;letter-spacing:.5px">
+          Evolução Esperada / Prognóstico
+        </div>
+        {% if expected_evolution.clinical_evolution %}
+        <div style="margin-bottom:16px">
+          <div class="field-label">Evolução clínica esperada</div>
+          <p class="field-value">{{ expected_evolution.clinical_evolution }}</p>
+        </div>
+        {% endif %}
+        {% if expected_evolution.therapeutic_goals %}
+        <div style="margin-bottom:16px">
+          <div class="field-label">Metas terapêuticas</div>
+          <p class="field-value">{{ expected_evolution.therapeutic_goals }}</p>
+        </div>
+        {% endif %}
+        {% if expected_evolution.follow_up_plan %}
+        <div style="margin-bottom:16px;background:rgba(0,212,255,.05);border-left:3px solid var(--teal);padding:14px;border-radius:0 8px 8px 0">
+          <div class="field-label" style="margin-bottom:6px">Plano de acompanhamento</div>
+          <p class="field-value">{{ expected_evolution.follow_up_plan }}</p>
+        </div>
+        {% endif %}
+        {% if expected_evolution.prognosis %}
+        <div style="margin-bottom:16px">
+          <div class="field-label">Prognóstico</div>
+          <p class="field-value">{{ expected_evolution.prognosis }}</p>
+        </div>
+        {% endif %}
+        {% if expected_evolution.treatment_response %}
+        <div style="margin-bottom:16px">
+          <div class="field-label">Resposta esperada ao tratamento</div>
+          <p class="field-value">{{ expected_evolution.treatment_response }}</p>
+        </div>
+        {% endif %}
+        <div style="font-size:11px;color:var(--muted)">
+          Registrado por {{ expected_evolution.professional.display_name|default:"profissional" }} em {{ expected_evolution.created_at|date:"d/m/Y H:i" }}
+        </div>
+      </div>
+      {% endif %}
     </div>
 
     <!-- ════════════════════════════════════════════════════════════════════
@@ -297,6 +375,51 @@
     <div class="tab-panel {% if active_tab == 'paciente' %}active{% endif %}"
          id="tab-paciente" role="tabpanel">
 
+      <!-- ── Dados demográficos (automáticos do banco) ── -->
+      <div style="background:var(--surface-2);border:1px solid var(--border-soft);border-radius:10px;padding:16px 20px;margin-bottom:20px">
+        <div class="field-label" style="margin-bottom:12px">Identificação do Paciente</div>
+        <div class="info-grid">
+          <div>
+            <div class="field-label">Nome completo</div>
+            <div style="font-weight:700;font-size:15px">{{ consultation.patient.display_name }}</div>
+          </div>
+          {% if consultation.patient.date_of_birth %}
+          <div>
+            <div class="field-label">Data de nascimento</div>
+            <div style="font-weight:600">
+              {{ consultation.patient.date_of_birth|date:"d/m/Y" }}
+              {% if consultation.patient.age %}<span style="color:var(--muted);font-size:12px;font-weight:400"> ({{ consultation.patient.age }} anos)</span>{% endif %}
+            </div>
+          </div>
+          {% endif %}
+          {% if consultation.patient.phone %}
+          <div>
+            <div class="field-label">Telefone</div>
+            <div style="font-weight:600">{{ consultation.patient.phone }}</div>
+          </div>
+          {% endif %}
+          {% if patient_profile and patient_profile.blood_type %}
+          <div>
+            <div class="field-label">Tipo sanguíneo</div>
+            <span class="badge badge-teal">{{ patient_profile.blood_type }}</span>
+          </div>
+          {% endif %}
+          {% if patient_profile and patient_profile.cpf %}
+          <div>
+            <div class="field-label">CPF</div>
+            <div style="font-weight:600;font-family:monospace">{{ patient_profile.cpf }}</div>
+          </div>
+          {% endif %}
+          {% if patient_profile and patient_profile.health_insurance %}
+          <div>
+            <div class="field-label">Plano de saúde</div>
+            <div style="font-weight:600">{{ patient_profile.health_insurance }}</div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- ── Perfil clínico permanente ── -->
       {% if clinical_summary %}
         <div class="info-grid">
           {% if clinical_summary.allergies %}
@@ -317,44 +440,41 @@
             <p class="field-value">{{ clinical_summary.comorbidities }}</p>
           </div>
           {% endif %}
-          {% if clinical_summary.smokes %}
-          <div>
-            <div class="field-label">Tabagismo</div>
-            <span class="badge badge-yellow">{{ clinical_summary.get_smokes_display }}</span>
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            {% if clinical_summary.smokes %}
+            <div>
+              <div class="field-label">Tabagismo</div>
+              <span class="badge badge-yellow">{{ clinical_summary.get_smokes_display }}</span>
+            </div>
+            {% endif %}
+            {% if clinical_summary.drinks %}
+            <div>
+              <div class="field-label">Etilismo</div>
+              <span class="badge badge-yellow">{{ clinical_summary.get_drinks_display }}</span>
+            </div>
+            {% endif %}
           </div>
-          {% endif %}
-          {% if clinical_summary.drinks %}
-          <div>
-            <div class="field-label">Etilismo</div>
-            <span class="badge badge-yellow">{{ clinical_summary.get_drinks_display }}</span>
-          </div>
-          {% endif %}
         </div>
 
         {% if clinical_summary.updated_by %}
-        <div style="margin-top:16px;font-size:11px;color:var(--muted)">
+        <div style="margin-top:12px;font-size:11px;color:var(--muted)">
           Última atualização por {{ clinical_summary.updated_by.display_name }} em {{ clinical_summary.updated_at|date:"d/m/Y H:i" }}
         </div>
         {% endif %}
 
-        {% if can_edit_clinical_summary %}
-        <div style="margin-top:16px">
-          <a href="{% url 'patient_clinical_summary' consultation.pk %}" class="btn btn-secondary btn-sm">
-            Atualizar perfil clínico
-          </a>
-        </div>
-        {% endif %}
-
       {% else %}
-        <div class="empty-state" style="padding:32px">
-          <div class="empty-icon" style="font-size:40px;opacity:.4">📋</div>
-          <p style="margin-bottom:16px">Nenhum perfil clínico registrado para este paciente.</p>
-          {% if can_edit_clinical_summary %}
-          <a href="{% url 'patient_clinical_summary' consultation.pk %}" class="btn btn-primary">
-            Preencher perfil clínico
-          </a>
-          {% endif %}
+        <div class="empty-state" style="padding:24px">
+          <div class="empty-icon" style="font-size:36px;opacity:.4">📋</div>
+          <p style="margin-bottom:12px">Nenhum perfil clínico registrado para este paciente.</p>
         </div>
+      {% endif %}
+
+      {% if can_edit_clinical_summary %}
+      <div style="margin-top:16px">
+        <a href="{% url 'patient_clinical_summary' consultation.pk %}" class="btn btn-secondary btn-sm">
+          {% if clinical_summary %}Atualizar perfil clínico{% else %}Preencher perfil clínico{% endif %}
+        </a>
+      </div>
       {% endif %}
 
       <!-- Sinais vitais recentes -->

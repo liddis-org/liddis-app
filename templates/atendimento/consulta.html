@@ -108,6 +108,29 @@
 /* Two-column layout */
 .consulta-layout { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
 @media(max-width:900px){ .consulta-layout { grid-template-columns: 1fr; } }
+
+/* Sub-abas dentro da aba Avaliação */
+.subtabs-nav {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border-soft);
+  margin-bottom: 20px;
+}
+.subtab-btn {
+  padding: 8px 16px;
+  font-size: 12px; font-weight: 600;
+  color: var(--muted);
+  background: none; border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+  white-space: nowrap;
+}
+.subtab-btn:hover { color: var(--text); }
+.subtab-btn.active { color: var(--teal); border-bottom-color: var(--teal); }
+.subtab-panel { display: none; }
+.subtab-panel.active { display: block; }
 </style>
 {% endblock %}
 
@@ -251,46 +274,109 @@
           </div>
         </div>
 
-        <!-- ── Aba: Avaliação (Anamnese dinâmica) ── -->
+        <!-- ── Aba: Avaliação (com sub-abas) ── -->
         <div class="tab-panel {% if active_tab == 'avaliacao' %}active{% endif %}" id="tab-avaliacao">
-          <div style="background:var(--teal-glow);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:20px;font-size:12px;color:var(--teal)">
-            Esta seção registra a <strong>{{ evaluation_label }}</strong> — dados específicos da avaliação clínica desta consulta.
+          <div style="background:var(--teal-glow);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--teal)">
+            <strong>{{ evaluation_label }}</strong> — dados clínicos específicos desta consulta.
           </div>
-          <div class="form-group">
-            <label>Queixa principal</label>
-            {{ anamnese_form.chief_complaint }}
+
+          <!-- Sub-abas -->
+          <div class="subtabs-nav" role="tablist">
+            <button type="button" class="subtab-btn active" data-subtab="anamnese">Anamnese</button>
+            <button type="button" class="subtab-btn" data-subtab="intervencao">Intervenção</button>
+            <button type="button" class="subtab-btn" data-subtab="evolucao">Evolução Esperada</button>
           </div>
-          <div class="form-group">
-            <label>História da doença atual</label>
-            {{ anamnese_form.history }}
-          </div>
-          <div class="form-group">
-            <label>Antecedentes pessoais</label>
-            {{ anamnese_form.past_history }}
-          </div>
-          <div class="form-group">
-            <label>Antecedentes familiares</label>
-            {{ anamnese_form.family_history }}
-          </div>
-          <div class="form-row">
+
+          <!-- ─ Sub-aba: Anamnese ─ -->
+          <div class="subtab-panel active" id="subtab-anamnese">
             <div class="form-group">
-              <label>Medicamentos em uso</label>
-              {{ anamnese_form.medications }}
+              <label>Queixa principal</label>
+              {{ anamnese_form.chief_complaint }}
             </div>
             <div class="form-group">
-              <label>Alergias (desta consulta)</label>
-              {{ anamnese_form.allergies }}
+              <label>História da doença atual</label>
+              {{ anamnese_form.history }}
+            </div>
+            <div class="form-group">
+              <label>Antecedentes pessoais</label>
+              {{ anamnese_form.past_history }}
+            </div>
+            <div class="form-group">
+              <label>Antecedentes familiares</label>
+              {{ anamnese_form.family_history }}
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Medicamentos em uso</label>
+                {{ anamnese_form.medications }}
+              </div>
+              <div class="form-group">
+                <label>Alergias (desta consulta)</label>
+                {{ anamnese_form.allergies }}
+              </div>
+            </div>
+            <div class="form-group">
+              <label style="margin-bottom:8px">Imagens da Avaliação</label>
+              <div class="drop-zone" onclick="document.getElementById('img_anamnese').click()">
+                <input type="file" name="images_anamnese" id="img_anamnese" accept="image/*" multiple
+                       onchange="previewImages(this, 'preview_anamnese')">
+                <div>Clique ou arraste imagens aqui</div>
+                <div style="font-size:11px;margin-top:4px;opacity:.7">JPG, PNG, WEBP</div>
+              </div>
+              <div class="img-preview-grid" id="preview_anamnese"></div>
             </div>
           </div>
-          <div class="form-group">
-            <label style="margin-bottom:8px">Imagens da Avaliação</label>
-            <div class="drop-zone" onclick="document.getElementById('img_anamnese').click()">
-              <input type="file" name="images_anamnese" id="img_anamnese" accept="image/*" multiple
-                     onchange="previewImages(this, 'preview_anamnese')">
-              <div>Clique ou arraste imagens aqui</div>
-              <div style="font-size:11px;margin-top:4px;opacity:.7">JPG, PNG, WEBP</div>
+
+          <!-- ─ Sub-aba: Intervenção ─ -->
+          <div class="subtab-panel" id="subtab-intervencao">
+            <div style="background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.2);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:#818cf8">
+              Registre as condutas, procedimentos e orientações executadas nesta consulta.
             </div>
-            <div class="img-preview-grid" id="preview_anamnese"></div>
+            <div class="form-group">
+              <label>{{ intervention_form.conducts.label }}</label>
+              {{ intervention_form.conducts }}
+            </div>
+            <div class="form-group">
+              <label>{{ intervention_form.procedures.label }}</label>
+              {{ intervention_form.procedures }}
+            </div>
+            <div class="form-group">
+              <label>{{ intervention_form.guidelines.label }}</label>
+              {{ intervention_form.guidelines }}
+            </div>
+            <div class="form-group">
+              <label>{{ intervention_form.clinical_actions.label }}</label>
+              {{ intervention_form.clinical_actions }}
+            </div>
+          </div>
+
+          <!-- ─ Sub-aba: Evolução Esperada ─ -->
+          <div class="subtab-panel" id="subtab-evolucao">
+            <div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:#fbbf24">
+              Registre o prognóstico, metas terapêuticas e plano de acompanhamento do paciente.
+            </div>
+            <div class="form-group">
+              <label>{{ evolution_form.clinical_evolution.label }}</label>
+              {{ evolution_form.clinical_evolution }}
+            </div>
+            <div class="form-group">
+              <label>{{ evolution_form.therapeutic_goals.label }}</label>
+              {{ evolution_form.therapeutic_goals }}
+            </div>
+            <div class="form-group">
+              <label>{{ evolution_form.follow_up_plan.label }}</label>
+              {{ evolution_form.follow_up_plan }}
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>{{ evolution_form.prognosis.label }}</label>
+                {{ evolution_form.prognosis }}
+              </div>
+              <div class="form-group">
+                <label>{{ evolution_form.treatment_response.label }}</label>
+                {{ evolution_form.treatment_response }}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -468,7 +554,7 @@
 
 {% block extra_js %}
 <script>
-// ── Tabs ──────────────────────────────────────────────────────────────────────
+// ── Tabs principais ───────────────────────────────────────────────────────────
 document.querySelectorAll('.tab-btn').forEach(function(btn) {
   btn.addEventListener('click', function() {
     var tab = this.dataset.tab;
@@ -477,6 +563,18 @@ document.querySelectorAll('.tab-btn').forEach(function(btn) {
     this.classList.add('active');
     document.getElementById('tab-' + tab).classList.add('active');
     document.getElementById('active_tab_input').value = tab;
+  });
+});
+
+// ── Sub-abas (dentro da aba Avaliação) ───────────────────────────────────────
+document.querySelectorAll('.subtab-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var subtab = this.dataset.subtab;
+    var parent = this.closest('.tab-panel');
+    parent.querySelectorAll('.subtab-btn').forEach(function(b) { b.classList.remove('active'); });
+    parent.querySelectorAll('.subtab-panel').forEach(function(p) { p.classList.remove('active'); });
+    this.classList.add('active');
+    document.getElementById('subtab-' + subtab).classList.add('active');
   });
 });
 

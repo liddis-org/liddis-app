@@ -2,7 +2,7 @@ from django import forms
 from .models import (
     Consultation, VitalSign, Anamnese, ExameLaboratorial,
     Evolution, Prescription, DiagnosisCID, PhysicalExam, LabRequest,
-    PatientClinicalSummary,
+    PatientClinicalSummary, ClinicalIntervention, ExpectedEvolution,
 )
 
 _I = {'class': 'input'}
@@ -318,6 +318,46 @@ class LabRequestForm(forms.ModelForm):
             'exam_type':        'Tipo de exame',
             'exam_description': 'Descrição / parâmetros',
             'urgency':          'Urgência',
+        }
+
+
+class ClinicalInterventionForm(forms.ModelForm):
+    """Intervenção clínica — condutas, procedimentos e orientações registradas durante consulta."""
+    class Meta:
+        model  = ClinicalIntervention
+        fields = ['conducts', 'procedures', 'guidelines', 'clinical_actions']
+        widgets = {
+            'conducts':         forms.Textarea(attrs={**_TA(4), 'placeholder': 'Condutas adotadas, decisões clínicas, protocolos seguidos...'}),
+            'procedures':       forms.Textarea(attrs={**_TA(4), 'placeholder': 'Procedimentos realizados durante o atendimento (curativo, sondagem, nebulização, punção...)'}),
+            'guidelines':       forms.Textarea(attrs={**_TA(4), 'placeholder': 'Orientações fornecidas ao paciente e/ou familiares, restrições, cuidados em domicílio...'}),
+            'clinical_actions': forms.Textarea(attrs={**_TA(3), 'placeholder': 'Outras ações clínicas executadas (encaminhamentos, interconsultas, notificações...)'}),
+        }
+        labels = {
+            'conducts':         'Condutas clínicas',
+            'procedures':       'Procedimentos realizados',
+            'guidelines':       'Orientações ao paciente',
+            'clinical_actions': 'Outras ações clínicas',
+        }
+
+
+class ExpectedEvolutionForm(forms.ModelForm):
+    """Evolução esperada — prognóstico, metas terapêuticas e plano de acompanhamento."""
+    class Meta:
+        model  = ExpectedEvolution
+        fields = ['clinical_evolution', 'therapeutic_goals', 'follow_up_plan', 'prognosis', 'treatment_response']
+        widgets = {
+            'clinical_evolution': forms.Textarea(attrs={**_TA(4), 'placeholder': 'Evolução clínica esperada para esta condição nas próximas semanas/meses...'}),
+            'therapeutic_goals':  forms.Textarea(attrs={**_TA(4), 'placeholder': 'Metas terapêuticas: controle glicêmico, reabilitação funcional, redução da dor...'}),
+            'follow_up_plan':     forms.Textarea(attrs={**_TA(3), 'placeholder': 'Retorno em X dias/semanas, exames de controle, monitoramento de parâmetros...'}),
+            'prognosis':          forms.Textarea(attrs={**_TA(3), 'placeholder': 'Prognóstico geral, fatores favoráveis e desfavoráveis...'}),
+            'treatment_response': forms.Textarea(attrs={**_TA(3), 'placeholder': 'Resposta esperada ao tratamento prescrito, sinais de melhora e alertas...'}),
+        }
+        labels = {
+            'clinical_evolution': 'Evolução clínica esperada',
+            'therapeutic_goals':  'Metas terapêuticas',
+            'follow_up_plan':     'Plano de acompanhamento / retorno',
+            'prognosis':          'Prognóstico',
+            'treatment_response': 'Resposta esperada ao tratamento',
         }
 
 
