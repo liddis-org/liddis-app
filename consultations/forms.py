@@ -322,42 +322,59 @@ class LabRequestForm(forms.ModelForm):
 
 
 class ClinicalInterventionForm(forms.ModelForm):
-    """Intervenção clínica — condutas, procedimentos e orientações registradas durante consulta."""
+    """Intervenção clínica — diagnóstico profissional, condutas e orientações."""
     class Meta:
         model  = ClinicalIntervention
-        fields = ['conducts', 'procedures', 'guidelines', 'clinical_actions']
+        fields = [
+            'professional_diagnosis', 'classification_code', 'related_factors',
+            'conducts', 'procedures', 'guidelines', 'clinical_actions',
+        ]
         widgets = {
-            'conducts':         forms.Textarea(attrs={**_TA(4), 'placeholder': 'Condutas adotadas, decisões clínicas, protocolos seguidos...'}),
-            'procedures':       forms.Textarea(attrs={**_TA(4), 'placeholder': 'Procedimentos realizados durante o atendimento (curativo, sondagem, nebulização, punção...)'}),
-            'guidelines':       forms.Textarea(attrs={**_TA(4), 'placeholder': 'Orientações fornecidas ao paciente e/ou familiares, restrições, cuidados em domicílio...'}),
-            'clinical_actions': forms.Textarea(attrs={**_TA(3), 'placeholder': 'Outras ações clínicas executadas (encaminhamentos, interconsultas, notificações...)'}),
+            'professional_diagnosis': forms.TextInput(attrs={**_I, 'placeholder': 'Ex: Troca de Gases Prejudicada, Déficit Nutricional...'}),
+            'classification_code':    forms.TextInput(attrs={**_I, 'placeholder': 'Ex: NANDA, CID-10, DSM-5, NCP...'}),
+            'related_factors':        forms.Textarea(attrs={**_TA(3), 'placeholder': 'Fatores causais ou contribuintes para o diagnóstico...'}),
+            'conducts':               forms.Textarea(attrs={**_TA(5), 'placeholder': 'Digite uma conduta por linha:\nMonitorização contínua de oximetria\nPositionamento em decúbito elevado\nAdministração de O₂ conforme prescrição'}),
+            'procedures':             forms.Textarea(attrs={**_TA(3), 'placeholder': 'Procedimentos realizados durante o atendimento (curativo, sondagem, punção...)'}),
+            'guidelines':             forms.Textarea(attrs={**_TA(3), 'placeholder': 'Orientações fornecidas ao paciente e/ou familiares...'}),
+            'clinical_actions':       forms.Textarea(attrs={**_TA(2), 'placeholder': 'Encaminhamentos, interconsultas, notificações...'}),
         }
         labels = {
-            'conducts':         'Condutas clínicas',
-            'procedures':       'Procedimentos realizados',
-            'guidelines':       'Orientações ao paciente',
-            'clinical_actions': 'Outras ações clínicas',
+            'professional_diagnosis': 'Diagnóstico clínico',
+            'classification_code':    'Código de classificação',
+            'related_factors':        'Fatores relacionados / etiologia',
+            'conducts':               'Condutas (uma por linha)',
+            'procedures':             'Procedimentos realizados',
+            'guidelines':             'Orientações ao paciente',
+            'clinical_actions':       'Outras ações clínicas',
         }
 
 
 class ExpectedEvolutionForm(forms.ModelForm):
-    """Evolução esperada — prognóstico, metas terapêuticas e plano de acompanhamento."""
+    """Evolução esperada — prazo, prioridade, metas e prognóstico."""
     class Meta:
         model  = ExpectedEvolution
-        fields = ['clinical_evolution', 'therapeutic_goals', 'follow_up_plan', 'prognosis', 'treatment_response']
+        fields = [
+            'estimated_timeframe', 'priority',
+            'clinical_evolution', 'therapeutic_goals',
+            'follow_up_plan', 'prognosis', 'treatment_response',
+        ]
         widgets = {
-            'clinical_evolution': forms.Textarea(attrs={**_TA(4), 'placeholder': 'Evolução clínica esperada para esta condição nas próximas semanas/meses...'}),
-            'therapeutic_goals':  forms.Textarea(attrs={**_TA(4), 'placeholder': 'Metas terapêuticas: controle glicêmico, reabilitação funcional, redução da dor...'}),
-            'follow_up_plan':     forms.Textarea(attrs={**_TA(3), 'placeholder': 'Retorno em X dias/semanas, exames de controle, monitoramento de parâmetros...'}),
-            'prognosis':          forms.Textarea(attrs={**_TA(3), 'placeholder': 'Prognóstico geral, fatores favoráveis e desfavoráveis...'}),
-            'treatment_response': forms.Textarea(attrs={**_TA(3), 'placeholder': 'Resposta esperada ao tratamento prescrito, sinais de melhora e alertas...'}),
+            'estimated_timeframe': forms.TextInput(attrs={**_I, 'placeholder': 'Ex: 48–72 horas, 2 semanas, 1 mês...'}),
+            'priority':            forms.Select(attrs=_I),
+            'clinical_evolution':  forms.Textarea(attrs={**_TA(4), 'placeholder': 'Resultados clínicos esperados ao final do prazo estabelecido...'}),
+            'therapeutic_goals':   forms.Textarea(attrs={**_TA(3), 'placeholder': 'Metas específicas e mensuráveis do tratamento...'}),
+            'follow_up_plan':      forms.Textarea(attrs={**_TA(2), 'placeholder': 'Retorno em X dias, exames de controle, parâmetros a monitorar...'}),
+            'prognosis':           forms.Textarea(attrs={**_TA(2), 'placeholder': 'Prognóstico geral, fatores favoráveis e desfavoráveis...'}),
+            'treatment_response':  forms.Textarea(attrs={**_TA(2), 'placeholder': 'Sinais esperados de melhora, alertas e critérios de reavaliação...'}),
         }
         labels = {
-            'clinical_evolution': 'Evolução clínica esperada',
-            'therapeutic_goals':  'Metas terapêuticas',
-            'follow_up_plan':     'Plano de acompanhamento / retorno',
-            'prognosis':          'Prognóstico',
-            'treatment_response': 'Resposta esperada ao tratamento',
+            'estimated_timeframe': 'Prazo estimado',
+            'priority':            'Prioridade',
+            'clinical_evolution':  'Resultados esperados',
+            'therapeutic_goals':   'Metas terapêuticas',
+            'follow_up_plan':      'Plano de acompanhamento',
+            'prognosis':           'Prognóstico',
+            'treatment_response':  'Resposta esperada ao tratamento',
         }
 
 

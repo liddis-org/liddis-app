@@ -95,6 +95,31 @@
   display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;
 }
 @media (max-width: 480px) { .info-grid { grid-template-columns: 1fr; } }
+
+/* ── Avaliação: 3 cards ── */
+.avaliacao-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 720px) { .avaliacao-cards { grid-template-columns: 1fr; } }
+@media (min-width: 480px) and (max-width: 720px) { .avaliacao-cards { grid-template-columns: 1fr 1fr; } }
+.aval-card {
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  padding: 16px;
+}
+.aval-card-header {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+}
+.aval-icon {
+  width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 15px;
+}
+.aval-label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .8px; font-weight: 700;
+}
+.aval-field { margin-bottom: 10px; }
 </style>
 {% endblock %}
 
@@ -250,80 +275,135 @@
 
       {% include "consultations/_tab_images.html" with tab_key="anamnese" tab_label="Anamnese" imgs=images_by_tab.anamnese consultation=consultation %}
 
-      <!-- ── Intervenção Clínica ── -->
-      {% if clinical_intervention %}
-      <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--border-soft)">
-        <div style="font-size:13px;font-weight:700;color:#818cf8;margin-bottom:16px;text-transform:uppercase;letter-spacing:.5px">
-          Intervenção Clínica
-        </div>
-        {% if clinical_intervention.conducts %}
-        <div style="margin-bottom:16px">
-          <div class="field-label">Condutas clínicas</div>
-          <p class="field-value">{{ clinical_intervention.conducts }}</p>
-        </div>
-        {% endif %}
-        {% if clinical_intervention.procedures %}
-        <div style="margin-bottom:16px">
-          <div class="field-label">Procedimentos realizados</div>
-          <p class="field-value">{{ clinical_intervention.procedures }}</p>
-        </div>
-        {% endif %}
-        {% if clinical_intervention.guidelines %}
-        <div style="margin-bottom:16px;background:rgba(74,222,128,.05);border-left:3px solid var(--green);padding:14px;border-radius:0 8px 8px 0">
-          <div class="field-label" style="margin-bottom:6px">Orientações ao paciente</div>
-          <p class="field-value">{{ clinical_intervention.guidelines }}</p>
-        </div>
-        {% endif %}
-        {% if clinical_intervention.clinical_actions %}
-        <div style="margin-bottom:16px">
-          <div class="field-label">Outras ações clínicas</div>
-          <p class="field-value">{{ clinical_intervention.clinical_actions }}</p>
-        </div>
-        {% endif %}
-        <div style="font-size:11px;color:var(--muted)">
-          Registrado por {{ clinical_intervention.professional.display_name|default:"profissional" }} em {{ clinical_intervention.created_at|date:"d/m/Y H:i" }}
-        </div>
-      </div>
-      {% endif %}
+      <!-- ── Avaliação clínica: Diagnóstico · Intervenção · Evolução Esperada ── -->
+      {% if clinical_intervention or expected_evolution %}
+      <div style="margin-top:28px;padding-top:24px;border-top:1px solid var(--border-soft)">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:16px">Avaliação Clínica</div>
+        <div class="avaliacao-cards">
 
-      <!-- ── Evolução Esperada ── -->
-      {% if expected_evolution %}
-      <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--border-soft)">
-        <div style="font-size:13px;font-weight:700;color:#fbbf24;margin-bottom:16px;text-transform:uppercase;letter-spacing:.5px">
-          Evolução Esperada / Prognóstico
-        </div>
-        {% if expected_evolution.clinical_evolution %}
-        <div style="margin-bottom:16px">
-          <div class="field-label">Evolução clínica esperada</div>
-          <p class="field-value">{{ expected_evolution.clinical_evolution }}</p>
-        </div>
-        {% endif %}
-        {% if expected_evolution.therapeutic_goals %}
-        <div style="margin-bottom:16px">
-          <div class="field-label">Metas terapêuticas</div>
-          <p class="field-value">{{ expected_evolution.therapeutic_goals }}</p>
-        </div>
-        {% endif %}
-        {% if expected_evolution.follow_up_plan %}
-        <div style="margin-bottom:16px;background:rgba(0,212,255,.05);border-left:3px solid var(--teal);padding:14px;border-radius:0 8px 8px 0">
-          <div class="field-label" style="margin-bottom:6px">Plano de acompanhamento</div>
-          <p class="field-value">{{ expected_evolution.follow_up_plan }}</p>
-        </div>
-        {% endif %}
-        {% if expected_evolution.prognosis %}
-        <div style="margin-bottom:16px">
-          <div class="field-label">Prognóstico</div>
-          <p class="field-value">{{ expected_evolution.prognosis }}</p>
-        </div>
-        {% endif %}
-        {% if expected_evolution.treatment_response %}
-        <div style="margin-bottom:16px">
-          <div class="field-label">Resposta esperada ao tratamento</div>
-          <p class="field-value">{{ expected_evolution.treatment_response }}</p>
-        </div>
-        {% endif %}
-        <div style="font-size:11px;color:var(--muted)">
-          Registrado por {{ expected_evolution.professional.display_name|default:"profissional" }} em {{ expected_evolution.created_at|date:"d/m/Y H:i" }}
+          <!-- Card 1: Diagnóstico -->
+          <div class="aval-card" style="background:rgba(99,102,241,.04);border-color:rgba(99,102,241,.2)">
+            <div class="aval-card-header">
+              <div class="aval-icon" style="background:rgba(99,102,241,.15)">🩺</div>
+              <div class="aval-label" style="color:#818cf8">Diagnóstico</div>
+            </div>
+            {% if clinical_intervention %}
+              {% if clinical_intervention.professional_diagnosis %}
+              <div class="aval-field">
+                <div class="field-label">Diagnóstico clínico</div>
+                <p class="field-value" style="font-size:13px">{{ clinical_intervention.professional_diagnosis }}</p>
+              </div>
+              {% endif %}
+              {% if clinical_intervention.classification_code %}
+              <div class="aval-field">
+                <div class="field-label">Código</div>
+                <span class="badge badge-teal">{{ clinical_intervention.classification_code }}</span>
+              </div>
+              {% endif %}
+              {% if clinical_intervention.related_factors %}
+              <div class="aval-field">
+                <div class="field-label">Fatores relacionados</div>
+                <p class="field-value" style="font-size:13px">{{ clinical_intervention.related_factors }}</p>
+              </div>
+              {% endif %}
+              {% if not clinical_intervention.professional_diagnosis and not clinical_intervention.classification_code and not clinical_intervention.related_factors %}
+                <p style="color:var(--muted);font-size:12px">Não registrado.</p>
+              {% endif %}
+            {% else %}
+              <p style="color:var(--muted);font-size:12px">Não registrado.</p>
+            {% endif %}
+          </div>
+
+          <!-- Card 2: Intervenção -->
+          <div class="aval-card" style="background:rgba(99,102,241,.04);border-color:rgba(99,102,241,.2)">
+            <div class="aval-card-header">
+              <div class="aval-icon" style="background:rgba(99,102,241,.15)">⚡</div>
+              <div class="aval-label" style="color:#818cf8">Intervenção</div>
+            </div>
+            {% if clinical_intervention %}
+              {% if clinical_intervention.conducts_list %}
+              <div class="aval-field">
+                <div class="field-label">Condutas clínicas</div>
+                <ul style="margin:6px 0 0 16px;padding:0;font-size:13px;line-height:1.7">
+                  {% for conduct in clinical_intervention.conducts_list %}
+                  <li>{{ conduct }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+              {% endif %}
+              {% if clinical_intervention.procedures %}
+              <div class="aval-field">
+                <div class="field-label">Procedimentos</div>
+                <p class="field-value" style="font-size:13px">{{ clinical_intervention.procedures }}</p>
+              </div>
+              {% endif %}
+              {% if clinical_intervention.guidelines %}
+              <div class="aval-field" style="background:rgba(74,222,128,.05);border-left:2px solid var(--green);padding:10px;border-radius:0 6px 6px 0">
+                <div class="field-label">Orientações ao paciente</div>
+                <p class="field-value" style="font-size:13px">{{ clinical_intervention.guidelines }}</p>
+              </div>
+              {% endif %}
+              {% if not clinical_intervention.conducts and not clinical_intervention.procedures and not clinical_intervention.guidelines %}
+                <p style="color:var(--muted);font-size:12px">Não registrado.</p>
+              {% endif %}
+              <div style="font-size:11px;color:var(--muted);margin-top:12px">
+                {{ clinical_intervention.professional.display_name|default:"Profissional" }} · {{ clinical_intervention.created_at|date:"d/m/Y" }}
+              </div>
+            {% else %}
+              <p style="color:var(--muted);font-size:12px">Não registrado.</p>
+            {% endif %}
+          </div>
+
+          <!-- Card 3: Evolução Esperada -->
+          <div class="aval-card" style="background:rgba(245,158,11,.04);border-color:rgba(245,158,11,.2)">
+            <div class="aval-card-header">
+              <div class="aval-icon" style="background:rgba(245,158,11,.15)">📈</div>
+              <div class="aval-label" style="color:#fbbf24">Evolução Esperada</div>
+            </div>
+            {% if expected_evolution %}
+              {% if expected_evolution.estimated_timeframe or expected_evolution.priority %}
+              <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+                {% if expected_evolution.estimated_timeframe %}
+                <span style="font-size:12px;font-weight:600">⏱ {{ expected_evolution.estimated_timeframe }}</span>
+                {% endif %}
+                {% if expected_evolution.priority == 'high' %}
+                <span style="font-size:11px;padding:2px 10px;border-radius:10px;font-weight:700;background:rgba(248,113,113,.15);color:#f87171">Alta</span>
+                {% elif expected_evolution.priority == 'medium' %}
+                <span style="font-size:11px;padding:2px 10px;border-radius:10px;font-weight:700;background:rgba(251,191,36,.15);color:#fbbf24">Média</span>
+                {% elif expected_evolution.priority == 'low' %}
+                <span style="font-size:11px;padding:2px 10px;border-radius:10px;font-weight:700;background:rgba(74,222,128,.15);color:#4ade80">Baixa</span>
+                {% endif %}
+              </div>
+              {% endif %}
+              {% if expected_evolution.clinical_evolution %}
+              <div class="aval-field">
+                <div class="field-label">Resultados esperados</div>
+                <p class="field-value" style="font-size:13px">{{ expected_evolution.clinical_evolution }}</p>
+              </div>
+              {% endif %}
+              {% if expected_evolution.therapeutic_goals %}
+              <div class="aval-field">
+                <div class="field-label">Metas terapêuticas</div>
+                <p class="field-value" style="font-size:13px">{{ expected_evolution.therapeutic_goals }}</p>
+              </div>
+              {% endif %}
+              {% if expected_evolution.follow_up_plan %}
+              <div class="aval-field" style="background:rgba(0,212,255,.05);border-left:2px solid var(--teal);padding:10px;border-radius:0 6px 6px 0">
+                <div class="field-label">Plano de acompanhamento</div>
+                <p class="field-value" style="font-size:13px">{{ expected_evolution.follow_up_plan }}</p>
+              </div>
+              {% endif %}
+              {% if not expected_evolution.clinical_evolution and not expected_evolution.therapeutic_goals and not expected_evolution.estimated_timeframe %}
+                <p style="color:var(--muted);font-size:12px">Não registrado.</p>
+              {% endif %}
+              <div style="font-size:11px;color:var(--muted);margin-top:12px">
+                {{ expected_evolution.professional.display_name|default:"Profissional" }} · {{ expected_evolution.created_at|date:"d/m/Y" }}
+              </div>
+            {% else %}
+              <p style="color:var(--muted);font-size:12px">Não registrado.</p>
+            {% endif %}
+          </div>
+
         </div>
       </div>
       {% endif %}

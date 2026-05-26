@@ -53,9 +53,48 @@ _EVALUATION_LABEL = {
     'PATIENT':           'Anamnese',
 }
 
+_DIAGNOSIS_LABEL = {
+    'DOCTOR':            'DIAGNÓSTICO MÉDICO',
+    'NURSE':             'DIAGNÓSTICO DE ENFERMAGEM',
+    'PHYSIO':            'DIAGNÓSTICO FISIOTERAPÊUTICO',
+    'NUTRITIONIST':      'DIAGNÓSTICO NUTRICIONAL',
+    'SPEECH_THERAPIST':  'DIAGNÓSTICO FONOAUDIOLÓGICO',
+    'PHYSICAL_EDUCATOR': 'AVALIAÇÃO FÍSICA',
+    'PSYCHOLOGIST':      'DIAGNÓSTICO PSICOLÓGICO',
+    'DENTIST':           'DIAGNÓSTICO ODONTOLÓGICO',
+    'OCC_THERAPIST':     'DIAGNÓSTICO OCUPACIONAL',
+    'PHARMACIST':        'AVALIAÇÃO FARMACÊUTICA',
+    'BIOMEDICO':         'DIAGNÓSTICO BIOMÉDICO',
+    'ADMIN':             'DIAGNÓSTICO CLÍNICO',
+    'PATIENT':           'DIAGNÓSTICO',
+}
+
+_CLASSIFICATION_HINT = {
+    'DOCTOR':            'CID-10',
+    'NURSE':             'NANDA',
+    'PHYSIO':            'CIF',
+    'NUTRITIONIST':      'CID-10 / TUSS',
+    'SPEECH_THERAPIST':  'CID-10',
+    'PHYSICAL_EDUCATOR': 'CID-10',
+    'PSYCHOLOGIST':      'DSM-5 / CID-11',
+    'DENTIST':           'CID-10 / TUSS',
+    'OCC_THERAPIST':     'CIF / CID-10',
+    'PHARMACIST':        'CID-10',
+    'BIOMEDICO':         'CID-10',
+    'ADMIN':             'CID-10',
+}
+
 
 def _evaluation_label(user):
     return _EVALUATION_LABEL.get(user.role, 'Avaliação Clínica')
+
+
+def _diagnosis_label(user):
+    return _DIAGNOSIS_LABEL.get(user.role, 'DIAGNÓSTICO CLÍNICO')
+
+
+def _classification_hint(user):
+    return _CLASSIFICATION_HINT.get(user.role, 'CID-10')
 
 
 def _is_professional(user):
@@ -208,7 +247,9 @@ class ConsultationDetailView(LoginRequiredMixin, DetailView):
         ctx['tab_choices']   = ConsultationImage.TAB_CHOICES
         ctx['active_tab']    = self.request.GET.get('tab', 'geral')
         ctx['is_professional'] = _is_professional(user)
-        ctx['evaluation_label'] = _evaluation_label(user)
+        ctx['evaluation_label']    = _evaluation_label(user)
+        ctx['diagnosis_label']     = _diagnosis_label(user)
+        ctx['classification_hint'] = _classification_hint(user)
 
         # Perfil clínico permanente do paciente (Descrição do Paciente)
         try:
@@ -695,9 +736,11 @@ def atendimento_consulta(request, token):
         'evolution_form':     evolution_form,
         'tab_choices':        ConsultationImage.TAB_CHOICES,
         'active_tab':         request.POST.get('active_tab', 'geral'),
-        'professional':       request.user,
-        'evaluation_label':   _evaluation_label(request.user),
-        'historico_anterior': historico_anterior,
+        'professional':        request.user,
+        'evaluation_label':    _evaluation_label(request.user),
+        'diagnosis_label':     _diagnosis_label(request.user),
+        'classification_hint': _classification_hint(request.user),
+        'historico_anterior':  historico_anterior,
         'clinical_summary':   clinical_summary,
         'ultimo_vital':       ultimo_vital,
     })

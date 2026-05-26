@@ -560,12 +560,23 @@ class ClinicalIntervention(models.Model):
         related_name='interventions_written',
         verbose_name='Profissional',
     )
-    conducts          = models.TextField(blank=True, verbose_name='Condutas clínicas')
-    procedures        = models.TextField(blank=True, verbose_name='Procedimentos realizados')
-    guidelines        = models.TextField(blank=True, verbose_name='Orientações ao paciente')
-    clinical_actions  = models.TextField(blank=True, verbose_name='Ações clínicas executadas')
-    created_at        = models.DateTimeField(auto_now_add=True)
-    updated_at        = models.DateTimeField(auto_now=True)
+    professional_diagnosis = models.TextField(blank=True, verbose_name='Diagnóstico clínico do profissional')
+    classification_code    = models.CharField(max_length=50, blank=True, verbose_name='Código de classificação (NANDA, CID-10, DSM…)')
+    related_factors        = models.TextField(blank=True, verbose_name='Fatores relacionados / etiologia')
+    conducts               = models.TextField(blank=True, verbose_name='Condutas clínicas (uma por linha)')
+    procedures             = models.TextField(blank=True, verbose_name='Procedimentos realizados')
+    guidelines             = models.TextField(blank=True, verbose_name='Orientações ao paciente')
+    clinical_actions       = models.TextField(blank=True, verbose_name='Outras ações clínicas')
+    created_at             = models.DateTimeField(auto_now_add=True)
+    updated_at             = models.DateTimeField(auto_now=True)
+
+    @property
+    def conducts_list(self):
+        return [c.strip() for c in self.conducts.split('\n') if c.strip()]
+
+    @property
+    def conducts_count(self):
+        return len(self.conducts_list)
 
     class Meta:
         db_table            = 'clinical_interventions'
@@ -601,7 +612,18 @@ class ExpectedEvolution(models.Model):
         related_name='expected_evolutions_written',
         verbose_name='Profissional',
     )
-    clinical_evolution   = models.TextField(blank=True, verbose_name='Evolução clínica esperada')
+    PRIORITY_HIGH   = 'high'
+    PRIORITY_MEDIUM = 'medium'
+    PRIORITY_LOW    = 'low'
+    PRIORITY_CHOICES = [
+        (PRIORITY_HIGH,   'Alta'),
+        (PRIORITY_MEDIUM, 'Média'),
+        (PRIORITY_LOW,    'Baixa'),
+    ]
+
+    estimated_timeframe  = models.CharField(max_length=100, blank=True, verbose_name='Prazo estimado')
+    priority             = models.CharField(max_length=10, choices=PRIORITY_CHOICES, blank=True, verbose_name='Prioridade')
+    clinical_evolution   = models.TextField(blank=True, verbose_name='Resultados esperados')
     therapeutic_goals    = models.TextField(blank=True, verbose_name='Metas terapêuticas')
     follow_up_plan       = models.TextField(blank=True, verbose_name='Plano de acompanhamento')
     prognosis            = models.TextField(blank=True, verbose_name='Prognóstico')

@@ -329,12 +329,38 @@
 
           <!-- ─ Sub-aba: Intervenção ─ -->
           <div class="subtab-panel" id="subtab-intervencao">
-            <div style="background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.2);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:#818cf8">
-              Registre as condutas, procedimentos e orientações executadas nesta consulta.
+
+            <!-- Seção: Diagnóstico -->
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+              <div style="width:28px;height:28px;background:rgba(99,102,241,.15);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px">🩺</div>
+              <span style="font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:#818cf8;font-weight:700">{{ diagnosis_label }}</span>
+            </div>
+            <div class="form-group">
+              <label>Diagnóstico clínico</label>
+              {{ intervention_form.professional_diagnosis }}
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Código de classificação <span style="font-size:11px;color:var(--muted);font-weight:400">({{ classification_hint }})</span></label>
+                {{ intervention_form.classification_code }}
+              </div>
+              <div class="form-group">
+                <label>{{ intervention_form.related_factors.label }}</label>
+                {{ intervention_form.related_factors }}
+              </div>
+            </div>
+
+            <hr style="border:none;border-top:1px solid var(--border-soft);margin:18px 0">
+
+            <!-- Seção: Intervenção -->
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+              <div style="width:28px;height:28px;background:rgba(99,102,241,.15);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px">⚡</div>
+              <span style="font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:#818cf8;font-weight:700">Condutas e Procedimentos</span>
             </div>
             <div class="form-group">
               <label>{{ intervention_form.conducts.label }}</label>
               {{ intervention_form.conducts }}
+              <div style="font-size:11px;color:var(--muted);margin-top:4px">Uma conduta por linha — será exibida como lista no resumo.</div>
             </div>
             <div class="form-group">
               <label>{{ intervention_form.procedures.label }}</label>
@@ -352,8 +378,20 @@
 
           <!-- ─ Sub-aba: Evolução Esperada ─ -->
           <div class="subtab-panel" id="subtab-evolucao">
-            <div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:#fbbf24">
-              Registre o prognóstico, metas terapêuticas e plano de acompanhamento do paciente.
+
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+              <div style="width:28px;height:28px;background:rgba(245,158,11,.15);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px">📈</div>
+              <span style="font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:#fbbf24;font-weight:700">Evolução Esperada</span>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>{{ evolution_form.estimated_timeframe.label }}</label>
+                {{ evolution_form.estimated_timeframe }}
+              </div>
+              <div class="form-group">
+                <label>{{ evolution_form.priority.label }}</label>
+                {{ evolution_form.priority }}
+              </div>
             </div>
             <div class="form-group">
               <label>{{ evolution_form.clinical_evolution.label }}</label>
