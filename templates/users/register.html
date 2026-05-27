@@ -110,7 +110,7 @@ select.input option{background:#112038;color:#e8f4ff}
 .role-card-inner{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px}
 .role-icon{
   width:48px;height:48px;border-radius:12px;
-  display:flex;align-items:center;justify-content:center;font-size:22px;
+  display:flex;align-items:center;justify-content:center;
   background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);
   transition:background .15s;
 }
@@ -287,7 +287,13 @@ select.input option{background:#112038;color:#e8f4ff}
                    onchange="onRoleChange(this)"/>
             <div class="role-check" aria-hidden="true"></div>
             <div class="role-card-inner">
-              <div class="role-icon" aria-hidden="true">🏥</div>
+              <div class="role-icon" aria-hidden="true">
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="18" cy="11" r="5" stroke="#4ade80" stroke-width="1.8" fill="none"/>
+                  <path d="M9 30c0-4.97 4.03-9 9-9s9 4.03 9 9" stroke="#4ade80" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+                  <path d="M23 20l2 3 4-5" stroke="#22c55e" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                </svg>
+              </div>
               <div>
                 <div class="role-name">Paciente</div>
                 <div class="role-desc">Acompanhe sua saúde e histórico médico</div>
@@ -301,7 +307,14 @@ select.input option{background:#112038;color:#e8f4ff}
                    onchange="onRoleChange(this)"/>
             <div class="role-check" aria-hidden="true"></div>
             <div class="role-card-inner">
-              <div class="role-icon" aria-hidden="true">👨‍⚕️</div>
+              <div class="role-icon" aria-hidden="true">
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="18" cy="11" r="5" stroke="#00d4ff" stroke-width="1.8" fill="none"/>
+                  <path d="M9 30c0-4.97 4.03-9 9-9s9 4.03 9 9" stroke="#00d4ff" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+                  <path d="M22 24v4M20 26h4" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/>
+                  <circle cx="24" cy="22" r="4.5" stroke="#00d4ff" stroke-width="1.5" fill="none"/>
+                </svg>
+              </div>
               <div>
                 <div class="role-name">Profissional</div>
                 <div class="role-desc">Gerencie atendimentos e consultas</div>
