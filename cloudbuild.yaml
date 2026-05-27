@@ -59,7 +59,7 @@ steps:
       - '--max-instances=10'
       - '--concurrency=80'
       - '--timeout=60'
-      - '--set-secrets=SECRET_KEY=liddis-secret-key:latest,DATABASE_URL=liddis-database-url:latest,GOOGLE_CLIENT_ID=liddis-google-client-id:latest,GOOGLE_SECRET=liddis-google-secret:latest,GMAIL_APP_PASSWORD=liddis-gmail-app-password:latest'
+      - '--set-secrets=SECRET_KEY=liddis-secret-key:latest,DATABASE_URL=liddis-database-url:latest,GOOGLE_CLIENT_ID=liddis-google-client-id:latest,GOOGLE_SECRET=liddis-google-secret:latest,GMAIL_APP_PASSWORD=liddis-gmail-app-password:latest,OPENAI_API_KEY=liddis-openai-api-key:latest'
       - '--set-env-vars=DEBUG=False,ALLOWED_HOSTS=liddis-backend-tyi23kxkeq-rj.a.run.app,EMAIL_PROVIDER=gmail,GMAIL_USER=liddis.org@gmail.com,DEFAULT_FROM_EMAIL=liddis.org@gmail.com,SITE_NAME=LIDDIS,CSRF_TRUSTED_ORIGINS=https://liddis-backend-tyi23kxkeq-rj.a.run.app,SITE_DOMAIN=liddis-backend-tyi23kxkeq-rj.a.run.app,GCS_BUCKET_NAME=liddis-media'
 
 images:
