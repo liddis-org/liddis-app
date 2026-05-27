@@ -276,8 +276,14 @@ class LumiService:
 
     def _call_openai(self, api_key: str, user_message: str) -> str:
         try:
+            import httpx
             import openai
-            client = openai.OpenAI(api_key=api_key)
+            from decouple import config as _cfg
+            # OPENAI_SSL_VERIFY=false no .env local contorna SSL interceptado por antivírus.
+            # Em produção (Cloud Run) a variável não existe → padrão True.
+            ssl_verify = _cfg('OPENAI_SSL_VERIFY', default='true', cast=str).lower() != 'false'
+            http_client = httpx.Client(verify=ssl_verify)
+            client = openai.OpenAI(api_key=api_key, http_client=http_client)
             response = client.chat.completions.create(
                 model=self.MODEL,
                 messages=[
