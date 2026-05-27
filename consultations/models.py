@@ -218,8 +218,9 @@ class VitalSign(models.Model):
     temperature = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True, verbose_name='Temperatura (°C)')
     oxygen_saturation = models.PositiveIntegerField(null=True, blank=True, verbose_name='Saturação O₂ (%)')
     glucose = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True, verbose_name='Glicemia (mg/dL)')
-    notes = models.CharField(max_length=255, blank=True, verbose_name='Observações')
-    created_at = models.DateTimeField(auto_now_add=True)
+    notes       = models.CharField(max_length=255, blank=True, verbose_name='Observações')
+    other_signs = models.TextField(blank=True, verbose_name='Outros Sinais')
+    created_at  = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table            = 'vital_signs'
@@ -626,7 +627,6 @@ class ExpectedEvolution(models.Model):
     clinical_evolution   = models.TextField(blank=True, verbose_name='Resultados esperados')
     therapeutic_goals    = models.TextField(blank=True, verbose_name='Metas terapêuticas')
     follow_up_plan       = models.TextField(blank=True, verbose_name='Plano de acompanhamento')
-    prognosis            = models.TextField(blank=True, verbose_name='Prognóstico')
     treatment_response   = models.TextField(blank=True, verbose_name='Resposta esperada ao tratamento')
     created_at           = models.DateTimeField(auto_now_add=True)
     updated_at           = models.DateTimeField(auto_now=True)

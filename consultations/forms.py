@@ -108,11 +108,11 @@ class VitalSignProfessionalForm(forms.ModelForm):
     class Meta:
         model = VitalSign
         fields = [
-            'date', 'blood_pressure', 'heart_rate', 'respiratory_rate',
-            'weight', 'height', 'temperature', 'oxygen_saturation', 'glucose', 'notes',
+            'blood_pressure', 'heart_rate', 'respiratory_rate',
+            'weight', 'height', 'temperature', 'oxygen_saturation', 'glucose',
+            'notes', 'other_signs',
         ]
         widgets = {
-            'date':              forms.DateInput(attrs={'type': 'date', **_I}),
             'blood_pressure':    forms.TextInput(attrs={**_I, 'placeholder': '120/80 mmHg'}),
             'heart_rate':        forms.NumberInput(attrs={**_I, 'placeholder': 'bpm'}),
             'respiratory_rate':  forms.NumberInput(attrs={**_I, 'placeholder': 'irpm'}),
@@ -122,6 +122,7 @@ class VitalSignProfessionalForm(forms.ModelForm):
             'oxygen_saturation': forms.NumberInput(attrs={**_I, 'placeholder': '%'}),
             'glucose':           forms.NumberInput(attrs={**_I, 'placeholder': 'mg/dL', 'step': '0.1'}),
             'notes':             forms.TextInput(attrs={**_I, 'placeholder': 'Observações clínicas'}),
+            'other_signs':       forms.Textarea(attrs={**_TA(3), 'placeholder': 'Outros sinais clínicos relevantes...'}),
         }
         labels = {
             'blood_pressure':    'Pressão Arterial (PA)',
@@ -132,6 +133,7 @@ class VitalSignProfessionalForm(forms.ModelForm):
             'temperature':       'Temperatura (°C)',
             'oxygen_saturation': 'Saturação O₂ (%)',
             'glucose':           'Glicemia (mg/dL)',
+            'other_signs':       'Outros Sinais',
         }
 
 
@@ -350,13 +352,13 @@ class ClinicalInterventionForm(forms.ModelForm):
 
 
 class ExpectedEvolutionForm(forms.ModelForm):
-    """Evolução esperada — prazo, prioridade, metas e prognóstico."""
+    """Evolução esperada — prazo, prioridade, metas e acompanhamento."""
     class Meta:
         model  = ExpectedEvolution
         fields = [
             'estimated_timeframe', 'priority',
             'clinical_evolution', 'therapeutic_goals',
-            'follow_up_plan', 'prognosis', 'treatment_response',
+            'follow_up_plan', 'treatment_response',
         ]
         widgets = {
             'estimated_timeframe': forms.TextInput(attrs={**_I, 'placeholder': 'Ex: 48–72 horas, 2 semanas, 1 mês...'}),
@@ -364,7 +366,6 @@ class ExpectedEvolutionForm(forms.ModelForm):
             'clinical_evolution':  forms.Textarea(attrs={**_TA(4), 'placeholder': 'Resultados clínicos esperados ao final do prazo estabelecido...'}),
             'therapeutic_goals':   forms.Textarea(attrs={**_TA(3), 'placeholder': 'Metas específicas e mensuráveis do tratamento...'}),
             'follow_up_plan':      forms.Textarea(attrs={**_TA(2), 'placeholder': 'Retorno em X dias, exames de controle, parâmetros a monitorar...'}),
-            'prognosis':           forms.Textarea(attrs={**_TA(2), 'placeholder': 'Prognóstico geral, fatores favoráveis e desfavoráveis...'}),
             'treatment_response':  forms.Textarea(attrs={**_TA(2), 'placeholder': 'Sinais esperados de melhora, alertas e critérios de reavaliação...'}),
         }
         labels = {
@@ -373,7 +374,6 @@ class ExpectedEvolutionForm(forms.ModelForm):
             'clinical_evolution':  'Resultados esperados',
             'therapeutic_goals':   'Metas terapêuticas',
             'follow_up_plan':      'Plano de acompanhamento',
-            'prognosis':           'Prognóstico',
             'treatment_response':  'Resposta esperada ao tratamento',
         }
 

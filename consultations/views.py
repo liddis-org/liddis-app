@@ -675,16 +675,16 @@ def atendimento_consulta(request, token):
             # Salva sinais vitais apenas se ao menos um campo clínico foi preenchido
             if vitals_form.is_valid():
                 cd = vitals_form.cleaned_data
-                clinical_fields = {k: v for k, v in cd.items() if k != 'date'}
                 has_any_vital = any(
                     v is not None and v != '' and v is not False
-                    for v in clinical_fields.values()
+                    for v in cd.values()
                 )
                 if has_any_vital:
                     vital = vitals_form.save(commit=False)
                     vital.patient = patient
                     vital.consultation = consultation
                     vital.recorded_by = request.user
+                    vital.date = timezone.now().date()
                     vital.save()
 
             session.consultation = consultation
@@ -719,9 +719,7 @@ def atendimento_consulta(request, token):
         form               = AtendimentoForm(initial={'date': timezone.now().date()})
         anamnese_form      = AnamneseForm(prefix='anamnese')
         exames_form        = ExameLaboratorialForm(prefix='exames')
-        vitals_form        = VitalSignProfessionalForm(
-            prefix='vitais', initial={'date': timezone.now().date()}
-        )
+        vitals_form        = VitalSignProfessionalForm(prefix='vitais')
         intervention_form  = ClinicalInterventionForm(prefix='interv')
         evolution_form     = ExpectedEvolutionForm(prefix='evolucao')
 
