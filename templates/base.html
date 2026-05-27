@@ -392,6 +392,19 @@ tbody tr:hover td{background:var(--surface-2)}
       </a>
     {% endif %}
 
+    <div class="nav-section">Inteligência</div>
+    <a class="nav-link {% block nav_lumi %}{% endblock %}" href="{% url 'lumi' %}"
+       style="{% block nav_lumi_style %}{% endblock %}">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 8v4l3 3"/>
+        <path d="M9.5 9a4 4 0 0 1 6.5 3c0 1.5-.8 2.8-2 3.5V17h-3v-1.5C9.3 14.8 8.5 13.5 8.5 12a3.5 3.5 0 0 1 1-2.5"/>
+      </svg>
+      LUMI
+      <span style="margin-left:auto;background:rgba(127,119,221,.2);color:#a78bfa;
+                   font-size:9px;font-weight:700;padding:2px 7px;border-radius:8px;letter-spacing:.5px">IA</span>
+    </a>
+
     <div class="nav-section">Conta</div>
     <a class="nav-link {% block nav_profile %}{% endblock %}" href="{% url 'profile' %}">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>

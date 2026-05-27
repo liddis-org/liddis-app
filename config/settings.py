@@ -48,7 +48,11 @@ INSTALLED_APPS = [
     # Apps do projeto
     'users',
     'consultations',
+    'lumi',
 ]
+
+# ── LUMI — IA Clínica ─────────────────────────────────────────────────────────
+OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
 
 # ── Middleware ─────────────────────────────────────────────────────────────────
 MIDDLEWARE = [
