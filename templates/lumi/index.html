@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}LUMI — IA Clínica{% endblock %}
 {% block topbar_title %}LUMI{% endblock %}
 {% block nav_lumi %}active{% endblock %}
@@ -76,52 +77,6 @@
   }
   .feat-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
 
-  /* ── Botão gerar ──────────────────────────────────────────── */
-  .lumi-cta {
-    background: linear-gradient(135deg, #7F77DD 0%, #5b54c4 100%);
-    border: none;
-    border-radius: 14px;
-    padding: 16px 28px;
-    color: #fff;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    transition: opacity .2s, transform .15s;
-    letter-spacing: .3px;
-  }
-  .lumi-cta:hover { opacity: .9; transform: translateY(-1px); }
-  .lumi-cta:disabled { opacity: .5; cursor: not-allowed; transform: none; }
-
-  /* ── Relatório ────────────────────────────────────────────── */
-  #lumi-report-box {
-    display: none;
-    background: var(--surface-2);
-    border: 1px solid rgba(127,119,221,.25);
-    border-radius: 16px;
-    padding: 28px 32px;
-    margin-top: 28px;
-  }
-  .report-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--border-soft);
-  }
-  .report-meta { font-size: 11px; color: var(--muted); }
-  .report-body {
-    font-size: 13.5px;
-    line-height: 1.85;
-    color: var(--text);
-    white-space: pre-wrap;
-  }
-
   /* ── Disclaimer ───────────────────────────────────────────── */
   .lumi-disclaimer {
     background: rgba(245,158,11,.05);
@@ -135,35 +90,6 @@
   }
   .lumi-disclaimer p { font-size: 12px; color: var(--muted); line-height: 1.6; margin: 0; }
 
-  /* ── Loading spinner ──────────────────────────────────────── */
-  .lumi-spinner {
-    display: none;
-    align-items: center;
-    gap: 10px;
-    font-size: 13px;
-    color: var(--muted);
-    margin-top: 20px;
-  }
-  .spinner-ring {
-    width: 18px; height: 18px;
-    border: 2px solid rgba(127,119,221,.25);
-    border-top-color: #7F77DD;
-    border-radius: 50%;
-    animation: spin .8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* ── Error ────────────────────────────────────────────────── */
-  .lumi-error {
-    display: none;
-    background: rgba(239,68,68,.06);
-    border: 1px solid rgba(239,68,68,.2);
-    border-radius: 12px;
-    padding: 14px 18px;
-    font-size: 13px;
-    color: #f87171;
-    margin-top: 20px;
-  }
 </style>
 {% endblock %}
 
@@ -185,10 +111,8 @@
   </div>
   <!-- Mascote -->
   <div style="flex-shrink:0;display:flex;align-items:center;justify-content:center">
-    <svg width="180" height="180" viewBox="0 0 1024 1024"
-         style="filter:drop-shadow(0 8px 32px rgba(56,225,200,.25)) drop-shadow(0 2px 8px rgba(0,0,0,.4));border-radius:28%">
-      <use href="#lumi-icon"/>
-    </svg>
+    <img src="{% static 'lumi/lumi-icon.svg' %}" width="180" height="180"
+         style="filter:drop-shadow(0 8px 32px rgba(56,225,200,.25)) drop-shadow(0 2px 8px rgba(0,0,0,.4));border-radius:28%" alt="LUMI">
   </div>
 </div>
 
@@ -238,60 +162,6 @@
   </div>
 </div>
 
-<!-- ── Ação ──────────────────────────────────────────────────────────────── -->
-<div class="card" style="border:1px solid rgba(127,119,221,.2);background:var(--surface-2)">
-  <div style="margin-bottom:20px">
-    <div style="font-size:16px;font-weight:700;margin-bottom:6px">
-      {% if is_professional %}
-        Gerar resumo clínico do paciente
-      {% else %}
-        Gerar meu resumo de saúde
-      {% endif %}
-    </div>
-    <p style="font-size:13px;color:var(--muted);line-height:1.6">
-      {% if is_professional %}
-        A LUMI vai analisar os dados do paciente e gerar um resumo clínico objetivo
-        para apoiar seu atendimento. O relatório aparece diretamente nesta tela.
-      {% else %}
-        A LUMI vai analisar seu histórico completo e gerar um resumo personalizado
-        com orientações preventivas e pontos de atenção.
-      {% endif %}
-    </p>
-  </div>
-
-  <button class="lumi-cta" id="btn-gerar" onclick="gerarRelatorio()">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16 10,8"/></svg>
-    Gerar relatório LUMI
-  </button>
-
-  <!-- Spinner -->
-  <div class="lumi-spinner" id="lumi-spinner">
-    <div class="spinner-ring"></div>
-    Analisando dados clínicos…
-  </div>
-
-  <!-- Erro -->
-  <div class="lumi-error" id="lumi-error"></div>
-
-  <!-- Resultado -->
-  <div id="lumi-report-box">
-    <div class="report-header">
-      <div>
-        <div style="font-size:13px;font-weight:700;color:#a78bfa">Relatório LUMI</div>
-        <div class="report-meta" id="report-meta"></div>
-      </div>
-      <button onclick="copiarRelatorio()"
-              style="background:none;border:1px solid var(--border-soft);border-radius:8px;
-                     padding:6px 14px;font-size:12px;color:var(--muted);cursor:pointer;
-                     display:flex;align-items:center;gap:6px">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        Copiar
-      </button>
-    </div>
-    <div class="report-body" id="report-body"></div>
-  </div>
-</div>
-
 <!-- ── Disclaimer legal ───────────────────────────────────────────────────── -->
 <div class="lumi-disclaimer">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -304,60 +174,3 @@
 </div>
 {% endblock %}
 
-{% block extra_js %}
-<script>
-  const LUMI_URL = "{% url 'lumi_report' %}";
-  const CSRF_TOKEN = "{{ csrf_token }}";
-
-  async function gerarRelatorio() {
-    const btn     = document.getElementById('btn-gerar');
-    const spinner = document.getElementById('lumi-spinner');
-    const errBox  = document.getElementById('lumi-error');
-    const repBox  = document.getElementById('lumi-report-box');
-
-    btn.disabled = true;
-    spinner.style.display = 'flex';
-    errBox.style.display  = 'none';
-    repBox.style.display  = 'none';
-
-    try {
-      const resp = await fetch(LUMI_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': CSRF_TOKEN,
-        },
-        body: JSON.stringify({}),
-      });
-
-      const data = await resp.json();
-
-      if (!resp.ok || data.error) {
-        throw new Error(data.error || 'Erro ao gerar relatório.');
-      }
-
-      document.getElementById('report-body').textContent = data.report;
-      document.getElementById('report-meta').textContent =
-        'Gerado em ' + data.generated_at + (data.patient_name ? ' · ' + data.patient_name : '');
-      repBox.style.display = 'block';
-
-    } catch (err) {
-      errBox.textContent = err.message || 'Não foi possível gerar o relatório. Tente novamente.';
-      errBox.style.display = 'block';
-    } finally {
-      btn.disabled = false;
-      spinner.style.display = 'none';
-    }
-  }
-
-  function copiarRelatorio() {
-    const text = document.getElementById('report-body').textContent;
-    navigator.clipboard.writeText(text).then(() => {
-      const btn = event.currentTarget;
-      const orig = btn.innerHTML;
-      btn.textContent = '✓ Copiado';
-      setTimeout(() => { btn.innerHTML = orig; }, 1800);
-    });
-  }
-</script>
-{% endblock %}

@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<defs>
+  <radialGradient id="bgGlow" cx="50%" cy="38%" r="70%"><stop offset="0%" stop-color="#1a2a3d"/><stop offset="45%" stop-color="#0c1422"/><stop offset="100%" stop-color="#04070d"/></radialGradient>
+  <linearGradient id="bgVignette" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0a1220" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".55"/></linearGradient>
+  <radialGradient id="floorGlow" cx="50%" cy="100%" r="55%"><stop offset="0%" stop-color="#38e1c8" stop-opacity=".22"/><stop offset="60%" stop-color="#38e1c8" stop-opacity=".04"/><stop offset="100%" stop-color="#38e1c8" stop-opacity="0"/></radialGradient>
+  <radialGradient id="headCeramic" cx="38%" cy="28%" r="78%"><stop offset="0%" stop-color="#ffffff"/><stop offset="35%" stop-color="#f3f7fb"/><stop offset="70%" stop-color="#cdd9e6"/><stop offset="100%" stop-color="#7a8a9e"/></radialGradient>
+  <radialGradient id="headRim" cx="50%" cy="50%" r="55%"><stop offset="80%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".35"/></radialGradient>
+  <linearGradient id="headTopLight" x1="50%" y1="0%" x2="50%" y2="60%"><stop offset="0%" stop-color="#ffffff" stop-opacity=".95"/><stop offset="100%" stop-color="#ffffff" stop-opacity="0"/></linearGradient>
+  <linearGradient id="rimAccent" x1="0%" y1="40%" x2="0%" y2="100%"><stop offset="0%" stop-color="#7fe8ff" stop-opacity="0"/><stop offset="100%" stop-color="#38e1c8" stop-opacity=".55"/></linearGradient>
+  <radialGradient id="visor" cx="50%" cy="42%" r="65%"><stop offset="0%" stop-color="#1a3140"/><stop offset="55%" stop-color="#0a1620"/><stop offset="100%" stop-color="#03080d"/></radialGradient>
+  <linearGradient id="visorGloss" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffffff" stop-opacity=".22"/><stop offset="55%" stop-color="#ffffff" stop-opacity="0"/></linearGradient>
+  <radialGradient id="eyeGlow" cx="50%" cy="50%" r="55%"><stop offset="0%" stop-color="#e9fffb"/><stop offset="40%" stop-color="#7df3e2"/><stop offset="100%" stop-color="#19a895"/></radialGradient>
+  <radialGradient id="eyeHalo" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#38e1c8" stop-opacity=".55"/><stop offset="100%" stop-color="#38e1c8" stop-opacity="0"/></radialGradient>
+  <linearGradient id="bodyCeramic" x1="50%" y1="0%" x2="50%" y2="100%"><stop offset="0%" stop-color="#e7eef6"/><stop offset="55%" stop-color="#c4d0de"/><stop offset="100%" stop-color="#67768a"/></linearGradient>
+  <radialGradient id="chestGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#bff8ee"/><stop offset="45%" stop-color="#38e1c8"/><stop offset="100%" stop-color="#0e7a6b"/></radialGradient>
+  <radialGradient id="chestHalo" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#38e1c8" stop-opacity=".6"/><stop offset="100%" stop-color="#38e1c8" stop-opacity="0"/></radialGradient>
+  <radialGradient id="antennaOrb" cx="40%" cy="35%" r="65%"><stop offset="0%" stop-color="#f3fffd"/><stop offset="40%" stop-color="#7fe8ff"/><stop offset="100%" stop-color="#1379a8"/></radialGradient>
+  <radialGradient id="antennaHalo" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#7fc8ff" stop-opacity=".7"/><stop offset="100%" stop-color="#7fc8ff" stop-opacity="0"/></radialGradient>
+  <radialGradient id="blush" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ffc8d8" stop-opacity=".55"/><stop offset="100%" stop-color="#ffc8d8" stop-opacity="0"/></radialGradient>
+  <radialGradient id="contactShadow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#000" stop-opacity=".55"/><stop offset="80%" stop-color="#000" stop-opacity="0"/></radialGradient>
+  <clipPath id="sq"><path d="M512,0C200,0,0,200,0,512C0,824,200,1024,512,1024C824,1024,1024,824,1024,512C1024,200,824,0,512,0Z"/></clipPath>
+  <pattern id="gr" x="0" y="0" width="64" height="64" patternUnits="userSpaceOnUse"><path d="M64 0L0 0 0 64" fill="none" stroke="#1a2c44" stroke-width=".7" stroke-opacity=".35"/></pattern>
+  <clipPath id="ls"><path d="M-56,-12 Q0,-72 56,-12 L56,28 L-56,28 Z"/></clipPath>
+  <clipPath id="rs"><path d="M-56,-12 Q0,-72 56,-12 L56,28 L-56,28 Z"/></clipPath>
+</defs>
+<g clip-path="url(#sq)">
+  <rect width="1024" height="1024" fill="url(#bgGlow)"/>
+  <rect width="1024" height="1024" fill="url(#gr)" opacity=".5"/>
+  <rect width="1024" height="1024" fill="url(#bgVignette)"/>
+  <ellipse cx="512" cy="900" rx="430" ry="170" fill="url(#floorGlow)"/>
+  <circle cx="512" cy="560" r="370" fill="none" stroke="#2a4768" stroke-opacity=".35" stroke-width="1.2" stroke-dasharray="3 9"/>
+  <circle cx="512" cy="560" r="300" fill="none" stroke="#2a4768" stroke-opacity=".25" stroke-width="1"/>
+  <ellipse cx="512" cy="880" rx="240" ry="34" fill="url(#contactShadow)"/>
+  <path d="M332,820C332,720,412,660,512,660C612,660,692,720,692,820C692,860,660,884,620,884L404,884C364,884,332,860,332,820Z" fill="url(#bodyCeramic)"/>
+  <path d="M372,790C372,720,432,690,512,690C540,690,566,696,588,706C540,704,470,720,432,766C408,792,392,810,372,790Z" fill="#fff" opacity=".55"/>
+  <path d="M360,720C420,700,600,700,664,720" fill="none" stroke="#7d8da1" stroke-width="3" stroke-opacity=".35"/>
+  <circle cx="512" cy="780" r="58" fill="url(#chestHalo)"/>
+  <circle cx="512" cy="780" r="34" fill="url(#chestGlow)"/>
+  <g fill="#fff" opacity=".95"><rect x="504" y="762" width="16" height="36" rx="3"/><rect x="494" y="772" width="36" height="16" rx="3"/></g>
+  <circle cx="500" cy="770" r="6" fill="#fff" opacity=".7"/>
+  <rect x="478" y="640" width="68" height="40" rx="14" fill="#9fadbe"/>
+  <rect x="478" y="640" width="68" height="14" rx="7" fill="#fff" opacity=".55"/>
+  <rect x="478" y="666" width="68" height="14" rx="6" fill="#000" opacity=".15"/>
+  <ellipse cx="512" cy="420" rx="290" ry="270" fill="#7fc8ff" opacity=".06"/>
+  <path d="M232,420C232,260,350,170,512,170C674,170,792,260,792,420C792,560,700,660,568,660L456,660C324,660,232,560,232,420Z" fill="url(#headCeramic)"/>
+  <path d="M280,360C290,260,380,200,512,200C644,200,734,260,744,360C700,320,620,300,512,300C404,300,324,320,280,360Z" fill="url(#headTopLight)" opacity=".9"/>
+  <path d="M232,420C232,260,350,170,512,170C674,170,792,260,792,420C792,560,700,660,568,660L456,660C324,660,232,560,232,420Z" fill="url(#headRim)"/>
+  <path d="M232,420C232,260,350,170,512,170C674,170,792,260,792,420C792,560,700,660,568,660L456,660C324,660,232,560,232,420Z" fill="url(#rimAccent)" opacity=".9"/>
+  <ellipse cx="380" cy="240" rx="80" ry="22" fill="#fff" opacity=".75"/>
+  <ellipse cx="350" cy="280" rx="36" ry="10" fill="#fff" opacity=".55"/>
+  <ellipse cx="236" cy="430" rx="34" ry="50" fill="#cad6e4"/>
+  <ellipse cx="244" cy="430" rx="20" ry="34" fill="url(#chestGlow)"/>
+  <ellipse cx="244" cy="430" rx="8" ry="14" fill="#fff" opacity=".7"/>
+  <ellipse cx="788" cy="430" rx="34" ry="50" fill="#cad6e4"/>
+  <ellipse cx="780" cy="430" rx="20" ry="34" fill="url(#chestGlow)"/>
+  <ellipse cx="780" cy="430" rx="8" ry="14" fill="#fff" opacity=".7"/>
+  <path d="M304,360C304,330,332,308,366,308L658,308C692,308,720,330,720,360L720,520C720,552,692,574,658,574L366,574C332,574,304,552,304,520Z" fill="url(#visor)"/>
+  <path d="M304,360C304,330,332,308,366,308L658,308C692,308,720,330,720,360L720,420L304,420Z" fill="url(#visorGloss)"/>
+  <path d="M320,344C360,322,664,322,704,344" fill="none" stroke="#fff" stroke-opacity=".25" stroke-width="2"/>
+  <g transform="translate(420,460)">
+    <circle r="58" fill="url(#eyeHalo)" opacity=".9"/>
+    <g clip-path="url(#ls)"><circle r="42" fill="url(#eyeGlow)"/></g>
+    <path d="M-48,-2 Q0,52 48,-2" fill="none" stroke="#eafffb" stroke-width="10" stroke-linecap="round"/>
+    <circle cx="-12" cy="-22" r="6" fill="#fff"/>
+  </g>
+  <g transform="translate(604,460)">
+    <circle r="58" fill="url(#eyeHalo)" opacity=".9"/>
+    <g clip-path="url(#rs)"><circle r="42" fill="url(#eyeGlow)"/></g>
+    <path d="M-48,-2 Q0,52 48,-2" fill="none" stroke="#eafffb" stroke-width="10" stroke-linecap="round"/>
+    <circle cx="-12" cy="-22" r="6" fill="#fff"/>
+  </g>
+  <path d="M488,548 Q512,566 536,548" fill="none" stroke="#7fe8ff" stroke-width="6" stroke-linecap="round" opacity=".8"/>
+  <ellipse cx="380" cy="540" rx="34" ry="14" fill="url(#blush)"/>
+  <ellipse cx="644" cy="540" rx="34" ry="14" fill="url(#blush)"/>
+  <rect x="504" y="120" width="16" height="60" rx="6" fill="#bcc7d6"/>
+  <rect x="504" y="120" width="6" height="60" rx="3" fill="#fff" opacity=".7"/>
+  <circle cx="512" cy="100" r="60" fill="url(#antennaHalo)"/>
+  <circle cx="512" cy="100" r="28" fill="url(#antennaOrb)"/>
+  <ellipse cx="502" cy="90" rx="9" ry="5" fill="#fff" opacity=".95"/>
+  <g fill="#7fe8ff"><circle cx="170" cy="240" r="2.5" opacity=".7"/><circle cx="220" cy="160" r="1.6" opacity=".5"/><circle cx="870" cy="220" r="2" opacity=".6"/><circle cx="830" cy="140" r="1.4" opacity=".5"/></g>
+</g>
+</svg>
