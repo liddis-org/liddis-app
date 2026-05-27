@@ -15,14 +15,7 @@
     position: relative;
     overflow: hidden;
   }
-  .lumi-hero::before {
-    content: '';
-    position: absolute;
-    top: -40px; right: -40px;
-    width: 180px; height: 180px;
-    background: radial-gradient(circle, rgba(127,119,221,.18) 0%, transparent 70%);
-    pointer-events: none;
-  }
+  @media (max-width: 600px) { .lumi-hero svg { width: 120px; height: 120px; } }
   .lumi-badge {
     display: inline-flex;
     align-items: center;
@@ -176,17 +169,27 @@
 
 {% block content %}
 <!-- ── Hero ─────────────────────────────────────────────────────────────── -->
-<div class="lumi-hero">
-  <div class="lumi-badge">
-    <svg width="10" height="10" viewBox="0 0 24 24" fill="#a78bfa"><circle cx="12" cy="12" r="10"/></svg>
-    IA Clínica · Apoio Preventivo
+<div class="lumi-hero" style="display:flex;align-items:center;gap:32px;flex-wrap:wrap">
+  <!-- Texto -->
+  <div style="flex:1;min-width:260px">
+    <div class="lumi-badge">
+      <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#a78bfa"/></svg>
+      IA Clínica · Apoio Preventivo
+    </div>
+    <div class="lumi-title">Olá, eu sou a LUMI.</div>
+    <p class="lumi-subtitle">
+      Sou uma inteligência artificial de apoio clínico e preventivo integrada ao HDI.
+      Analiso dados de saúde, identifico padrões e ofereço orientações preventivas
+      personalizadas — sempre como suporte, nunca como substituto de um profissional.
+    </p>
   </div>
-  <div class="lumi-title">Olá, eu sou a LUMI.</div>
-  <p class="lumi-subtitle">
-    Sou uma inteligência artificial de apoio clínico e preventivo integrada ao HDI.
-    Analiso seus dados de saúde, identifico padrões e ofereço orientações preventivas
-    personalizadas — sempre como suporte, nunca como substituto de um profissional.
-  </p>
+  <!-- Mascote -->
+  <div style="flex-shrink:0;display:flex;align-items:center;justify-content:center">
+    <svg width="180" height="180" viewBox="0 0 1024 1024"
+         style="filter:drop-shadow(0 8px 32px rgba(56,225,200,.25)) drop-shadow(0 2px 8px rgba(0,0,0,.4));border-radius:28%">
+      <use href="#lumi-icon"/>
+    </svg>
+  </div>
 </div>
 
 <!-- ── Features ─────────────────────────────────────────────────────────── -->
