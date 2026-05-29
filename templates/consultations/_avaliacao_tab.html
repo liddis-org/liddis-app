@@ -1,0 +1,541 @@
+{% load consultation_filters %}
+{% comment %}
+─────────────────────────────────────────────────────────────────────────────
+Partial: Aba "Avaliação" — universal para qualquer especialidade clínica.
+─────────────────────────────────────────────────────────────────────────────
+VARIÁVEIS ESPERADAS NO CONTEXTO (todas já presentes em ConsultationDetailView):
+
+  consultation          → objeto Consultation
+  evaluation_label      → ex: "Avaliação de Enfermagem", "Avaliação Médica"
+  classification_hint   → ex: "NANDA", "CID-10", "DSM-5", "CIF"
+  diagnosis_label       → ex: "DIAGNÓSTICO DE ENFERMAGEM", "DIAGNÓSTICO MÉDICO"
+  clinical_intervention → objeto ClinicalIntervention (ou None)
+  expected_evolution    → objeto ExpectedEvolution (ou None)
+  is_professional       → bool — controla campos editáveis
+  allowed_actions       → dict com chaves 'edit_anamnese', 'view_diagnosis', etc.
+─────────────────────────────────────────────────────────────────────────────
+{% endcomment %}
+
+<style>
+/* ── Avaliação Tab — Design System LIDDIS ─────────────────────────────────── */
+.av-wrap {
+  background: #0d1b3e;
+  border-radius: 14px;
+  padding: 24px;
+  font-family: inherit;
+}
+
+/* Header */
+.av-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.av-logo {
+  color: #00d4aa;
+  font-weight: 600;
+  font-size: 16px;
+}
+.av-logo span {
+  font-size: 10px;
+  display: block;
+  color: #6ecfb8;
+  font-weight: 400;
+}
+.av-role-badge {
+  background: #1a3a6b;
+  color: #7eb8f7;
+  font-size: 11px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 0.5px solid #2a5aab;
+  white-space: nowrap;
+}
+
+/* Consult meta */
+.av-consult-title {
+  color: #e8eaf0;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 3px;
+}
+.av-consult-sub {
+  color: #7a8db0;
+  font-size: 12px;
+  margin-bottom: 20px;
+}
+
+/* Section cards */
+.av-card {
+  background: #122044;
+  border-radius: 12px;
+  border: 0.5px solid #1e3a6e;
+  padding: 20px;
+  margin-bottom: 14px;
+}
+.av-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.av-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.av-icon-diag { background: #1a3a6b; color: #7eb8f7; }
+.av-icon-int  { background: #0f3d2e; color: #00d4aa; }
+.av-icon-ev   { background: #2d1f4a; color: #a78bfa; }
+
+.av-section-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.av-label-diag { color: #7eb8f7; }
+.av-label-int  { color: #00d4aa; }
+.av-label-ev   { color: #a78bfa; }
+
+.av-section-title {
+  color: #e8eaf0;
+  font-size: 13px;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* Fields */
+.av-field-label {
+  font-size: 11px;
+  color: #7a8db0;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.av-field-value {
+  color: #c8d4ea;
+  font-size: 13.5px;
+  background: #0d1b3e;
+  border: 0.5px solid #1e3a6e;
+  border-radius: 8px;
+  padding: 9px 13px;
+  line-height: 1.6;
+  min-height: 38px;
+}
+.av-field-value.editable {
+  border-color: #2a5aab;
+  cursor: text;
+  outline: none;
+  transition: border-color .15s;
+}
+.av-field-value.editable:hover  { border-color: #00d4aa55; }
+.av-field-value.editable:focus  { border-color: #00d4aa; box-shadow: 0 0 0 2px rgba(0,212,170,.12); }
+.av-field-value.editable:empty::before {
+  content: attr(data-placeholder);
+  color: #3a5080;
+  pointer-events: none;
+}
+textarea.av-field-value {
+  width: 100%;
+  resize: vertical;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 13.5px;
+  background: #0d1b3e;
+  color: #c8d4ea;
+  border: 0.5px solid #2a5aab;
+  border-radius: 8px;
+  padding: 9px 13px;
+  line-height: 1.6;
+}
+textarea.av-field-value:focus {
+  outline: none;
+  border-color: #00d4aa;
+  box-shadow: 0 0 0 2px rgba(0,212,170,.12);
+}
+
+/* Tags / badges */
+.av-tag {
+  display: inline-block;
+  border-radius: 20px;
+  font-size: 11px;
+  padding: 2px 9px;
+  border: 0.5px solid;
+}
+.av-tag-teal   { background: #00d4aa22; color: #00d4aa; border-color: #00d4aa55; }
+.av-tag-blue   { background: #7eb8f722; color: #7eb8f7; border-color: #7eb8f755; }
+.av-tag-purple { background: #a78bfa22; color: #a78bfa; border-color: #a78bfa55; }
+.av-tag-red    { background: #f8717122; color: #f87171; border-color: #f8717155; }
+.av-tag-yellow { background: #fbbf2422; color: #fbbf24; border-color: #fbbf2455; }
+
+/* Conduta list */
+.av-conduct-list { list-style: none; padding: 0; margin: 0; }
+.av-conduct-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 0.5px solid #1e3a6e;
+  position: relative;
+}
+.av-conduct-item:last-child { border-bottom: none; }
+.av-conduct-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00d4aa;
+  margin-top: 7px;
+  flex-shrink: 0;
+}
+.av-conduct-text {
+  color: #c8d4ea;
+  font-size: 13.5px;
+  line-height: 1.55;
+  flex: 1;
+}
+.av-conduct-text[contenteditable="true"]:focus {
+  outline: 1px solid #00d4aa44;
+  border-radius: 4px;
+}
+.av-conduct-remove {
+  background: none;
+  border: none;
+  color: #f87171;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 4px;
+  opacity: 0;
+  transition: opacity .15s;
+}
+.av-conduct-item:hover .av-conduct-remove { opacity: 1; }
+
+.av-add-conduct {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  background: none;
+  border: 0.5px dashed #1e3a6e;
+  border-radius: 8px;
+  padding: 7px 12px;
+  color: #00d4aa;
+  font-size: 12px;
+  cursor: pointer;
+  width: 100%;
+  transition: border-color .15s, background .15s;
+}
+.av-add-conduct:hover { border-color: #00d4aa; background: #00d4aa11; }
+
+/* Meta row */
+.av-meta-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+@media (max-width: 480px) { .av-meta-row { grid-template-columns: 1fr; } }
+
+/* Priority select */
+select.av-priority-select {
+  background: #0d1b3e;
+  color: #c8d4ea;
+  border: 0.5px solid #2a5aab;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  width: 100%;
+  font-family: inherit;
+  cursor: pointer;
+}
+select.av-priority-select:focus { outline: none; border-color: #00d4aa; }
+
+/* Conduct counter */
+.av-conduct-count {
+  margin-top: 10px;
+  font-size: 11px;
+  color: #7a8db0;
+}
+</style>
+
+{# ── Wrapper ── #}
+<div class="av-wrap" id="avaliacao-tab">
+
+  {# ── Header: logo + badge de especialidade ── #}
+  <div class="av-header">
+    <div class="av-logo">
+      LIDDIS
+      <span>Inteligência Clínica</span>
+    </div>
+    {# VARIÁVEL: role → "Médico(a)", "Enfermeiro(a)", "Fisioterapeuta", "Psicólogo(a)"… #}
+    <div class="av-role-badge">{{ consultation.session.professional.get_role_display|default:evaluation_label }}</div>
+  </div>
+
+  {# ── Meta da consulta ── #}
+  {# VARIÁVEL: data + profissional + especialidade + paciente #}
+  <div class="av-consult-title">
+    Detalhe da Consulta &mdash; {{ consultation.date|date:"d/m/Y" }}
+  </div>
+  <div class="av-consult-sub">
+    {{ consultation.professional_name }}
+    &middot; {{ consultation.get_specialty_display }}
+    &middot; Paciente: {{ consultation.patient.display_name }}
+  </div>
+
+  {# ══════════════════════════════════════════════════════════════════════ #}
+  {# BLOCO 1 — DIAGNÓSTICO                                                 #}
+  {# ══════════════════════════════════════════════════════════════════════ #}
+  <div class="av-card">
+    <div class="av-card-header">
+      <div class="av-icon av-icon-diag">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="M9 12h6m-3-3v6m-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v14l-2-2-2 2-2-2-2 2-2-2-2 2z"/>
+        </svg>
+      </div>
+      <div>
+        {# VARIÁVEL: rótulo completo do bloco 1 (ex: "Diagnóstico Médico (CID-11 / CIAP-2)") #}
+        <div class="av-section-label av-label-diag">{{ block1_label }}</div>
+        {# VARIÁVEL: sub-rótulo (ex: "Etiologia / Fisiopatologia", "Fatores Psicossociais…") #}
+        <div class="av-section-title">{{ block1_sublabel }}</div>
+      </div>
+    </div>
+
+    {# Diagnóstico principal #}
+    <div class="av-field-label">Diagnóstico principal</div>
+    <div class="av-field-value{% if is_professional and allowed_actions.edit_anamnese %} editable{% endif %}"
+         {% if is_professional and allowed_actions.edit_anamnese %}
+           contenteditable="true"
+           data-field="professional_diagnosis"
+           data-placeholder="Informe o diagnóstico..."
+         {% endif %}>
+      {# VARIÁVEL: diagnóstico registrado pelo profissional #}
+      {% if clinical_intervention %}
+        {{ clinical_intervention.professional_diagnosis|default:"—" }}
+      {% else %}—{% endif %}
+      {# VARIÁVEL: sistema de classificação (NANDA / CID-10 / DSM-5 / CIF…) #}
+      {% if classification_hint %}
+        <span class="av-tag av-tag-blue" style="margin-left:8px;">{{ classification_hint }}</span>
+      {% endif %}
+    </div>
+
+    {# Código de classificação #}
+    {% if clinical_intervention and clinical_intervention.classification_code %}
+    <div style="margin-top:12px;">
+      <div class="av-field-label">Código / Classificação ({{ classification_hint }})</div>
+      <div class="av-field-value{% if is_professional and allowed_actions.edit_anamnese %} editable{% endif %}"
+           {% if is_professional and allowed_actions.edit_anamnese %}
+             contenteditable="true"
+             data-field="classification_code"
+             data-placeholder="ex: 00030, J18.9, F32.1..."
+           {% endif %}>
+        {{ clinical_intervention.classification_code }}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  {# ══════════════════════════════════════════════════════════════════════ #}
+  {# BLOCO 2 — INTERVENÇÕES / CONDUTAS                                     #}
+  {# ══════════════════════════════════════════════════════════════════════ #}
+  <div class="av-card">
+    <div class="av-card-header">
+      <div class="av-icon av-icon-int">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/>
+        </svg>
+      </div>
+      <div>
+        {# VARIÁVEL: ex: "Prescrição e Conduta Médica", "Plano de Tratamento Cinesioterapêutico" #}
+        <div class="av-section-label av-label-int">{{ block2_label }}</div>
+        <div class="av-section-title">Condutas e intervenções registradas</div>
+      </div>
+    </div>
+
+    {# ── Lista dinâmica de condutas ── #}
+    {# VARIÁVEL: conducts é um TextField — exibido linha por linha #}
+    {% if clinical_intervention and clinical_intervention.conducts %}
+      <ul class="av-conduct-list" id="av-conducts-list">
+        {% for conduta in clinical_intervention.conducts|split_lines %}
+        {% if conduta %}
+        <li class="av-conduct-item" data-index="{{ forloop.counter0 }}">
+          <div class="av-conduct-dot"></div>
+          <div class="av-conduct-text"
+               {% if is_professional and allowed_actions.edit_anamnese %}
+                 contenteditable="true"
+               {% endif %}>{{ conduta }}</div>
+          {% if is_professional and allowed_actions.edit_anamnese %}
+          <button type="button" class="av-conduct-remove" onclick="avRemoveConducta(this)" title="Remover">×</button>
+          {% endif %}
+        </li>
+        {% endif %}
+        {% endfor %}
+      </ul>
+      <div class="av-conduct-count" id="av-conduct-count">
+        <span class="av-tag av-tag-teal">
+          {{ clinical_intervention.conducts|count_lines }} conduta{{ clinical_intervention.conducts|count_lines|pluralize }} registrada{{ clinical_intervention.conducts|count_lines|pluralize }}
+        </span>
+      </div>
+    {% else %}
+      <ul class="av-conduct-list" id="av-conducts-list">
+        <li class="av-conduct-item">
+          <div class="av-conduct-dot"></div>
+          <div class="av-conduct-text" style="color:#3a5080">Nenhuma conduta registrada.</div>
+        </li>
+      </ul>
+    {% endif %}
+
+    {# Ações clínicas complementares #}
+    {% if clinical_intervention and clinical_intervention.clinical_actions %}
+    <div style="margin-top:14px;">
+      <div class="av-field-label">Ações clínicas complementares</div>
+      {% if is_professional and allowed_actions.edit_anamnese %}
+      <textarea class="av-field-value" rows="3"
+                data-field="clinical_actions"
+                placeholder="Descreva ações adicionais...">{{ clinical_intervention.clinical_actions }}</textarea>
+      {% else %}
+      <div class="av-field-value">{{ clinical_intervention.clinical_actions }}</div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {# Botão adicionar conduta (apenas profissional com permissão de edição) #}
+    {% if is_professional and allowed_actions.edit_anamnese %}
+    <button type="button" class="av-add-conduct" onclick="avAddConducta()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Adicionar conduta
+    </button>
+    {% endif %}
+  </div>
+
+  {# ══════════════════════════════════════════════════════════════════════ #}
+  {# BLOCO 3 — EVOLUÇÃO ESPERADA                                           #}
+  {# ══════════════════════════════════════════════════════════════════════ #}
+  {% if expected_evolution %}
+  <div class="av-card">
+    <div class="av-card-header">
+      <div class="av-icon av-icon-ev">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <polyline points="23,6 13.5,15.5 8.5,10.5 1,18"/>
+          <polyline points="17,6 23,6 23,12"/>
+        </svg>
+      </div>
+      <div>
+        {# VARIÁVEL: ex: "Prognóstico Clínico e Critérios de Alta / Retorno", "Metas de Regulação Emocional…" #}
+        <div class="av-section-label av-label-ev">{{ block3_label }}</div>
+        <div class="av-section-title">Resultados e metas clínicas</div>
+      </div>
+    </div>
+
+    {# Prioridade #}
+    <div class="av-meta-row">
+      <div>
+        <div class="av-field-label">Prazo estimado</div>
+        <div class="av-field-value{% if is_professional and allowed_actions.edit_anamnese %} editable{% endif %}"
+             {% if is_professional and allowed_actions.edit_anamnese %}
+               contenteditable="true"
+               data-field="timeframe"
+               data-placeholder="ex: 48–72 horas, 7 dias..."
+             {% endif %}>
+          {# VARIÁVEL: prazo estimado — campo livre #}
+          {{ expected_evolution.timeframe|default:"—" }}
+        </div>
+      </div>
+      <div>
+        <div class="av-field-label">Prioridade</div>
+        {% if is_professional and allowed_actions.edit_anamnese %}
+        {# VARIÁVEL: nível de prioridade — selecionável #}
+        <select class="av-priority-select" data-field="priority" id="av-priority-select">
+          <option value="baixa"  {% if expected_evolution.priority == "baixa"  %}selected{% endif %}>Baixa</option>
+          <option value="media"  {% if expected_evolution.priority == "media"  %}selected{% endif %}>Média</option>
+          <option value="alta"   {% if expected_evolution.priority == "alta"   %}selected{% endif %}>Alta</option>
+          <option value="critica"{% if expected_evolution.priority == "critica"%}selected{% endif %}>Crítica</option>
+        </select>
+        {% else %}
+        <div class="av-field-value">
+          {% if expected_evolution.priority == "alta" or expected_evolution.priority == "critica" %}
+            <span class="av-tag av-tag-red">{{ expected_evolution.get_priority_display|default:expected_evolution.priority|capfirst }}</span>
+          {% elif expected_evolution.priority == "media" %}
+            <span class="av-tag av-tag-yellow">{{ expected_evolution.get_priority_display|default:expected_evolution.priority|capfirst }}</span>
+          {% else %}
+            <span class="av-tag av-tag-teal">{{ expected_evolution.get_priority_display|default:expected_evolution.priority|capfirst }}</span>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {# Resultados esperados #}
+    <div class="av-field-label">Resultados esperados</div>
+    {% if is_professional and allowed_actions.edit_anamnese %}
+    {# VARIÁVEL: texto livre de evolução esperada #}
+    <textarea class="av-field-value" rows="4"
+              data-field="treatment_response"
+              placeholder="Descreva os resultados clínicos esperados...">{{ expected_evolution.treatment_response }}</textarea>
+    {% else %}
+    <div class="av-field-value">{{ expected_evolution.treatment_response|default:"—" }}</div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>{# /av-wrap #}
+
+{# ── JavaScript: condutas dinâmicas ── #}
+{% if is_professional and allowed_actions.edit_anamnese %}
+<script>
+(function() {
+  // ── Adicionar nova conduta ────────────────────────────────────────────
+  window.avAddConducta = function() {
+    var list = document.getElementById('av-conducts-list');
+    var idx  = list.querySelectorAll('.av-conduct-item').length;
+
+    var li = document.createElement('li');
+    li.className = 'av-conduct-item';
+    li.dataset.index = idx;
+    li.innerHTML =
+      '<div class="av-conduct-dot"></div>' +
+      '<div class="av-conduct-text" contenteditable="true" data-placeholder="Nova conduta..."></div>' +
+      '<button type="button" class="av-conduct-remove" onclick="avRemoveConducta(this)" title="Remover">×</button>';
+
+    list.appendChild(li);
+    li.querySelector('.av-conduct-text').focus();
+    avUpdateCount();
+  };
+
+  // ── Remover conduta ───────────────────────────────────────────────────
+  window.avRemoveConducta = function(btn) {
+    var item = btn.closest('.av-conduct-item');
+    if (item) { item.remove(); avUpdateCount(); }
+  };
+
+  // ── Atualizar contador ────────────────────────────────────────────────
+  function avUpdateCount() {
+    var list   = document.getElementById('av-conducts-list');
+    var counter = document.getElementById('av-conduct-count');
+    if (!list || !counter) return;
+    var n = list.querySelectorAll('.av-conduct-item').length;
+    counter.innerHTML =
+      '<span class="av-tag av-tag-teal">' + n +
+      ' conduta' + (n !== 1 ? 's' : '') +
+      ' registrada' + (n !== 1 ? 's' : '') + '</span>';
+  }
+
+  // ── Prioridade → cor do badge ─────────────────────────────────────────
+  var sel = document.getElementById('av-priority-select');
+  if (sel) {
+    sel.addEventListener('change', function() {
+      var map = { baixa:'teal', media:'yellow', alta:'red', critica:'red' };
+    });
+  }
+})();
+</script>
+{% endif %}

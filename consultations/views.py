@@ -76,18 +76,86 @@ _DIAGNOSIS_LABEL = {
 }
 
 _CLASSIFICATION_HINT = {
-    'DOCTOR':            'CID-10',
+    'DOCTOR':            'CID-11 / CIAP-2',
     'NURSE':             'NANDA',
     'PHYSIO':            'CIF',
     'NUTRITIONIST':      'CID-10 / TUSS',
     'SPEECH_THERAPIST':  'CID-10',
     'PHYSICAL_EDUCATOR': 'CID-10',
-    'PSYCHOLOGIST':      'DSM-5 / CID-11',
+    'PSYCHOLOGIST':      'DSM-5-TR',
     'DENTIST':           'CID-10 / TUSS',
     'OCC_THERAPIST':     'CIF / CID-10',
     'PHARMACIST':        'CID-10',
     'BIOMEDICO':         'CID-10',
     'ADMIN':             'CID-10',
+}
+
+# Rótulo do Bloco 1 completo (inclui sistema de classificação)
+_BLOCK1_LABEL = {
+    'DOCTOR':            'Diagnóstico Médico (CID-11 / CIAP-2)',
+    'NURSE':             'Diagnóstico de Enfermagem (NANDA)',
+    'PHYSIO':            'Diagnóstico Cinesiológico-Funcional (CIF)',
+    'NUTRITIONIST':      'Diagnóstico Nutricional (CID-10)',
+    'SPEECH_THERAPIST':  'Diagnóstico Fonoaudiológico (CID-10)',
+    'PHYSICAL_EDUCATOR': 'Avaliação Física (CID-10)',
+    'PSYCHOLOGIST':      'Hipótese Diagnóstica (DSM-5-TR)',
+    'DENTIST':           'Diagnóstico Odontológico (CID-10)',
+    'OCC_THERAPIST':     'Diagnóstico Ocupacional (CIF / CID-10)',
+    'PHARMACIST':        'Avaliação Farmacêutica (CID-10)',
+    'BIOMEDICO':         'Diagnóstico Biomédico (CID-10)',
+    'ADMIN':             'Diagnóstico Clínico',
+    'PATIENT':           'Diagnóstico',
+}
+
+# Sub-rótulo do Bloco 1 (natureza dos fatores relacionados)
+_BLOCK1_SUBLABEL = {
+    'DOCTOR':            'Etiologia / Fisiopatologia',
+    'NURSE':             'Fatores Relacionados e Características Definidoras',
+    'PHYSIO':            'Limitações de Atividade e Restrições de Mobilidade',
+    'NUTRITIONIST':      'Fatores Nutricionais e Metabólicos',
+    'SPEECH_THERAPIST':  'Alterações de Comunicação e Deglutição',
+    'PHYSICAL_EDUCATOR': 'Capacidade Funcional e Condicionamento',
+    'PSYCHOLOGIST':      'Fatores Psicossociais e Gatilhos',
+    'DENTIST':           'Comprometimentos Dentários e Periodontais',
+    'OCC_THERAPIST':     'Barreiras Ocupacionais e Ambientais',
+    'PHARMACIST':        'Interações e Adesão Farmacológica',
+    'BIOMEDICO':         'Alterações Laboratoriais e Moleculares',
+    'ADMIN':             'Fatores Clínicos',
+    'PATIENT':           'Informações do Diagnóstico',
+}
+
+# Rótulo do Bloco 2 (intervenções)
+_BLOCK2_LABEL = {
+    'DOCTOR':            'Prescrição e Conduta Médica',
+    'NURSE':             'Intervenções de Enfermagem (NIC)',
+    'PHYSIO':            'Plano de Tratamento Cinesioterapêutico',
+    'NUTRITIONIST':      'Plano Alimentar e Conduta Nutricional',
+    'SPEECH_THERAPIST':  'Plano Terapêutico Fonoaudiológico',
+    'PHYSICAL_EDUCATOR': 'Programa de Exercícios e Atividade Física',
+    'PSYCHOLOGIST':      'Manejo e Abordagem Terapêutica',
+    'DENTIST':           'Plano de Tratamento Odontológico',
+    'OCC_THERAPIST':     'Plano de Intervenção Ocupacional',
+    'PHARMACIST':        'Orientação e Acompanhamento Farmacoterapêutico',
+    'BIOMEDICO':         'Condutas e Análises Recomendadas',
+    'ADMIN':             'Condutas e Intervenções',
+    'PATIENT':           'Condutas Registradas',
+}
+
+# Rótulo do Bloco 3 (evolução esperada)
+_BLOCK3_LABEL = {
+    'DOCTOR':            'Prognóstico Clínico e Critérios de Alta / Retorno',
+    'NURSE':             'Resultados Esperados (NOC) e Metas de Cuidado',
+    'PHYSIO':            'Ganho Funcional, Escala de Dor e Sessões Estimadas',
+    'NUTRITIONIST':      'Metas Nutricionais e Indicadores Antropométricos',
+    'SPEECH_THERAPIST':  'Progressão da Terapia e Indicadores de Alta',
+    'PHYSICAL_EDUCATOR': 'Metas de Condicionamento e Progressão do Treino',
+    'PSYCHOLOGIST':      'Metas de Regulação Emocional e Frequência das Sessões',
+    'DENTIST':           'Prognóstico Odontológico e Plano de Manutenção',
+    'OCC_THERAPIST':     'Ganho Ocupacional e Critérios de Alta',
+    'PHARMACIST':        'Adesão Esperada e Monitoramento Terapêutico',
+    'BIOMEDICO':         'Resultados Esperados dos Exames e Monitoramento',
+    'ADMIN':             'Evolução Esperada e Metas Clínicas',
+    'PATIENT':           'Evolução Esperada',
 }
 
 
@@ -101,6 +169,22 @@ def _diagnosis_label(user):
 
 def _classification_hint(user):
     return _CLASSIFICATION_HINT.get(user.role, 'CID-10')
+
+
+def _block1_label(user):
+    return _BLOCK1_LABEL.get(user.role, 'Diagnóstico Clínico')
+
+
+def _block1_sublabel(user):
+    return _BLOCK1_SUBLABEL.get(user.role, 'Fatores Relacionados')
+
+
+def _block2_label(user):
+    return _BLOCK2_LABEL.get(user.role, 'Condutas e Intervenções')
+
+
+def _block3_label(user):
+    return _BLOCK3_LABEL.get(user.role, 'Evolução Esperada e Metas Clínicas')
 
 
 def _is_professional(user):
@@ -263,10 +347,14 @@ class ConsultationDetailView(LoginRequiredMixin, DetailView):
         )
         ctx['tab_choices']   = ConsultationImage.TAB_CHOICES
         ctx['active_tab']    = self.request.GET.get('tab', 'geral')
-        ctx['is_professional'] = _is_professional(user)
+        ctx['is_professional']     = _is_professional(user)
         ctx['evaluation_label']    = _evaluation_label(user)
         ctx['diagnosis_label']     = _diagnosis_label(user)
         ctx['classification_hint'] = _classification_hint(user)
+        ctx['block1_label']        = _block1_label(user)
+        ctx['block1_sublabel']     = _block1_sublabel(user)
+        ctx['block2_label']        = _block2_label(user)
+        ctx['block3_label']        = _block3_label(user)
 
         # Perfil clínico permanente do paciente (Descrição do Paciente)
         try:
@@ -794,6 +882,10 @@ def atendimento_consulta(request, token):
         'evaluation_label':    _evaluation_label(request.user),
         'diagnosis_label':     _diagnosis_label(request.user),
         'classification_hint': _classification_hint(request.user),
+        'block1_label':        _block1_label(request.user),
+        'block1_sublabel':     _block1_sublabel(request.user),
+        'block2_label':        _block2_label(request.user),
+        'block3_label':        _block3_label(request.user),
         'historico_anterior':  historico_anterior,
         'clinical_summary':   clinical_summary,
         'ultimo_vital':       ultimo_vital,
