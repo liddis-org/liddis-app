@@ -1,0 +1,60 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches: [main]
+
+env:
+  PROJECT_ID: liddis
+  REGION: southamerica-east1
+  SERVICE: liddis-backend
+  REGISTRY: southamerica-east1-docker.pkg.dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGISTRY }} --quiet
+
+      - name: Build and push Docker image
+        run: |
+          IMAGE=${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/liddis/${{ env.SERVICE }}:${{ github.sha }}
+          docker build \
+            --tag $IMAGE \
+            --tag ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/liddis/${{ env.SERVICE }}:latest \
+            --cache-from ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/liddis/${{ env.SERVICE }}:latest \
+            --build-arg BUILDKIT_INLINE_CACHE=1 \
+            .
+          docker push --all-tags ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/liddis/${{ env.SERVICE }}
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE }} \
+            --image=${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/liddis/${{ env.SERVICE }}:${{ github.sha }} \
+            --region=${{ env.REGION }} \
+            --platform=managed \
+            --allow-unauthenticated \
+            --port=8080 \
+            --memory=512Mi \
+            --cpu=1 \
+            --min-instances=0 \
+            --max-instances=10 \
+            --concurrency=80 \
+            --timeout=60 \
+            --set-secrets=SECRET_KEY=liddis-secret-key:latest,DATABASE_URL=liddis-database-url:latest,GOOGLE_CLIENT_ID=liddis-google-client-id:latest,GOOGLE_SECRET=liddis-google-secret:latest,GMAIL_APP_PASSWORD=liddis-gmail-app-password:latest,OPENAI_API_KEY=liddis-openai-api-key:latest \
+            --set-env-vars=DEBUG=False,ALLOWED_HOSTS=liddis-backend-tyi23kxkeq-rj.a.run.app,EMAIL_PROVIDER=gmail,GMAIL_USER=liddis.org@gmail.com,DEFAULT_FROM_EMAIL=liddis.org@gmail.com,SITE_NAME=LIDDIS,CSRF_TRUSTED_ORIGINS=https://liddis-backend-tyi23kxkeq-rj.a.run.app,SITE_DOMAIN=liddis-backend-tyi23kxkeq-rj.a.run.app,GCS_BUCKET_NAME=liddis-media \
+            --quiet

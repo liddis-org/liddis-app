@@ -19,9 +19,10 @@ urlpatterns = [
     path('sinais-vitais/', views.VitalSignListView.as_view(), name='vitals'),
     path('sinais-vitais/novo/', views.VitalSignCreateView.as_view(), name='vital_create'),
 
-    # Imagens da consulta
+    # Anexos da consulta (imagens e PDFs)
     path('<uuid:pk>/imagem/', views.upload_image, name='consultation_upload_image'),
     path('<uuid:pk>/imagem/<int:img_pk>/excluir/', views.delete_image, name='consultation_delete_image'),
+    path('<uuid:pk>/anexo/<int:img_pk>/', views.attachment_proxy, name='consultation_attachment'),
 
     # Evoluções multiprofissionais
     path('<uuid:consultation_pk>/evolucoes/', views.evolution_list, name='evolution_list'),

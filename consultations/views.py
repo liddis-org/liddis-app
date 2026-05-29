@@ -1,17 +1,23 @@
 import uuid as _uuid_module
 import logging
+import mimetypes
+import os
 
 from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.http import HttpResponse, Http404
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
 from django.utils import timezone
+
+_ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'webp', 'gif', 'pdf'}
+_MAX_UPLOAD_BYTES   = 20 * 1024 * 1024  # 20 MB
 
 _log = logging.getLogger('liddis')
 
@@ -145,9 +151,20 @@ def _save_sub_forms(request, consultation, anamnese_form, exames_form):
         e.save()
 
 
+def _valid_attachment(f) -> bool:
+    ext = os.path.splitext(f.name)[1].lstrip('.').lower()
+    return ext in _ALLOWED_EXTENSIONS and f.size <= _MAX_UPLOAD_BYTES
+
+
 def _handle_image_uploads(request, consultation):
     for tab, _ in ConsultationImage.TAB_CHOICES:
         for f in request.FILES.getlist(f'images_{tab}'):
+            if not _valid_attachment(f):
+                _log.warning(
+                    'Anexo rejeitado | consulta=#%s | aba=%s | arquivo=%s | tamanho=%s',
+                    consultation.pk, tab, f.name, f.size,
+                )
+                continue
             try:
                 ConsultationImage.objects.create(
                     consultation=consultation,
@@ -157,7 +174,7 @@ def _handle_image_uploads(request, consultation):
                 )
             except Exception as exc:
                 _log.error(
-                    'Falha ao salvar imagem | consulta=#%s | aba=%s | arquivo=%s | erro=%s',
+                    'Falha ao salvar anexo | consulta=#%s | aba=%s | arquivo=%s | erro=%s',
                     consultation.pk, tab, f.name, exc,
                 )
 
@@ -412,16 +429,16 @@ def upload_image(request, pk):
     if request.method == 'POST':
         file = request.FILES.get('image')
         valid_tabs = [t for t, _ in ConsultationImage.TAB_CHOICES]
-        if file and tab in valid_tabs:
+        if file and tab in valid_tabs and _valid_attachment(file):
             ConsultationImage.objects.create(
                 consultation=consultation,
                 tab=tab,
                 image=file,
                 caption=request.POST.get('caption', ''),
             )
-            messages.success(request, 'Imagem anexada com sucesso!')
+            messages.success(request, 'Arquivo anexado com sucesso!')
         else:
-            messages.error(request, 'Arquivo inválido.')
+            messages.error(request, 'Arquivo inválido. Use JPG, PNG, WEBP ou PDF (máx. 20 MB).')
     return redirect(f'/consultas/{pk}/?tab={tab}')
 
 
@@ -434,8 +451,47 @@ def delete_image(request, pk, img_pk):
     tab = image.tab
     image.image.delete(save=False)
     image.delete()
-    messages.success(request, 'Imagem removida.')
+    messages.success(request, 'Anexo removido.')
     return redirect(f'/consultas/{pk}/?tab={tab}')
+
+
+@login_required
+def attachment_proxy(request, pk, img_pk):
+    """
+    Serve anexos da consulta com controle de acesso.
+    Em produção (GCS): faz streaming via SDK do GCS.
+    Em desenvolvimento: serve do filesystem local.
+    """
+    consultation = get_object_or_404(_accessible_consultations(request.user), pk=pk)
+    attachment = get_object_or_404(ConsultationImage, pk=img_pk, consultation=consultation)
+
+    filename = attachment.filename
+    content_type, _ = mimetypes.guess_type(filename)
+    if not content_type:
+        content_type = 'application/octet-stream'
+
+    gcs_bucket = getattr(settings, 'GCS_BUCKET_NAME', '')
+    if gcs_bucket and not settings.DEBUG:
+        try:
+            from google.cloud import storage as gcs_storage
+            client = gcs_storage.Client()
+            blob = client.bucket(gcs_bucket).blob(attachment.image.name)
+            data = blob.download_as_bytes()
+            response = HttpResponse(data, content_type=content_type)
+        except Exception as exc:
+            _log.error('attachment_proxy GCS error | pk=%s | img=%s | %s', pk, img_pk, exc)
+            raise Http404
+    else:
+        from django.http import FileResponse
+        try:
+            response = FileResponse(open(attachment.image.path, 'rb'), content_type=content_type)
+        except (FileNotFoundError, ValueError):
+            raise Http404
+
+    disposition = 'inline' if content_type.startswith(('image/', 'application/pdf')) else 'attachment'
+    response['Content-Disposition'] = f'{disposition}; filename="{filename}"'
+    response['X-Content-Type-Options'] = 'nosniff'
+    return response
 
 
 # ── Sinais Vitais ──────────────────────────────────────────────────────────────

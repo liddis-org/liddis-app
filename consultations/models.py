@@ -4,6 +4,9 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 from datetime import timedelta
+from django.core.validators import FileExtensionValidator
+
+ALLOWED_ATTACHMENT_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'pdf']
 
 
 SPECIALTY_CHOICES = [
@@ -160,7 +163,7 @@ def consultation_image_path(instance, filename):
 
 
 class ConsultationImage(models.Model):
-    """Imagens anexadas a uma consulta, organizadas por aba."""
+    """Anexos (imagens e PDFs) de uma consulta, organizados por aba."""
     TAB_CHOICES = [
         ('anamnese',   'Anamnese'),
         ('exames',     'Exames Laboratoriais'),
@@ -174,18 +177,31 @@ class ConsultationImage(models.Model):
         related_name='images'
     )
     tab = models.CharField(max_length=20, choices=TAB_CHOICES, verbose_name='Aba')
-    image = models.ImageField(upload_to=consultation_image_path, verbose_name='Imagem')
+    image = models.FileField(
+        upload_to=consultation_image_path,
+        verbose_name='Arquivo',
+        validators=[FileExtensionValidator(ALLOWED_ATTACHMENT_EXTENSIONS)],
+    )
     caption = models.CharField(max_length=255, blank=True, verbose_name='Legenda')
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table            = 'consultation_images'
         ordering            = ['-uploaded_at']
-        verbose_name        = 'Imagem da Consulta'
-        verbose_name_plural = 'Imagens das Consultas'
+        verbose_name        = 'Anexo da Consulta'
+        verbose_name_plural = 'Anexos das Consultas'
 
     def __str__(self):
-        return f'Imagem [{self.get_tab_display()}] — Consulta #{self.consultation_id}'
+        return f'Anexo [{self.get_tab_display()}] — Consulta #{self.consultation_id}'
+
+    @property
+    def is_pdf(self):
+        name = self.image.name or ''
+        return name.lower().endswith('.pdf')
+
+    @property
+    def filename(self):
+        return os.path.basename(self.image.name) if self.image.name else 'arquivo'
 
 
 class VitalSign(models.Model):

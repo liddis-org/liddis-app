@@ -1,36 +1,61 @@
 {% comment %}
-Partial: galeria de imagens + upload por aba.
+Partial: galeria de anexos (imagens e PDFs) + upload por aba.
 Variáveis esperadas: tab_key, tab_label, imgs (lista), consultation
 {% endcomment %}
 <div class="upload-section">
-  <div class="field-label" style="margin-bottom:12px">Imagens — {{ tab_label }}</div>
+  <div class="field-label" style="margin-bottom:12px">Anexos — {{ tab_label }}</div>
 
   <!-- ── Galeria existente ── -->
   {% if imgs %}
   <div class="img-gallery">
     {% for img in imgs %}
     <div class="img-gallery-item">
-      <a href="{{ img.image.url }}" target="_blank" rel="noopener">
-        <img src="{{ img.image.url }}" alt="{{ img.caption|default:'imagem' }}">
+      {% if img.is_pdf %}
+      <!-- ── PDF ── -->
+      <a href="{% url 'consultation_attachment' consultation.pk img.pk %}"
+         target="_blank" rel="noopener"
+         style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+                height:100px;background:rgba(239,68,68,.07);border-radius:8px;
+                border:1px solid rgba(239,68,68,.2);text-decoration:none;gap:6px;padding:8px">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/>
+          <line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/>
+        </svg>
+        <span style="font-size:10px;color:#f87171;font-weight:600;text-align:center;
+                     max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          {{ img.filename }}
+        </span>
       </a>
+      {% else %}
+      <!-- ── Imagem ── -->
+      <a href="{% url 'consultation_attachment' consultation.pk img.pk %}"
+         target="_blank" rel="noopener">
+        <img src="{% url 'consultation_attachment' consultation.pk img.pk %}"
+             alt="{{ img.caption|default:'imagem' }}"
+             loading="lazy">
+      </a>
+      {% endif %}
       <div class="img-meta">
         <span class="img-caption" title="{{ img.caption }}">{{ img.caption|default:"—" }}</span>
+        {% if allowed_actions.delete_images %}
         <form method="post"
               action="{% url 'consultation_delete_image' consultation.pk img.pk %}"
-              onsubmit="return confirm('Remover imagem?')">
+              onsubmit="return confirm('Remover anexo?')">
           {% csrf_token %}
           <button type="submit" class="btn btn-danger btn-sm"
                   style="padding:2px 8px;font-size:11px;line-height:1.4">×</button>
         </form>
+        {% endif %}
       </div>
     </div>
     {% endfor %}
   </div>
   {% else %}
-  <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Nenhuma imagem anexada ainda.</p>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Nenhum anexo ainda.</p>
   {% endif %}
 
   <!-- ── Formulário de upload ── -->
+  {% if allowed_actions.upload_images %}
   <form method="post"
         action="{% url 'consultation_upload_image' consultation.pk %}"
         enctype="multipart/form-data"
@@ -38,39 +63,38 @@ Variáveis esperadas: tab_key, tab_label, imgs (lista), consultation
     {% csrf_token %}
     <input type="hidden" name="tab" value="{{ tab_key }}">
 
-    <!--
-      Input de arquivo: oculto — acionado via JS.
-      accept="image/*" permite câmera no mobile sem forçar modo câmera exclusivo.
-    -->
     <input type="file"
            name="image"
            id="file_{{ tab_key }}"
-           accept="image/*"
+           accept="image/*,.pdf,application/pdf"
            style="display:none"
            onchange="onFileChosen_{{ tab_key|slugify }}(this)">
 
-    <!-- Área de seleção + preview + legenda + botão num único bloco -->
     <div class="upload-block" id="ub_{{ tab_key }}">
 
       <!-- Preview: aparece após seleção -->
       <div class="upload-preview" id="prev_{{ tab_key }}" style="display:none">
+        <!-- Preview de imagem -->
         <img id="prev_img_{{ tab_key }}" src="" alt="preview"
-             style="max-height:120px;border-radius:8px;object-fit:cover;display:block;margin-bottom:8px">
+             style="max-height:120px;border-radius:8px;object-fit:cover;display:none;margin-bottom:8px">
+        <!-- Preview de PDF -->
+        <div id="prev_pdf_{{ tab_key }}"
+             style="display:none;align-items:center;gap:8px;
+                    background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);
+                    border-radius:8px;padding:10px;margin-bottom:8px">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/>
+          </svg>
+          <span style="font-size:12px;font-weight:600;color:#f87171">PDF selecionado</span>
+        </div>
         <span class="upload-fname" id="fname_{{ tab_key }}"
               style="font-size:12px;color:var(--muted)"></span>
       </div>
 
-      <!-- Linha: legenda + botão principal -->
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px">
         <input class="input" type="text" name="caption"
                placeholder="Legenda (opcional)"
                style="flex:1;min-width:140px">
-
-        <!--
-          Botão inteligente:
-          - Sem arquivo selecionado → abre o file picker
-          - Com arquivo selecionado → submete o formulário
-        -->
         <button type="button"
                 id="btn_{{ tab_key }}"
                 class="btn btn-secondary"
@@ -78,44 +102,43 @@ Variáveis esperadas: tab_key, tab_label, imgs (lista), consultation
           Selecionar arquivo
         </button>
       </div>
-
+      <div style="font-size:10px;color:var(--muted-2);margin-top:4px">JPG, PNG, WEBP, PDF · máx. 20 MB</div>
     </div>
   </form>
+  {% endif %}
 </div>
 
 <script>
-// Funções isoladas por tab para evitar conflito entre instâncias
 (function() {
-  var TAB = '{{ tab_key }}';
+  var TAB  = '{{ tab_key }}';
   var SLUG = '{{ tab_key|slugify }}';
 
   window['onFileChosen_' + SLUG] = function(input) {
-    var btn   = document.getElementById('btn_'      + TAB);
-    var prev  = document.getElementById('prev_'     + TAB);
-    var img   = document.getElementById('prev_img_' + TAB);
-    var fname = document.getElementById('fname_'    + TAB);
+    var btn    = document.getElementById('btn_'      + TAB);
+    var prev   = document.getElementById('prev_'     + TAB);
+    var imgEl  = document.getElementById('prev_img_' + TAB);
+    var pdfEl  = document.getElementById('prev_pdf_' + TAB);
+    var fname  = document.getElementById('fname_'    + TAB);
 
     if (!input.files || !input.files.length) return;
-
     var file = input.files[0];
 
-    // Mostra preview se for imagem
-    if (file.type.startsWith('image/')) {
+    imgEl.style.display = 'none';
+    pdfEl.style.display = 'none';
+
+    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+      pdfEl.style.display = 'flex';
+    } else if (file.type.startsWith('image/')) {
       var reader = new FileReader();
       reader.onload = function(e) {
-        img.src = e.target.result;
-        prev.style.display = 'block';
+        imgEl.src = e.target.result;
+        imgEl.style.display = 'block';
       };
       reader.readAsDataURL(file);
-    } else {
-      prev.style.display = 'none';
     }
 
-    // Atualiza nome do arquivo
     fname.textContent = file.name;
     prev.style.display = 'block';
-
-    // Muda botão para "Anexar" (submissão)
     btn.textContent = 'Anexar';
     btn.className   = 'btn btn-primary';
   };
@@ -123,15 +146,12 @@ Variáveis esperadas: tab_key, tab_label, imgs (lista), consultation
   window['smartAnexar_' + SLUG] = function() {
     var input = document.getElementById('file_' + TAB);
     if (input.files && input.files.length > 0) {
-      // Arquivo já selecionado → submete
       document.getElementById('form_upload_' + TAB).submit();
     } else {
-      // Nenhum arquivo → abre o seletor
       input.click();
     }
   };
 
-  // Drag-and-drop: a drop-zone é o upload-block inteiro
   var block = document.getElementById('ub_' + TAB);
   if (block) {
     block.addEventListener('dragover', function(e) {

@@ -255,20 +255,20 @@
           <div class="form-group">
             <label style="margin-bottom:8px">Imagens — Diagnóstico</label>
             <div class="drop-zone" onclick="document.getElementById('img_diagnostico').click()">
-              <input type="file" name="images_diagnostico" id="img_diagnostico" accept="image/*" multiple
+              <input type="file" name="images_diagnostico" id="img_diagnostico" accept="image/*,.pdf,application/pdf" multiple
                      onchange="previewImages(this, 'preview_diagnostico')">
               <div>Clique ou arraste imagens aqui</div>
-              <div style="font-size:11px;margin-top:4px;opacity:.7">JPG, PNG, WEBP</div>
+              <div style="font-size:11px;margin-top:4px;opacity:.7">JPG, PNG, WEBP, PDF</div>
             </div>
             <div class="img-preview-grid" id="preview_diagnostico"></div>
           </div>
           <div class="form-group">
             <label style="margin-bottom:8px">Imagens — Prescrição</label>
             <div class="drop-zone" onclick="document.getElementById('img_prescricao').click()">
-              <input type="file" name="images_prescricao" id="img_prescricao" accept="image/*" multiple
+              <input type="file" name="images_prescricao" id="img_prescricao" accept="image/*,.pdf,application/pdf" multiple
                      onchange="previewImages(this, 'preview_prescricao')">
               <div>Clique ou arraste imagens aqui</div>
-              <div style="font-size:11px;margin-top:4px;opacity:.7">JPG, PNG, WEBP</div>
+              <div style="font-size:11px;margin-top:4px;opacity:.7">JPG, PNG, WEBP, PDF</div>
             </div>
             <div class="img-preview-grid" id="preview_prescricao"></div>
           </div>
@@ -282,7 +282,7 @@
 
           <!-- Sub-abas -->
           <div class="subtabs-nav" role="tablist">
-            <button type="button" class="subtab-btn active" data-subtab="anamnese">Avaliação</button>
+            <button type="button" class="subtab-btn active" data-subtab="anamnese">{{ evaluation_label }}</button>
             <button type="button" class="subtab-btn" data-subtab="intervencao">Intervenção</button>
             <button type="button" class="subtab-btn" data-subtab="evolucao">Evolução Esperada</button>
           </div>
@@ -318,10 +318,10 @@
             <div class="form-group">
               <label style="margin-bottom:8px">Imagens da Avaliação</label>
               <div class="drop-zone" onclick="document.getElementById('img_anamnese').click()">
-                <input type="file" name="images_anamnese" id="img_anamnese" accept="image/*" multiple
+                <input type="file" name="images_anamnese" id="img_anamnese" accept="image/*,.pdf,application/pdf" multiple
                        onchange="previewImages(this, 'preview_anamnese')">
                 <div>Clique ou arraste imagens aqui</div>
-                <div style="font-size:11px;margin-top:4px;opacity:.7">JPG, PNG, WEBP</div>
+                <div style="font-size:11px;margin-top:4px;opacity:.7">JPG, PNG, WEBP, PDF</div>
               </div>
               <div class="img-preview-grid" id="preview_anamnese"></div>
             </div>
@@ -498,10 +498,10 @@
           <div class="form-group">
             <label style="margin-bottom:8px">Imagens dos Exames</label>
             <div class="drop-zone" onclick="document.getElementById('img_exames').click()">
-              <input type="file" name="images_exames" id="img_exames" accept="image/*" multiple
+              <input type="file" name="images_exames" id="img_exames" accept="image/*,.pdf,application/pdf" multiple
                      onchange="previewImages(this, 'preview_exames')">
               <div>Clique ou arraste imagens aqui</div>
-              <div style="font-size:11px;margin-top:4px;opacity:.7">JPG, PNG, WEBP</div>
+              <div style="font-size:11px;margin-top:4px;opacity:.7">JPG, PNG, WEBP, PDF</div>
             </div>
             <div class="img-preview-grid" id="preview_exames"></div>
           </div>
@@ -625,21 +625,32 @@ document.querySelectorAll('.drop-zone').forEach(function(zone) {
   });
 });
 
-// ── Image preview ─────────────────────────────────────────────────────────────
+// ── Attachment preview (imagens e PDFs) ───────────────────────────────────────
 function previewImages(input, previewId) {
   var container = document.getElementById(previewId);
   container.innerHTML = '';
   Array.from(input.files).forEach(function(file, idx) {
-    if (!file.type.startsWith('image/')) return;
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      var wrap = document.createElement('div');
-      wrap.className = 'img-preview-item';
-      wrap.innerHTML = '<img src="' + e.target.result + '" alt="preview">' +
-        '<button type="button" class="remove-btn" onclick="removePreview(' + idx + ',\'' + input.id + '\',\'' + previewId + '\')">×</button>';
+    var wrap = document.createElement('div');
+    wrap.className = 'img-preview-item';
+    var removeBtn = '<button type="button" class="remove-btn" onclick="removePreview(' + idx + ',\'' + input.id + '\',\'' + previewId + '\')">×</button>';
+
+    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+      wrap.innerHTML =
+        '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+        'height:80px;background:rgba(239,68,68,.07);border-radius:8px;border:1px solid rgba(239,68,68,.2);gap:4px;padding:8px">' +
+        '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round">' +
+        '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>' +
+        '<span style="font-size:9px;color:#f87171;font-weight:600;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' +
+        file.name + '</span></div>' + removeBtn;
       container.appendChild(wrap);
-    };
-    reader.readAsDataURL(file);
+    } else if (file.type.startsWith('image/')) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        wrap.innerHTML = '<img src="' + e.target.result + '" alt="preview">' + removeBtn;
+        container.appendChild(wrap);
+      };
+      reader.readAsDataURL(file);
+    }
   });
 }
 

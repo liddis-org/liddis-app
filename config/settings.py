@@ -300,11 +300,11 @@ GCS_BUCKET_NAME = config('GCS_BUCKET_NAME', default='')
 if not DEBUG and GCS_BUCKET_NAME:
     DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
     GS_BUCKET_NAME       = GCS_BUCKET_NAME
-    GS_DEFAULT_ACL       = None            # bucket-level policy (uniform access)
-    GS_QUERYSTRING_AUTH  = False           # URLs públicas sem signed query strings
-    GS_FILE_OVERWRITE    = False           # preserva histórico: nunca sobrescreve
+    GS_DEFAULT_ACL       = None   # uniform bucket-level IAM policy
+    GS_QUERYSTRING_AUTH  = False  # URLs diretas — acesso via view proxy autenticada
+    GS_FILE_OVERWRITE    = False  # preserva histórico
     GS_OBJECT_PARAMETERS = {
-        'cache_control': 'public, max-age=86400',   # cache de 24h
+        'cache_control': 'private, no-cache',  # dados médicos: sem cache público
     }
     MEDIA_URL = f'https://storage.googleapis.com/{GCS_BUCKET_NAME}/'
 

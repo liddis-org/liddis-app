@@ -236,9 +236,21 @@
           <div class="img-grid">
             {% for img in images_by_tab.diagnostico %}
             <div class="img-item">
-              <a href="{{ img.image.url }}" target="_blank" title="{{ img.caption }}">
-                <img src="{{ img.image.url }}" alt="{{ img.caption|default:'imagem' }}">
+              {% if img.is_pdf %}
+              <a href="{% url 'consultation_attachment' object.pk img.pk %}" target="_blank" title="{{ img.caption }}"
+                 style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+                        height:70px;background:rgba(239,68,68,.07);border-radius:6px;
+                        border:1px solid rgba(239,68,68,.2);text-decoration:none;gap:4px;padding:6px">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/>
+                </svg>
+                <span style="font-size:9px;color:#f87171;font-weight:600;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ img.filename }}</span>
               </a>
+              {% else %}
+              <a href="{% url 'consultation_attachment' object.pk img.pk %}" target="_blank" title="{{ img.caption }}">
+                <img src="{% url 'consultation_attachment' object.pk img.pk %}" alt="{{ img.caption|default:'imagem' }}">
+              </a>
+              {% endif %}
               <form method="post"
                     action="{% url 'consultation_delete_image' object.pk img.pk %}"
                     onsubmit="return confirm('Remover imagem?')">
@@ -254,11 +266,11 @@
         <div class="drop-zone" style="margin-top:10px"
              onclick="document.getElementById('img_diagnostico').click()">
           <input type="file" name="images_diagnostico" id="img_diagnostico"
-                 accept="image/*" multiple data-preview="preview_diagnostico"
+                 accept="image/*,.pdf,application/pdf" multiple data-preview="preview_diagnostico"
                  onchange="previewImages(this, this.dataset.preview)">
           <div class="dz-icon">+</div>
           <div>Clique ou arraste para adicionar imagens</div>
-          <div style="font-size:11px;margin-top:3px;opacity:.6">JPG · PNG · WEBP</div>
+          <div style="font-size:11px;margin-top:3px;opacity:.6">JPG · PNG · WEBP · PDF</div>
         </div>
         <div class="img-grid" id="preview_diagnostico"></div>
       </div>
@@ -273,9 +285,21 @@
           <div class="img-grid">
             {% for img in images_by_tab.prescricao %}
             <div class="img-item">
-              <a href="{{ img.image.url }}" target="_blank" title="{{ img.caption }}">
-                <img src="{{ img.image.url }}" alt="{{ img.caption|default:'imagem' }}">
+              {% if img.is_pdf %}
+              <a href="{% url 'consultation_attachment' object.pk img.pk %}" target="_blank" title="{{ img.caption }}"
+                 style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+                        height:70px;background:rgba(239,68,68,.07);border-radius:6px;
+                        border:1px solid rgba(239,68,68,.2);text-decoration:none;gap:4px;padding:6px">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/>
+                </svg>
+                <span style="font-size:9px;color:#f87171;font-weight:600;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ img.filename }}</span>
               </a>
+              {% else %}
+              <a href="{% url 'consultation_attachment' object.pk img.pk %}" target="_blank" title="{{ img.caption }}">
+                <img src="{% url 'consultation_attachment' object.pk img.pk %}" alt="{{ img.caption|default:'imagem' }}">
+              </a>
+              {% endif %}
               <form method="post"
                     action="{% url 'consultation_delete_image' object.pk img.pk %}"
                     onsubmit="return confirm('Remover imagem?')">
@@ -291,11 +315,11 @@
         <div class="drop-zone" style="margin-top:10px"
              onclick="document.getElementById('img_prescricao').click()">
           <input type="file" name="images_prescricao" id="img_prescricao"
-                 accept="image/*" multiple data-preview="preview_prescricao"
+                 accept="image/*,.pdf,application/pdf" multiple data-preview="preview_prescricao"
                  onchange="previewImages(this, this.dataset.preview)">
           <div class="dz-icon">+</div>
           <div>Clique ou arraste para adicionar imagens</div>
-          <div style="font-size:11px;margin-top:3px;opacity:.6">JPG · PNG · WEBP</div>
+          <div style="font-size:11px;margin-top:3px;opacity:.6">JPG · PNG · WEBP · PDF</div>
         </div>
         <div class="img-grid" id="preview_prescricao"></div>
       </div>
@@ -351,9 +375,21 @@
           <div class="img-grid">
             {% for img in images_by_tab.anamnese %}
             <div class="img-item">
-              <a href="{{ img.image.url }}" target="_blank" title="{{ img.caption }}">
-                <img src="{{ img.image.url }}" alt="{{ img.caption|default:'imagem' }}">
+              {% if img.is_pdf %}
+              <a href="{% url 'consultation_attachment' object.pk img.pk %}" target="_blank" title="{{ img.caption }}"
+                 style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+                        height:70px;background:rgba(239,68,68,.07);border-radius:6px;
+                        border:1px solid rgba(239,68,68,.2);text-decoration:none;gap:4px;padding:6px">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/>
+                </svg>
+                <span style="font-size:9px;color:#f87171;font-weight:600;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ img.filename }}</span>
               </a>
+              {% else %}
+              <a href="{% url 'consultation_attachment' object.pk img.pk %}" target="_blank" title="{{ img.caption }}">
+                <img src="{% url 'consultation_attachment' object.pk img.pk %}" alt="{{ img.caption|default:'imagem' }}">
+              </a>
+              {% endif %}
               <form method="post"
                     action="{% url 'consultation_delete_image' object.pk img.pk %}"
                     onsubmit="return confirm('Remover imagem?')">
@@ -369,11 +405,11 @@
         <div class="drop-zone" style="margin-top:10px"
              onclick="document.getElementById('img_anamnese').click()">
           <input type="file" name="images_anamnese" id="img_anamnese"
-                 accept="image/*" multiple data-preview="preview_anamnese"
+                 accept="image/*,.pdf,application/pdf" multiple data-preview="preview_anamnese"
                  onchange="previewImages(this, this.dataset.preview)">
           <div class="dz-icon">+</div>
           <div>Clique ou arraste para adicionar imagens</div>
-          <div style="font-size:11px;margin-top:3px;opacity:.6">JPG · PNG · WEBP</div>
+          <div style="font-size:11px;margin-top:3px;opacity:.6">JPG · PNG · WEBP · PDF</div>
         </div>
         <div class="img-grid" id="preview_anamnese"></div>
       </div>
@@ -436,9 +472,21 @@
           <div class="img-grid">
             {% for img in images_by_tab.exames %}
             <div class="img-item">
-              <a href="{{ img.image.url }}" target="_blank" title="{{ img.caption }}">
-                <img src="{{ img.image.url }}" alt="{{ img.caption|default:'imagem' }}">
+              {% if img.is_pdf %}
+              <a href="{% url 'consultation_attachment' object.pk img.pk %}" target="_blank" title="{{ img.caption }}"
+                 style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+                        height:70px;background:rgba(239,68,68,.07);border-radius:6px;
+                        border:1px solid rgba(239,68,68,.2);text-decoration:none;gap:4px;padding:6px">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/>
+                </svg>
+                <span style="font-size:9px;color:#f87171;font-weight:600;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ img.filename }}</span>
               </a>
+              {% else %}
+              <a href="{% url 'consultation_attachment' object.pk img.pk %}" target="_blank" title="{{ img.caption }}">
+                <img src="{% url 'consultation_attachment' object.pk img.pk %}" alt="{{ img.caption|default:'imagem' }}">
+              </a>
+              {% endif %}
               <form method="post"
                     action="{% url 'consultation_delete_image' object.pk img.pk %}"
                     onsubmit="return confirm('Remover imagem?')">
@@ -454,11 +502,11 @@
         <div class="drop-zone" style="margin-top:10px"
              onclick="document.getElementById('img_exames').click()">
           <input type="file" name="images_exames" id="img_exames"
-                 accept="image/*" multiple data-preview="preview_exames"
+                 accept="image/*,.pdf,application/pdf" multiple data-preview="preview_exames"
                  onchange="previewImages(this, this.dataset.preview)">
           <div class="dz-icon">+</div>
           <div>Clique ou arraste para adicionar imagens</div>
-          <div style="font-size:11px;margin-top:3px;opacity:.6">JPG · PNG · WEBP</div>
+          <div style="font-size:11px;margin-top:3px;opacity:.6">JPG · PNG · WEBP · PDF</div>
         </div>
         <div class="img-grid" id="preview_exames"></div>
       </div>
@@ -514,25 +562,35 @@ document.querySelectorAll('.drop-zone').forEach(function(zone) {
   });
 });
 
-// ── Preview de imagens selecionadas ──────────────────────────────────────────
+// ── Preview de anexos (imagens e PDFs) ───────────────────────────────────────
 function previewImages(input, previewId) {
   var container = document.getElementById(previewId);
   if (!container) return;
   container.innerHTML = '';
   Array.from(input.files).forEach(function(file, idx) {
-    if (!file.type.startsWith('image/')) return;
-    var reader = new FileReader();
-    reader.onload = function(ev) {
-      var wrap = document.createElement('div');
-      wrap.className = 'img-item';
-      var inputId = input.id;
+    var wrap = document.createElement('div');
+    wrap.className = 'img-item';
+    var inputId = input.id;
+    var removeBtn = '<button type="button" class="del-btn" onclick="removePreview(' + idx + ',\'' + inputId + '\',\'' + previewId + '\')">×</button>';
+
+    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
       wrap.innerHTML =
-        '<img src="' + ev.target.result + '" alt="preview">' +
-        '<button type="button" class="del-btn" ' +
-          'onclick="removePreview(' + idx + ',\'' + inputId + '\',\'' + previewId + '\')">×</button>';
+        '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+        'height:70px;background:rgba(239,68,68,.07);border-radius:6px;' +
+        'border:1px solid rgba(239,68,68,.2);gap:4px;padding:6px">' +
+        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round">' +
+        '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>' +
+        '<span style="font-size:9px;color:#f87171;font-weight:600;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' +
+        file.name + '</span></div>' + removeBtn;
       container.appendChild(wrap);
-    };
-    reader.readAsDataURL(file);
+    } else if (file.type.startsWith('image/')) {
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        wrap.innerHTML = '<img src="' + ev.target.result + '" alt="preview">' + removeBtn;
+        container.appendChild(wrap);
+      };
+      reader.readAsDataURL(file);
+    }
   });
 }
 
