@@ -278,19 +278,19 @@
       <!-- ── Avaliação clínica: Diagnóstico · Intervenção · Evolução Esperada ── -->
       {% if clinical_intervention or expected_evolution %}
       <div style="margin-top:28px;padding-top:24px;border-top:1px solid var(--border-soft)">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:16px">Avaliação Clínica</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:16px">{{ evaluation_label|default:"Avaliação Clínica" }}</div>
         <div class="avaliacao-cards">
 
           <!-- Card 1: Diagnóstico -->
           <div class="aval-card" style="background:rgba(99,102,241,.04);border-color:rgba(99,102,241,.2)">
             <div class="aval-card-header">
               <div class="aval-icon" style="background:rgba(99,102,241,.15)">🩺</div>
-              <div class="aval-label" style="color:#818cf8">Diagnóstico</div>
+              <div class="aval-label" style="color:#818cf8">{{ block1_label|default:"Diagnóstico" }}</div>
             </div>
             {% if clinical_intervention %}
               {% if clinical_intervention.professional_diagnosis %}
               <div class="aval-field">
-                <div class="field-label">Diagnóstico clínico</div>
+                <div class="field-label">{{ diagnosis_label|default:"Diagnóstico clínico" }}</div>
                 <p class="field-value" style="font-size:13px">{{ clinical_intervention.professional_diagnosis }}</p>
               </div>
               {% endif %}
@@ -302,7 +302,7 @@
               {% endif %}
               {% if clinical_intervention.related_factors %}
               <div class="aval-field">
-                <div class="field-label">Fatores relacionados</div>
+                <div class="field-label">{{ block1_sublabel|default:"Fatores relacionados" }}</div>
                 <p class="field-value" style="font-size:13px">{{ clinical_intervention.related_factors }}</p>
               </div>
               {% endif %}
@@ -318,7 +318,7 @@
           <div class="aval-card" style="background:rgba(99,102,241,.04);border-color:rgba(99,102,241,.2)">
             <div class="aval-card-header">
               <div class="aval-icon" style="background:rgba(99,102,241,.15)">⚡</div>
-              <div class="aval-label" style="color:#818cf8">Intervenção</div>
+              <div class="aval-label" style="color:#818cf8">{{ block2_label|default:"Intervenção" }}</div>
             </div>
             {% if clinical_intervention %}
               {% if clinical_intervention.conducts_list %}
@@ -358,7 +358,7 @@
           <div class="aval-card" style="background:rgba(245,158,11,.04);border-color:rgba(245,158,11,.2)">
             <div class="aval-card-header">
               <div class="aval-icon" style="background:rgba(245,158,11,.15)">📈</div>
-              <div class="aval-label" style="color:#fbbf24">Evolução Esperada</div>
+              <div class="aval-label" style="color:#fbbf24">{{ block3_label|default:"Evolução Esperada" }}</div>
             </div>
             {% if expected_evolution %}
               {% if expected_evolution.estimated_timeframe or expected_evolution.priority %}
