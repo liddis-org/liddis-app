@@ -128,6 +128,14 @@
   <div>
     <h2>{{ consultation.date|date:"d/m/Y" }}</h2>
     <p>{{ consultation.professional_name }} · {{ consultation.specialty_label }}</p>
+    {% if consultation.is_patient_record %}
+    <span style="display:inline-flex;align-items:center;gap:5px;margin-top:4px;font-size:11px;
+                 padding:3px 10px;border-radius:20px;font-weight:600;
+                 background:rgba(251,191,36,.12);color:#fbbf24;border:0.5px solid rgba(251,191,36,.3)">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Registro inserido pelo paciente
+    </span>
+    {% endif %}
   </div>
   <div style="display:flex;gap:10px;flex-wrap:wrap">
     {% if allowed_actions.edit %}
@@ -273,7 +281,7 @@
         <p style="color:var(--muted);font-size:13px;padding:8px 0">Nenhuma anamnese registrada para esta consulta.</p>
       {% endif %}
 
-      {% include "consultations/_tab_images.html" with tab_key="anamnese" tab_label="Anamnese" imgs=images_by_tab.anamnese consultation=consultation %}
+      {% include "consultations/_tab_images.html" with tab_key="anamnese" tab_label=evaluation_label imgs=images_by_tab.anamnese consultation=consultation %}
 
       <!-- ── Avaliação clínica: Diagnóstico · Intervenção · Evolução Esperada ── -->
       {% if clinical_intervention or expected_evolution %}

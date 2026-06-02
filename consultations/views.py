@@ -56,7 +56,7 @@ _EVALUATION_LABEL = {
     'PHARMACIST':        'Avaliação Farmacêutica',
     'BIOMEDICO':         'Avaliação Biomédica',
     'ADMIN':             'Avaliação Clínica',
-    'PATIENT':           'Anamnese',
+    'PATIENT':           'Avaliação',
 }
 
 _DIAGNOSIS_LABEL = {
@@ -72,7 +72,7 @@ _DIAGNOSIS_LABEL = {
     'PHARMACIST':        'AVALIAÇÃO FARMACÊUTICA',
     'BIOMEDICO':         'DIAGNÓSTICO BIOMÉDICO',
     'ADMIN':             'DIAGNÓSTICO CLÍNICO',
-    'PATIENT':           'DIAGNÓSTICO',
+    'PATIENT':           'AVALIAÇÃO CLÍNICA',
 }
 
 _CLASSIFICATION_HINT = {
@@ -104,7 +104,7 @@ _BLOCK1_LABEL = {
     'PHARMACIST':        'Avaliação Farmacêutica (CID-10)',
     'BIOMEDICO':         'Diagnóstico Biomédico (CID-10)',
     'ADMIN':             'Diagnóstico Clínico',
-    'PATIENT':           'Diagnóstico',
+    'PATIENT':           'Avaliação Clínica',
 }
 
 # Sub-rótulo do Bloco 1 (natureza dos fatores relacionados)
@@ -384,17 +384,24 @@ class ConsultationDetailView(LoginRequiredMixin, DetailView):
             patient=patient
         ).order_by('-date', '-created_at')[:5]
 
+        # Paciente que criou a consulta manualmente pode gerir seus próprios anexos
+        consultation = self.object
+        is_owner_patient = (
+            not _is_professional(user)
+            and consultation.patient_id == user.pk
+            and consultation.is_patient_record
+        )
         ctx['allowed_actions'] = {
-            'edit':             has_permission(user, 'consultation', 'edit'),
-            'delete':           has_permission(user, 'consultation', 'delete'),
+            'edit':             has_permission(user, 'consultation', 'edit') or is_owner_patient,
+            'delete':           has_permission(user, 'consultation', 'delete') or is_owner_patient,
             'view_anamnese':    has_permission(user, 'anamnese',     'view'),
-            'edit_anamnese':    has_permission(user, 'anamnese',     'edit'),
+            'edit_anamnese':    has_permission(user, 'anamnese',     'edit') or is_owner_patient,
             'view_exams':       has_permission(user, 'exams',        'view'),
             'view_prescription':has_permission(user, 'prescription', 'view'),
             'view_diagnosis':   has_permission(user, 'diagnosis',    'view'),
             'view_images':      has_permission(user, 'images',       'view'),
-            'upload_images':    has_permission(user, 'images',       'create'),
-            'delete_images':    has_permission(user, 'images',       'delete'),
+            'upload_images':    has_permission(user, 'images',       'create') or is_owner_patient,
+            'delete_images':    has_permission(user, 'images',       'delete') or is_owner_patient,
         }
         return ctx
 
@@ -428,6 +435,12 @@ class ConsultationCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.patient = self.request.user
+        # Paciente cria consultas manuais; profissional usa fluxo de atendimento
+        form.instance.record_origin = (
+            Consultation.RecordOrigin.PATIENT_MANUAL
+            if not _is_professional(self.request.user)
+            else Consultation.RecordOrigin.PLATFORM
+        )
         response = super().form_valid(form)
         anamnese_form = AnamneseForm(self.request.POST, prefix='anamnese')
         exames_form = ExameLaboratorialForm(self.request.POST, prefix='exames')

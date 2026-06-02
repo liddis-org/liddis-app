@@ -36,8 +36,9 @@ Pillow>=10.3
 # twilio>=9.0
 
 # ── LUMI — IA Clínica (OpenAI) ────────────────────────────────────────────────
-openai>=1.30          # client oficial OpenAI (gpt-4o-mini)
+openai>=1.30          # client oficial OpenAI (gpt-4o-mini + vision)
 httpx>=0.27           # http client — necessário para ssl_verify no openai client
+pypdf>=3.0            # extração de texto de PDFs para análise pela LUMI
 
 # ── Armazenamento Google Cloud Storage (imagens em produção) ─────────────────
 django-storages[gcs]>=1.14

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Consultas — HealthData Hub{% endblock %}
+{% block title %}Consultas — LIDDIS{% endblock %}
 {% block topbar_title %}{% if is_professional %}Minhas Consultas Realizadas{% else %}Minhas Consultas{% endif %}{% endblock %}
 {% block nav_consultations %}active{% endblock %}
 
@@ -64,6 +64,7 @@
           {% if is_professional %}<th>Paciente</th>{% endif %}
           <th>Profissional</th>
           <th>Especialidade</th>
+          <th>Origem</th>
           <th>Diagnóstico</th>
           <th>Ações</th>
         </tr>
@@ -75,6 +76,19 @@
           {% if is_professional %}<td>{{ c.patient.display_name }}</td>{% endif %}
           <td>{{ c.professional_name }}</td>
           <td><span class="badge badge-teal">{{ c.specialty_label }}</span></td>
+          <td>
+            {% if c.is_patient_record %}
+              <span style="font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;
+                           background:rgba(251,191,36,.15);color:#fbbf24;border:0.5px solid rgba(251,191,36,.3)">
+                Reg. Paciente
+              </span>
+            {% else %}
+              <span style="font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;
+                           background:rgba(0,212,255,.1);color:var(--teal);border:0.5px solid rgba(0,212,255,.2)">
+                Plataforma
+              </span>
+            {% endif %}
+          </td>
           <td class="text-muted">{{ c.diagnosis|default:"—"|truncatechars:50 }}</td>
           <td style="white-space:nowrap">
             <a href="{% url 'consultation_detail' c.pk %}" class="btn btn-secondary btn-sm">Ver</a>

@@ -42,8 +42,24 @@ def lumi_report(request):
     else:
         patient = user
 
+    # Consulta ativa (durante atendimento): profissional passa consultation_id
+    consultation = None
+    if is_professional:
+        try:
+            body = json.loads(request.body)
+            consultation_id = body.get('consultation_id')
+            if consultation_id:
+                from consultations.models import Consultation
+                import uuid
+                consultation = Consultation.objects.filter(
+                    pk=uuid.UUID(str(consultation_id)),
+                    session__professional=request.user,
+                ).first()
+        except Exception:
+            pass  # consultation permanece None
+
     try:
-        report_text = _lumi_service.generate_report(patient, is_professional)
+        report_text = _lumi_service.generate_report(patient, is_professional, consultation=consultation)
     except LumiServiceError as exc:
         return JsonResponse({'error': str(exc)}, status=503)
 
