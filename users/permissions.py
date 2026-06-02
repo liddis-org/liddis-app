@@ -231,8 +231,10 @@ PERMISSIONS: dict[str, dict[str, frozenset[str]]] = {
     },
 
     # ── Paciente ──────────────────────────────────────────────────────────────
+    # Nota: edit/delete de consultas restrito a registros manuais no nível da view
+    # (get_queryset filtra record_origin='patient_manual' para não-profissionais)
     'PATIENT': {
-        'consultation': _V,
+        'consultation': frozenset({'view', 'create', 'edit', 'delete'}),
         'anamnese':     _V,
         'physical_exam':_V,
         'diagnosis':    _V,
@@ -241,7 +243,7 @@ PERMISSIONS: dict[str, dict[str, frozenset[str]]] = {
         'exams':        _V,
         'lab_requests': _V,
         'vitals':       _ALL,           # controla seus próprios sinais vitais
-        'images':       _V,
+        'images':       _VC,            # pode ver e anexar nas suas consultas manuais
         'patient_data': frozenset({'view', 'edit'}),
     },
 }

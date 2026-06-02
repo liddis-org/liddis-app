@@ -465,7 +465,11 @@ class ConsultationUpdateView(LoginRequiredMixin, UpdateView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        return _accessible_consultations(self.request.user)
+        qs = _accessible_consultations(self.request.user)
+        # Segurança: pacientes só editam registros que eles mesmos cadastraram
+        if not _is_professional(self.request.user):
+            qs = qs.filter(record_origin=Consultation.RecordOrigin.PATIENT_MANUAL)
+        return qs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -511,7 +515,11 @@ class ConsultationDeleteView(LoginRequiredMixin, DeleteView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        return _accessible_consultations(self.request.user)
+        qs = _accessible_consultations(self.request.user)
+        # Segurança: pacientes só excluem registros que eles mesmos cadastraram
+        if not _is_professional(self.request.user):
+            qs = qs.filter(record_origin=Consultation.RecordOrigin.PATIENT_MANUAL)
+        return qs
 
     def form_valid(self, form):
         log_access(self.request, 'delete', 'consultation', resource_id=self.object.pk)

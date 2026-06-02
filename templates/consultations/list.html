@@ -92,9 +92,12 @@
           <td class="text-muted">{{ c.diagnosis|default:"—"|truncatechars:50 }}</td>
           <td style="white-space:nowrap">
             <a href="{% url 'consultation_detail' c.pk %}" class="btn btn-secondary btn-sm">Ver</a>
-            <a href="{% url 'consultation_update' c.pk %}" class="btn btn-secondary btn-sm">Editar</a>
-            {% if not is_professional %}
-            <a href="{% url 'consultation_delete' c.pk %}" class="btn btn-danger btn-sm">Excluir</a>
+            {% if is_professional %}
+              <a href="{% url 'consultation_update' c.pk %}" class="btn btn-secondary btn-sm">Editar</a>
+            {% elif c.is_patient_record %}
+              {# Paciente só edita/exclui registros que ele mesmo criou #}
+              <a href="{% url 'consultation_update' c.pk %}" class="btn btn-secondary btn-sm">Editar</a>
+              <a href="{% url 'consultation_delete' c.pk %}" class="btn btn-danger btn-sm">Excluir</a>
             {% endif %}
           </td>
         </tr>
