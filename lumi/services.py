@@ -32,7 +32,14 @@ _SYSTEM_PROMPT = (
     "• NUNCA forneça diagnóstico médico, prescrição farmacológica ou conduta terapêutica.\n"
     "• SEMPRE deixe claro que suas análises são informativas e preventivas.\n"
     "• Em caso de dados insuficientes, informe claramente ao invés de especular.\n"
-    "• Seja analítica, empática e responsável com dados de saúde."
+    "• Seja analítica, empática e responsável com dados de saúde.\n"
+    "RASTREABILIDADE DE ORIGEM:\n"
+    "• O prontuário pode conter dois tipos de registros:\n"
+    "  1) Consultas registradas por PROFISSIONAIS DE SAÚDE — dados clínicos validados.\n"
+    "  2) Consultas inseridas pelo PRÓPRIO PACIENTE — informações auto-relatadas, não validadas clinicamente.\n"
+    "• Ao analisar, diferencie claramente a origem e calibre o peso de cada informação.\n"
+    "• Registros do paciente são valiosos para contexto histórico, mas devem ser interpretados "
+    "em conjunto com avaliações profissionais, quando disponíveis."
 )
 
 _PATIENT_INSTRUCTION = """
@@ -72,7 +79,9 @@ Use EXATAMENTE esta estrutura (inclua apenas seções com dados disponíveis):
 (Aspectos a discutir na próxima consulta)
 
 ## 10. 📝 Observações Gerais
-(Outras informações relevantes e encorajamento)
+(Outras informações relevantes e encorajamento.
+Se houver registros inseridos por você mesmo, mencione: "Algumas informações
+foram inseridas diretamente por você e complementam as avaliações profissionais.")
 
 ---
 ⚕️ *Este relatório é informativo. Consulte sempre um profissional de saúde habilitado.*
@@ -104,6 +113,10 @@ Use EXATAMENTE esta estrutura (inclua apenas seções com dados):
 
 ## 🎯 Sugestões de Acompanhamento
 (Exames complementares, frequência de retorno, encaminhamentos sugeridos)
+
+## ℹ️ Qualidade dos Dados
+(Indique se há registros inseridos pelo paciente vs. registrados por profissionais,
+e como isso impacta a confiabilidade da análise)
 
 ---
 ⚕️ *Análise informativa da LUMI — não substitui avaliação clínica do profissional.*
@@ -518,12 +531,14 @@ class ClinicalContextBuilder:
 
         if ctx.anamneses:
             lines.append("\n─── HISTÓRICO DE CONSULTAS / ANAMNESES ───")
+            lines.append("[FONTE: Profissionais de saúde — dados clinicamente registrados na plataforma]")
             for a in ctx.anamneses:
                 lines.append(a)
                 lines.append("")
 
         if ctx.interventions:
             lines.append("\n─── INTERVENÇÕES CLÍNICAS REGISTRADAS ───")
+            lines.append("[FONTE: Profissionais de saúde — dados clinicamente validados]")
             for i in ctx.interventions:
                 lines.append(i)
                 lines.append("")
@@ -546,7 +561,12 @@ class ClinicalContextBuilder:
                 lines.append(f"• {p}")
 
         if ctx.patient_records:
-            lines.append("\n─── CONSULTAS REGISTRADAS PELO PACIENTE ───")
+            lines.append("\n─── CONSULTAS CADASTRADAS PELO PRÓPRIO PACIENTE ───")
+            lines.append(
+                "[FONTE: Auto-relato do paciente | Não validado clinicamente por profissional.\n"
+                " Pode incluir: consultas externas, atendimentos particulares, exames anteriores.\n"
+                " Interpretar em conjunto com avaliações profissionais quando disponíveis.]"
+            )
             for r in ctx.patient_records:
                 lines.append(r)
                 lines.append("")
@@ -556,6 +576,36 @@ class ClinicalContextBuilder:
             for d in ctx.document_extracts:
                 lines.append(d)
                 lines.append("")
+
+        # Metadados de qualidade — orientam a LUMI sobre confiabilidade dos dados
+        has_professional = bool(ctx.anamneses or ctx.interventions or ctx.evolutions)
+        has_patient_self = bool(ctx.patient_records)
+        lines.append("\n─── QUALIDADE E ORIGEM DOS DADOS ───")
+        if has_professional and has_patient_self:
+            lines.append(
+                "CLASSIFICAÇÃO: PRONTUÁRIO MISTO\n"
+                "Contém registros de PROFISSIONAIS DE SAÚDE (clinicamente validados) "
+                "E AUTO-RELATOS DO PACIENTE (informações complementares, não validadas).\n"
+                "Ao elaborar o relatório: distingua as fontes; mencione que parte das informações "
+                "foi inserida pelo paciente e deve ser interpretada em conjunto com avaliações profissionais."
+            )
+        elif has_professional:
+            lines.append(
+                "CLASSIFICAÇÃO: PRONTUÁRIO PROFISSIONAL\n"
+                "Registros gerados exclusivamente por profissionais de saúde via plataforma LIDDIS."
+            )
+        elif has_patient_self:
+            lines.append(
+                "CLASSIFICAÇÃO: REGISTROS AUTO-RELATADOS\n"
+                "Dados inseridos pelo próprio paciente. Sem avaliações de profissionais disponíveis.\n"
+                "Deixe claro no relatório que todas as informações são auto-relatadas "
+                "e recomende avaliação profissional para validação clínica."
+            )
+        else:
+            lines.append(
+                "CLASSIFICAÇÃO: DADOS BÁSICOS\n"
+                "Apenas perfil clínico e sinais vitais. Sem histórico de consultas registrado."
+            )
 
         return "\n".join(lines)
 
