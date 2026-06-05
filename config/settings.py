@@ -294,9 +294,19 @@ MEDIA_URL  = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # ── Google Cloud Storage (produção) ───────────────────────────────────────────
-# Em Cloud Run o filesystem é efêmero — todos os uploads devem ir para GCS.
+# Em Railway/Cloud Run o filesystem é efêmero — uploads devem ir para GCS.
 # Variável obrigatória em prod: GCS_BUCKET_NAME
 GCS_BUCKET_NAME = config('GCS_BUCKET_NAME', default='')
+
+# Railway não suporta arquivos de credencial — aceita o JSON inline como variável
+_GCS_CREDENTIALS_JSON = config('GOOGLE_APPLICATION_CREDENTIALS_JSON', default='')
+if _GCS_CREDENTIALS_JSON:
+    import json, tempfile
+    _cred_file = tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False)
+    json.dump(json.loads(_GCS_CREDENTIALS_JSON), _cred_file)
+    _cred_file.flush()
+    os.environ.setdefault('GOOGLE_APPLICATION_CREDENTIALS', _cred_file.name)
+
 if not DEBUG and GCS_BUCKET_NAME:
     DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
     GS_BUCKET_NAME       = GCS_BUCKET_NAME
