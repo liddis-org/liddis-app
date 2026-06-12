@@ -7,9 +7,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ── Segurança Principal ────────────────────────────────────────────────────────
 # python-decouple lê do .env automaticamente e lança UndefinedValueError
 # se uma variável obrigatória (sem default) não estiver definida.
-SECRET_KEY    = config('SECRET_KEY')
-DEBUG         = config('DEBUG', default=False, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
+SECRET_KEY = config('SECRET_KEY')
+DEBUG      = config('DEBUG', default=False, cast=bool)
+
+# Em produção, --set-env-vars do gcloud usa vírgula como separador entre variáveis,
+# então "ALLOWED_HOSTS=a.com,b.com" só definiria "a.com". Por isso hardcodamos os
+# hosts de produção aqui e usamos o env var apenas em desenvolvimento.
+if DEBUG:
+    ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
+else:
+    ALLOWED_HOSTS = [
+        'liddis.com.br',
+        'www.liddis.com.br',
+        '.run.app',          # wildcard: cobre liddis-backend-*.run.app (Cloud Run)
+    ]
 
 # Guard de segurança: impede subir para produção com chave fraca ou debug ativo
 _INSECURE_KEYS = {'dev-secret-key-inseguro-troque-em-producao', 'change-me', 'insecure'}
@@ -291,11 +302,16 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = [o for o in config('CORS_ORIGINS', default='http://localhost:5173,http://localhost:3000').split(',') if o]
 
 # ── CSRF Trusted Origins ───────────────────────────────────────────────────────
-# Necessário para requisições POST de domínios externos (frontend separado, Railway, etc.)
-# Em desenvolvimento: localhost já é confiável por padrão.
-# Em produção: defina CSRF_TRUSTED_ORIGINS=https://seudominio.com no .env
-_csrf_default = 'http://localhost:8000,http://127.0.0.1:8000' if DEBUG else ''
-CSRF_TRUSTED_ORIGINS = [o for o in os.getenv('CSRF_TRUSTED_ORIGINS', _csrf_default).split(',') if o]
+# Hardcodado em produção pelo mesmo motivo do ALLOWED_HOSTS (vírgulas no --set-env-vars).
+if DEBUG:
+    _csrf_default = 'http://localhost:8000,http://127.0.0.1:8000'
+    CSRF_TRUSTED_ORIGINS = [o for o in os.getenv('CSRF_TRUSTED_ORIGINS', _csrf_default).split(',') if o]
+else:
+    CSRF_TRUSTED_ORIGINS = [
+        'https://liddis.com.br',
+        'https://www.liddis.com.br',
+        f'https://liddis-backend-tyi23kxkeq-rj.a.run.app',
+    ]
 
 # ── Arquivos Estáticos ─────────────────────────────────────────────────────────
 STATIC_URL       = '/static/'
