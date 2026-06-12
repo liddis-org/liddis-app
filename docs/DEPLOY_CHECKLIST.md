@@ -1,310 +1,525 @@
-# Checklist de Deploy — LIDDIS
-## Supabase + Google Cloud Run + Google OAuth
+# LIDDIS — Guia Completo de Deploy e Manutenção
 
 ---
 
-## PARTE 1 — Supabase (Banco de Dados PostgreSQL)
+## VISÃO GERAL DO PROJETO
 
-### 1.1 Criar Projeto no Supabase
-1. Acesse https://supabase.com e faça login
-2. Clique em **New Project**
-3. Preencha:
-   - **Name:** liddis-producao
-   - **Database Password:** gere uma senha forte (guarde em local seguro)
-   - **Region:** South America (São Paulo) → `sa-east-1`
-4. Aguarde ~2 minutos para o projeto ser criado
+LIDDIS é uma plataforma clínica com IA (LUMI) para gestão de consultas médicas.
 
-### 1.2 Obter a Connection String
-1. No projeto criado → **Project Settings** (ícone de engrenagem)
-2. Vá em **Database** → **Connection string**
-3. Selecione a aba **URI**
-4. **IMPORTANTE:** Use o **Connection Pooler** (porta **6543**, modo Transaction)
-   - Motivo: Cloud Run é serverless, muitas conexões simultâneas
-   - A URI terá formato: `postgresql://postgres.[REF]:[SENHA]@aws-0-sa-east-1.pooler.supabase.com:6543/postgres`
-5. Copie essa URI para `DATABASE_URL` no seu `.env`
+**Stack de produção:**
 
-### 1.3 Configurar SSL (já configurado)
-O `settings.py` já exige SSL em produção (`ssl_require=not DEBUG`).
-Supabase aceita conexões SSL por padrão. ✅
-
-### 1.4 Aplicar Migrações no Supabase
-```bash
-# No terminal, com DATABASE_URL do Supabase no .env:
-python manage.py migrate
-
-# Criar superusuário admin
-python manage.py createsuperuser
+```
+Usuário
+   │  https://liddis.com.br
+   ▼
+Hostinger DNS
+   │  Nameservers: alan.ns.cloudflare.com / paityn.ns.cloudflare.com
+   ▼
+Cloudflare (proxy + SSL gratuito)
+   │  DNS: CNAME @ → liddis-backend-tyi23kxkeq-rj.a.run.app  (proxy ativo)
+   │  SSL: Full/Completo
+   │
+   ├─ Cloudflare Worker: square-shadow-58ea
+   │    Routes: liddis.com.br/*  e  *.liddis.com.br/*
+   │    Função: proxy reverso — repassa requisições ao Cloud Run
+   ▼
+Google Cloud Run — southamerica-east1
+   Serviço : liddis-backend
+   URL     : https://liddis-backend-tyi23kxkeq-rj.a.run.app
+   Imagem  : southamerica-east1-docker.pkg.dev/liddis/liddis/liddis-backend
+   │
+   ├─ Secrets    → Google Secret Manager
+   ├─ Banco      → Supabase PostgreSQL (sa-east-1)
+   └─ Arquivos   → Google Cloud Storage (bucket: liddis-media)
 ```
 
-### 1.5 Configurar Site no Django Admin
-```bash
-python manage.py setup_site
-```
-Depois, no Admin (https://SEU-DOMINIO.run.app/admin) → Sites → altere o domínio.
+**Por que Cloudflare Worker?**
+A região `southamerica-east1` não suporta domain mappings nativos no Cloud Run.
+O Worker intercepta os requests, repassa ao Cloud Run e o Django corrige o Host
+internamente via `FixCloudRunHostMiddleware`.
 
 ---
 
-## PARTE 2 — Google Cloud Run
+## ESTRUTURA DO PROJETO
 
-### 2.1 Pré-requisitos
-```bash
-# Instalar Google Cloud CLI: https://cloud.google.com/sdk/docs/install
-gcloud auth login
-gcloud config set project SEU-PROJECT-ID
+```
+liddis-app/
+├── config/
+│   ├── settings.py          # Configurações Django (debug, db, storage, oauth…)
+│   ├── urls.py              # Rotas raiz
+│   ├── wsgi.py
+│   └── middleware.py        # FixCloudRunHostMiddleware + RemoveWWWMiddleware
+├── users/                   # App de autenticação e perfis
+│   ├── models.py            # CustomUser, PatientProfessionalAccess, PlatformFeedback…
+│   ├── views.py
+│   ├── adapters.py          # CustomAccountAdapter, CustomSocialAccountAdapter (Google OAuth)
+│   ├── backends.py          # EmailOrUsernameBackend, TestModeBackend
+│   └── middleware.py        # EmailVerificationMiddleware, RBACPatientAccessMiddleware
+├── consultations/           # App de consultas clínicas
+│   ├── models.py            # Consultation, ConsultationImage, DiagnosisCID, Evolution…
+│   └── views.py             # upload_image, attachment_proxy, consultas CRUD
+├── lumi/                    # IA clínica (LUMI)
+│   └── services.py          # ClinicalContextBuilder, LumiService (OpenAI gpt-4o-mini)
+├── templates/               # HTML (login, dashboard, consultas, etc.)
+├── static/                  # CSS/JS estáticos
+├── tests/                   # Testes pytest
+├── docs/
+│   └── DEPLOY_CHECKLIST.md  # Este arquivo
+├── .github/
+│   └── workflows/
+│       └── deploy.yml       # CI/CD: push → build Docker → deploy Cloud Run
+├── Dockerfile               # Multi-stage build (python:3.11-slim)
+├── requirements.txt         # Dependências de produção
+└── requirements-dev.txt     # Dependências de desenvolvimento
 ```
 
-### 2.2 Habilitar APIs necessárias
+**Principais dependências:**
+
+| Pacote | Finalidade |
+|--------|-----------|
+| Django 5.2 | Framework principal |
+| django-allauth | Login normal + Google OAuth |
+| django-axes | Rate limiting / bloqueio por tentativas de login |
+| django-storages[gcs] | Upload de arquivos no Google Cloud Storage |
+| whitenoise | Arquivos estáticos sem nginx adicional |
+| dj-database-url | Lê DATABASE_URL do Supabase |
+| openai | LUMI — IA clínica (gpt-4o-mini + Vision) |
+| pypdf | Extração de texto de PDFs para a LUMI |
+| sentry-sdk | Monitoramento de erros em produção |
+| gunicorn | Servidor WSGI de produção |
+
+---
+
+## COMO FAZER DEPLOY DE NOVAS ATUALIZAÇÕES
+
+### Deploy normal (fluxo padrão)
+
+Qualquer push para `main` dispara o deploy automaticamente:
+
 ```bash
-gcloud services enable \
-  run.googleapis.com \
-  cloudbuild.googleapis.com \
-  artifactregistry.googleapis.com \
-  secretmanager.googleapis.com
+git add .
+git commit -m "feat: descrição da mudança"
+git push origin main
 ```
 
-### 2.3 Criar repositório de imagens Docker
-```bash
-gcloud artifacts repositories create liddis \
-  --repository-format=docker \
-  --location=southamerica-east1 \
-  --description="Imagens Docker do LIDDIS"
+O GitHub Actions (`.github/workflows/deploy.yml`) executa:
+1. Build da imagem Docker (multi-stage, ~2-3 min)
+2. Push para Artifact Registry
+3. Deploy no Cloud Run com todas as variáveis
+4. O Cloud Run executa `python manage.py migrate --noinput` automaticamente na inicialização
+
+Acompanhe em: **GitHub → Actions → Deploy to Cloud Run**
+
+> **Atenção:** O deploy leva 3-5 minutos. Requisições durante esse período são
+> servidas pela versão anterior até o novo container estar pronto (zero-downtime).
+
+---
+
+### Alterar variáveis de ambiente
+
+Edite `.github/workflows/deploy.yml` na linha `--set-env-vars=`:
+
+```yaml
+--set-env-vars=DEBUG=False,ALLOWED_HOSTS=liddis.com.br,...
 ```
 
-### 2.4 Armazenar segredos no Secret Manager
+Faça commit e push — o deploy aplica as novas variáveis.
+
+**Variáveis atuais em produção:**
+
+| Variável | Valor |
+|----------|-------|
+| `DEBUG` | `False` |
+| `ALLOWED_HOSTS` | `liddis.com.br,www.liddis.com.br,liddis-backend-tyi23kxkeq-rj.a.run.app` |
+| `EMAIL_PROVIDER` | `gmail` |
+| `GMAIL_USER` | `liddis.org@gmail.com` |
+| `DEFAULT_FROM_EMAIL` | `liddis.org@gmail.com` |
+| `SITE_NAME` | `LIDDIS` |
+| `CSRF_TRUSTED_ORIGINS` | `https://liddis.com.br,https://www.liddis.com.br,...` |
+| `SITE_DOMAIN` | `liddis.com.br` |
+| `GCS_BUCKET_NAME` | `liddis-media` |
+
+---
+
+### Alterar secrets (DATABASE_URL, SECRET_KEY, etc.)
+
+Os secrets ficam no **Google Secret Manager**. Para atualizar:
+
 ```bash
-# SECRET_KEY
-echo -n "SUA_SECRET_KEY_FORTE" | \
-  gcloud secrets create liddis-secret-key --data-file=-
-
-# DATABASE_URL (Supabase)
-echo -n "postgresql://postgres.[REF]:..." | \
-  gcloud secrets create liddis-database-url --data-file=-
-
-# Google OAuth
-echo -n "SEU_CLIENT_ID.apps.googleusercontent.com" | \
-  gcloud secrets create liddis-google-client-id --data-file=-
-
-echo -n "GOCSPX-SEU_SECRET" | \
-  gcloud secrets create liddis-google-secret --data-file=-
-
-# Resend API Key (e-mail)
-echo -n "re_SUA_API_KEY" | \
-  gcloud secrets create liddis-resend-key --data-file=-
+# Atualizar um secret existente (exemplo: DATABASE_URL)
+echo -n "postgresql://nova-url..." | \
+  gcloud secrets versions add liddis-database-url --data-file=-
 ```
 
-### 2.5 Dar permissão ao Cloud Build
+O Cloud Run usa `:latest` — a nova versão é usada no próximo deploy.
+
+**Secrets configurados:**
+
+| Secret no GCP | Variável injetada |
+|---------------|------------------|
+| `liddis-secret-key` | `SECRET_KEY` |
+| `liddis-database-url` | `DATABASE_URL` |
+| `liddis-google-client-id` | `GOOGLE_CLIENT_ID` |
+| `liddis-google-secret` | `GOOGLE_SECRET` |
+| `liddis-gmail-app-password` | `GMAIL_APP_PASSWORD` |
+| `liddis-openai-api-key` | `OPENAI_API_KEY` |
+
+---
+
+### Criar uma nova migration (alteração de models)
+
 ```bash
-# Obter número do projeto
-PROJECT_NUMBER=$(gcloud projects describe $(gcloud config get-value project) --format='value(projectNumber)')
+# 1. Edite o model em users/models.py ou consultations/models.py
 
-# Service Account do Cloud Build
-SA="$PROJECT_NUMBER@cloudbuild.gserviceaccount.com"
+# 2. Gere a migration localmente
+python manage.py makemigrations
 
-# Permissões necessárias
-gcloud projects add-iam-policy-binding $(gcloud config get-value project) \
-  --member="serviceAccount:$SA" \
-  --role="roles/run.admin"
+# 3. Verifique o arquivo gerado em users/migrations/ ou consultations/migrations/
 
-gcloud projects add-iam-policy-binding $(gcloud config get-value project) \
-  --member="serviceAccount:$SA" \
-  --role="roles/secretmanager.secretAccessor"
-
-gcloud projects add-iam-policy-binding $(gcloud config get-value project) \
-  --member="serviceAccount:$SA" \
-  --role="roles/iam.serviceAccountUser"
+# 4. Commit INCLUINDO o arquivo de migration
+git add .
+git commit -m "feat: adicionar campo X ao model Y"
+git push origin main
 ```
 
-### 2.6 Build e Deploy manual (primeira vez)
+> O Dockerfile executa `migrate --noinput` na inicialização do container.
+> Nunca suba código sem a migration correspondente — o deploy vai falhar.
+
+---
+
+### Adicionar uma nova dependência Python
+
 ```bash
-# Na raiz do projeto:
-gcloud builds submit --config cloudbuild.yaml
+# 1. Instale e teste localmente
+pip install nome-do-pacote
+
+# 2. Adicione ao requirements.txt (com versão mínima)
+echo "nome-do-pacote>=1.0" >> requirements.txt
+
+# 3. Commit e push
+git add requirements.txt
+git commit -m "chore: adicionar nome-do-pacote"
+git push origin main
 ```
 
-### 2.7 Configurar CI/CD automático
-1. Google Cloud Console → Cloud Build → **Triggers**
-2. Clique em **Create Trigger**
-3. Conecte seu repositório GitHub
-4. Configurações:
-   - **Event:** Push to a branch
-   - **Branch:** `^main$`
-   - **Configuration:** Cloud Build configuration file (`cloudbuild.yaml`)
-5. Salve → agora cada push em `main` faz deploy automático
+---
 
-### 2.8 Verificar deploy
+## CLOUDFLARE — CONFIGURAÇÃO COMPLETA
+
+### DNS (configurado na Hostinger para usar nameservers do Cloudflare)
+
+| Tipo | Nome | Valor | Proxy |
+|------|------|-------|-------|
+| CNAME | @ | liddis-backend-tyi23kxkeq-rj.a.run.app | ✅ Ativo |
+| CNAME | www | liddis-backend-tyi23kxkeq-rj.a.run.app | ✅ Ativo |
+
+> O proxy (nuvem laranja) **deve estar ativo**. Com proxy desativado o Worker não intercepta.
+
+### SSL/TLS
+
+Modo: **Full / Completo** — não usar "Flexível" (causaria loop de redirect).
+
+### Cloudflare Worker — `square-shadow-58ea`
+
+**Acesse:** Cloudflare Dashboard → Workers & Pages → square-shadow-58ea → Edit code
+
+**Código atual do Worker:**
+
+```javascript
+export default {
+  async fetch(request) {
+    const url = new URL(request.url);
+    const targetUrl = new URL(
+      url.pathname + url.search,
+      'https://liddis-backend-tyi23kxkeq-rj.a.run.app'
+    );
+
+    const headers = new Headers(request.headers);
+    headers.delete('host');
+
+    return fetch(targetUrl.toString(), {
+      method: request.method,
+      headers: headers,
+      body: ['GET', 'HEAD'].includes(request.method) ? null : request.body,
+      redirect: 'manual',
+    });
+  }
+};
+```
+
+> O Worker apenas repassa as requisições ao Cloud Run.
+> A correção do Host para OAuth é feita pelo Django via `FixCloudRunHostMiddleware`.
+
+### Routes do Worker
+
+| Route | Cobre |
+|-------|-------|
+| `liddis.com.br/*` | Domínio raiz |
+| `*.liddis.com.br/*` | www e subdomínios |
+
+---
+
+## GOOGLE CLOUD — INFRAESTRUTURA
+
+### Cloud Run
+
 ```bash
+# Ver status e URL do serviço
 gcloud run services describe liddis-backend \
   --region=southamerica-east1 \
   --format="value(status.url)"
+
+# Logs em tempo real
+gcloud run logs tail liddis-backend --region=southamerica-east1
+
+# Forçar novo deploy (sem alterar código)
+gcloud run deploy liddis-backend \
+  --region=southamerica-east1 \
+  --image=southamerica-east1-docker.pkg.dev/liddis/liddis/liddis-backend:latest
 ```
 
----
+### Google Cloud Storage (uploads/anexos)
 
-## PARTE 3 — Google OAuth
+Bucket: `liddis-media`
+Service Account: `728883718504-compute@developer.gserviceaccount.com`
+Permissão: `roles/storage.objectAdmin`
 
-### 3.1 Configurar no Google Cloud Console
-1. Acesse https://console.cloud.google.com
-2. **APIs & Services** → **Credentials**
-3. Clique em **Create Credentials** → **OAuth 2.0 Client IDs**
-4. Application type: **Web application**
-5. Name: `LIDDIS`
-6. **Authorized JavaScript origins:**
-   ```
-   https://SEU-SERVICO.a.run.app
-   http://localhost:8000   ← para desenvolvimento
-   ```
-7. **Authorized redirect URIs:**
-   ```
-   https://SEU-SERVICO.a.run.app/accounts/google/login/callback/
-   http://localhost:8000/accounts/google/login/callback/   ← para desenvolvimento
-   ```
-8. Clique em **Create**
-9. Copie o **Client ID** e **Client Secret**
-
-### 3.2 Configurar no Django Admin
-1. Acesse `/admin/` no seu domínio
-2. Vá em **Social Applications** (django-allauth)
-3. Clique em **Add Social Application**
-4. Preencha:
-   - **Provider:** Google
-   - **Name:** Google OAuth
-   - **Client ID:** (seu Client ID)
-   - **Secret Key:** (seu Client Secret)
-   - **Sites:** mova o site da esquerda para a direita
-5. Salve
-
-### 3.3 Testar OAuth
-1. Acesse a página de login
-2. Clique em "Entrar com Google"
-3. Autorize o acesso
-4. Deve redirecionar para `/dashboard/`
-
----
-
-## PARTE 4 — Variáveis de Ambiente Finais
-
-Variáveis que o Cloud Run precisa ter configuradas (via Secret Manager ou direto):
-
-| Variável | Obrigatória | Fonte |
-|---------|------------|-------|
-| SECRET_KEY | ✅ | Secret Manager |
-| DATABASE_URL | ✅ | Secret Manager (Supabase) |
-| GOOGLE_CLIENT_ID | ✅ | Secret Manager |
-| GOOGLE_SECRET | ✅ | Secret Manager |
-| DEBUG | ✅ | direto: `False` |
-| ALLOWED_HOSTS | ✅ | direto: URL do Cloud Run |
-| EMAIL_PROVIDER | ✅ | direto: `resend` |
-| RESEND_API_KEY | ✅ | Secret Manager |
-| CSRF_TRUSTED_ORIGINS | ✅ | direto: URL completa com https:// |
-| SITE_DOMAIN | ✅ | direto: URL do Cloud Run |
-| SENTRY_DSN | Recomendado | Secret Manager |
-
----
-
-## PARTE 5 — Guia de Testes Passo a Passo
-
-### 5.1 Instalar dependências de teste
 ```bash
-# Ative o venv primeiro
+# Verificar se arquivos estão sendo salvos corretamente
+gcloud storage objects list gs://liddis-media --limit=10
+
+# Listar por pasta
+gcloud storage objects list gs://liddis-media/consultations/
+
+# Copiar arquivo do bucket para local (diagnóstico)
+gcloud storage cp gs://liddis-media/consultations/foto.jpg ./
+```
+
+> **Importante:** `DEFAULT_FILE_STORAGE` foi removido no Django 5.1.
+> O projeto usa `STORAGES['default']` (Django 4.2+) com `GoogleCloudStorage`.
+> Arquivos em DEV vão para o filesystem local (`media/`).
+
+---
+
+## GOOGLE OAUTH — CONFIGURAÇÃO
+
+### Google Cloud Console
+
+**APIs & Services → Credentials → OAuth 2.0 Client IDs**
+
+**Authorized JavaScript origins:**
+```
+https://liddis.com.br
+https://www.liddis.com.br
+http://localhost:8000
+```
+
+**Authorized redirect URIs:**
+```
+https://liddis.com.br/accounts/google/login/callback/
+https://www.liddis.com.br/accounts/google/login/callback/
+https://liddis-backend-tyi23kxkeq-rj.a.run.app/accounts/google/login/callback/
+http://localhost:8000/accounts/google/login/callback/
+```
+
+### Por que o OAuth funciona com o Worker
+
+O Cloudflare Worker mantém `Host: *.run.app` para o Cloud Run aceitar a requisição.
+O middleware `FixCloudRunHostMiddleware` (primeiro na chain de middlewares) corrige
+o host para `liddis.com.br` antes que qualquer código o leia. Assim o allauth constrói
+`redirect_uri=https://liddis.com.br/accounts/google/login/callback/` e o callback
+OAuth retorna pelo Cloudflare com o cookie de sessão correto.
+
+---
+
+## DESENVOLVIMENTO LOCAL
+
+### Setup inicial
+
+```bash
+# Clone e crie o ambiente
+git clone https://github.com/liddis-org/liddis-app.git
+cd liddis-app
+python -m venv venv
+venv\Scripts\activate        # Windows
+# source venv/bin/activate   # Linux/Mac
+
 pip install -r requirements-dev.txt
+
+# Copie e configure o .env
+copy .env.example .env
+# Edite .env com suas variáveis locais
 ```
 
-### 5.2 Configurar ambiente de teste
-```bash
-# Copiar .env de desenvolvimento
-copy dev-env\.env.development .env    # Windows
-cp dev-env/.env.development .env      # Linux/Mac
+### Variáveis mínimas no `.env` local
+
+```env
+SECRET_KEY=qualquer-chave-forte-para-desenvolvimento
+DEBUG=True
+USE_SQLITE=True              # usa SQLite local (sem precisar do Supabase)
+TEST_MODE=True               # aceita qualquer senha no login (só em DEBUG)
+OPENAI_API_KEY=sk-...        # necessário para testar a LUMI
 ```
 
-### 5.3 Rodar todos os testes
+### Rodar o servidor
+
 ```bash
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
+```
+
+Acesse: http://localhost:8000
+
+### Rodar testes
+
+```bash
+# Todos os testes
 pytest tests\ -v
-```
 
-### 5.4 Rodar testes por categoria
-```bash
-# Apenas models de usuários
-pytest tests\test_models_users.py -v
-
-# Apenas models de consultas
-pytest tests\test_models_consultations.py -v
-
-# Apenas autenticação
-pytest tests\test_auth.py -v
-
-# Apenas permissões RBAC
-pytest tests\test_permissions.py -v
-```
-
-### 5.5 Rodar com cobertura de código
-```bash
+# Com cobertura
 pytest tests\ --cov=users --cov=consultations --cov-report=html -v
-# Abrir relatório:
-start htmlcov\index.html    # Windows
-open htmlcov/index.html     # Mac
-```
+start htmlcov\index.html     # Windows — abre relatório no browser
 
-### 5.6 Rodar teste específico
-```bash
-# Sintaxe: pytest caminho::Classe::metodo
-pytest tests\test_permissions.py::TestHasPermission::test_medico_pode_criar_consulta -v
-```
-
-### 5.7 Rodar com DEBUG detalhado (falhas)
-```bash
-pytest tests\ -v --tb=long
-```
-
-### 5.8 Usar o script automático (Windows)
-```bash
-dev-env\executar_testes.bat           # todos os testes
-dev-env\executar_testes.bat models    # só models
-dev-env\executar_testes.bat auth      # só auth
-dev-env\executar_testes.bat cobertura # com relatório HTML
+# Scripts automatizados (Windows)
+dev-env\executar_testes.bat
+dev-env\executar_testes.bat cobertura
 ```
 
 ---
 
-## PARTE 6 — Checklist Final Antes do Deploy
+## CHECKLIST PRÉ-DEPLOY
 
 ```
-PRÉ-DEPLOY:
-[ ] requirements.txt atualizado (python-decouple incluído)
-[ ] Todas as migrations aplicadas localmente sem erro
-[ ] Tests passando: pytest tests\ -v
-[ ] .env.production preenchido completamente (sem "SUBSTITUA")
-[ ] SECRET_KEY forte (>50 chars, aleatória)
-[ ] DEBUG=False no .env de produção
-[ ] ALLOWED_HOSTS inclui domínio do Cloud Run
+CÓDIGO:
+[ ] requirements.txt atualizado com novas dependências
+[ ] Migrations geradas para alterações de models
+[ ] Testes passando: pytest tests\ -v
+[ ] DEBUG=False no deploy.yml (nunca subir True para produção)
 
-SUPABASE:
-[ ] Projeto Supabase criado em sa-east-1
-[ ] Connection Pooler URL copiada (porta 6543)
-[ ] DATABASE_URL testada localmente
-[ ] Migrações aplicadas: python manage.py migrate
-[ ] Superusuário criado: python manage.py createsuperuser
+CLOUDFLARE:
+[ ] Nameservers Cloudflare ativos na Hostinger
+[ ] DNS CNAME @ e www com proxy ativo (nuvem laranja)
+[ ] SSL: Full/Completo
+[ ] Worker square-shadow-58ea deployado e routes configuradas
 
 GOOGLE CLOUD:
-[ ] APIs habilitadas (Cloud Run, Cloud Build, Artifact Registry, Secret Manager)
-[ ] Repositório Artifact Registry criado
-[ ] Todos os secrets criados no Secret Manager
-[ ] Cloud Build SA tem permissões corretas
+[ ] Secrets no Secret Manager atualizados
+[ ] ALLOWED_HOSTS e CSRF_TRUSTED_ORIGINS incluem liddis.com.br
+[ ] Bucket liddis-media existe com permissão storage.objectAdmin
 
 GOOGLE OAUTH:
-[ ] OAuth Client ID criado no Google Console
-[ ] Redirect URIs configurados (produção e desenvolvimento)
-[ ] Social Application criada no Django Admin
-[ ] Fluxo OAuth testado manualmente
-
-E-MAIL:
-[ ] Domínio verificado no Resend/SendGrid
-[ ] RESEND_API_KEY configurada
-[ ] Envio de OTP testado manualmente
+[ ] Redirect URIs incluem https://liddis.com.br/accounts/google/login/callback/
+[ ] GOOGLE_CLIENT_ID e GOOGLE_SECRET nos secrets do GCP
 
 PÓS-DEPLOY:
-[ ] Acesse /admin/ e configure o Site (domain + name)
-[ ] Teste login normal
-[ ] Teste login com Google
-[ ] Teste registro + verificação de e-mail
-[ ] Verifique Sentry recebendo eventos
-[ ] Monitore logs: gcloud run logs tail liddis-backend --region=southamerica-east1
+[ ] https://liddis.com.br abre corretamente
+[ ] Login por e-mail funcionando
+[ ] Login com Google funcionando
+[ ] Upload de anexo em consulta → verificar em gcloud storage objects list gs://liddis-media
+[ ] Admin acessível: https://liddis.com.br/admin/
+[ ] LUMI gerando relatório sem erros
+[ ] Monitorar logs: gcloud run logs tail liddis-backend --region=southamerica-east1
+```
+
+---
+
+## DIAGNÓSTICO DE PROBLEMAS
+
+### Site retorna 500 ou não sobe
+
+```bash
+# Ver erros de inicialização do Django
+gcloud run logs tail liddis-backend --region=southamerica-east1
+
+# Causas comuns:
+# - Migration faltando (commitar o arquivo de migration gerado)
+# - Middleware referenciado no settings.py mas arquivo não commitado
+# - Secret no GCP com valor incorreto ou não criado
+# - Dependência no requirements.txt mas não instalada na imagem
+```
+
+### Login com Google não funciona
+
+Verificar na ordem:
+1. `GOOGLE_CLIENT_ID` e `GOOGLE_SECRET` corretos no Secret Manager
+2. Redirect URIs cadastrados no Google Console (incluir a URL do Cloud Run)
+3. `FixCloudRunHostMiddleware` é o **primeiro** middleware em `settings.py`
+4. `ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'` em produção
+
+### Uploads/anexos somem
+
+```bash
+# Verificar se estão chegando ao bucket
+gcloud storage objects list gs://liddis-media --limit=10
+
+# Se vazio: verificar STORAGES['default'] em settings.py
+# (DEFAULT_FILE_STORAGE foi removido no Django 5.1 — usar STORAGES dict)
+
+# Verificar permissão da service account
+gcloud projects get-iam-policy liddis \
+  --flatten="bindings[].members" \
+  --filter="bindings.members:728883718504-compute@developer.gserviceaccount.com"
+```
+
+### Erros de CSRF
+
+Verificar se `CSRF_TRUSTED_ORIGINS` no `deploy.yml` inclui `https://liddis.com.br`.
+
+### Sessão expira rápido ou perde login
+
+`SESSION_COOKIE_AGE = 60 * 60 * 8` (8 horas) está em `settings.py`.
+Para aumentar, altere o valor e faça push.
+
+---
+
+## ADICIONANDO NOVOS SECRETS
+
+```bash
+# Criar novo secret
+echo -n "VALOR-DO-SECRET" | gcloud secrets create liddis-novo-secret --data-file=-
+
+# Conceder acesso ao Cloud Run
+gcloud secrets add-iam-policy-binding liddis-novo-secret \
+  --member="serviceAccount:728883718504-compute@developer.gserviceaccount.com" \
+  --role="roles/secretmanager.secretAccessor"
+
+# Adicionar ao deploy.yml na linha --set-secrets=
+# liddis-novo-secret=liddis-novo-secret:latest
+
+# E no settings.py
+# NOVA_VARIAVEL = config('NOVA_VARIAVEL', default='')
+```
+
+---
+
+## GITHUB ACTIONS — CI/CD
+
+Arquivo: `.github/workflows/deploy.yml`
+
+**Secrets necessários no repositório GitHub:**
+
+| Secret GitHub | Descrição |
+|---------------|-----------|
+| `GCP_WORKLOAD_IDENTITY_PROVIDER` | Provider do Workload Identity Federation |
+| `GCP_SERVICE_ACCOUNT` | Email da service account do GCP |
+
+Configure em: GitHub → Repositório → Settings → Secrets and variables → Actions
+
+**Fluxo completo a cada `git push origin main`:**
+
+```
+git push origin main
+       │
+       ▼
+GitHub Actions
+       ├── Checkout do código
+       ├── Autenticação GCP (Workload Identity Federation — sem senha)
+       ├── docker build (multi-stage, ~2 min)
+       ├── docker push → Artifact Registry
+       └── gcloud run deploy liddis-backend
+                  │
+                  └── Container inicia:
+                       ├── python manage.py migrate --noinput
+                       └── gunicorn config.wsgi:application
 ```
