@@ -57,6 +57,7 @@ OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
 # ── Middleware ─────────────────────────────────────────────────────────────────
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'config.middleware.RemoveWWWMiddleware',         # www → sem www (301 permanente)
     'whitenoise.middleware.WhiteNoiseMiddleware',    # arquivos estáticos em produção
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -177,8 +178,19 @@ if not DEBUG:
     CSRF_COOKIE_SECURE               = True
     SECURE_CONTENT_TYPE_NOSNIFF      = True
     SECURE_BROWSER_XSS_FILTER        = True
+    # Permissions-Policy: limita APIs do browser não utilizadas
+    PERMISSIONS_POLICY = {
+        'geolocation':        [],
+        'microphone':         [],
+        'camera':             [],
+        'payment':            [],
+        'usb':                [],
+        'interest-cohort':    [],   # desativa FLoC/Topics
+    }
 
 X_FRAME_OPTIONS = 'DENY'
+SECURE_REFERRER_POLICY         = 'strict-origin-when-cross-origin'
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
 
 # ── Rate Limiting — django-axes ────────────────────────────────────────────────
 AXES_ENABLED              = True
@@ -284,29 +296,40 @@ CORS_ALLOWED_ORIGINS = [o for o in config('CORS_ORIGINS', default='http://localh
 _csrf_default = 'http://localhost:8000,http://127.0.0.1:8000' if DEBUG else ''
 CSRF_TRUSTED_ORIGINS = [o for o in os.getenv('CSRF_TRUSTED_ORIGINS', _csrf_default).split(',') if o]
 
-# ── Arquivos Estáticos (whitenoise em produção) ────────────────────────────────
+# ── Arquivos Estáticos ─────────────────────────────────────────────────────────
 STATIC_URL       = '/static/'
 STATIC_ROOT      = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL  = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # ── Google Cloud Storage (produção) ───────────────────────────────────────────
-# Em Cloud Run o filesystem é efêmero — todos os uploads devem ir para GCS.
-# Variável obrigatória em prod: GCS_BUCKET_NAME
+# Em Cloud Run o filesystem é efêmero — todos os uploads DEVEM ir para GCS.
+# DEFAULT_FILE_STORAGE foi removido no Django 5.1 — use STORAGES['default'].
 GCS_BUCKET_NAME = config('GCS_BUCKET_NAME', default='')
+
+_default_file_backend = 'django.core.files.storage.FileSystemStorage'
 if not DEBUG and GCS_BUCKET_NAME:
-    DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+    _default_file_backend = 'storages.backends.gcloud.GoogleCloudStorage'
     GS_BUCKET_NAME       = GCS_BUCKET_NAME
     GS_DEFAULT_ACL       = None   # uniform bucket-level IAM policy
-    GS_QUERYSTRING_AUTH  = False  # URLs diretas — acesso via view proxy autenticada
-    GS_FILE_OVERWRITE    = False  # preserva histórico
+    GS_QUERYSTRING_AUTH  = False  # acesso via view proxy autenticada, não URL pública
+    GS_FILE_OVERWRITE    = False  # preserva histórico — nunca sobrescreve
     GS_OBJECT_PARAMETERS = {
         'cache_control': 'private, no-cache',  # dados médicos: sem cache público
     }
     MEDIA_URL = f'https://storage.googleapis.com/{GCS_BUCKET_NAME}/'
+
+# STORAGES substitui DEFAULT_FILE_STORAGE e STATICFILES_STORAGE (Django 4.2+)
+STORAGES = {
+    'default': {
+        'BACKEND': _default_file_backend,
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
 
 # ── Internacionalização ────────────────────────────────────────────────────────
 LANGUAGE_CODE = 'pt-br'
