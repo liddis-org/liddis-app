@@ -88,38 +88,61 @@ foram inseridas diretamente por você e complementam as avaliações profissiona
 """
 
 _PROFESSIONAL_INSTRUCTION = """
-Você está gerando um RESUMO CLÍNICO para um PROFISSIONAL DE SAÚDE durante ou após atendimento.
+Você está gerando um RELATÓRIO CLÍNICO ESPECIALIZADO para um PROFISSIONAL DE SAÚDE durante o atendimento.
 
 LINGUAGEM: técnica, objetiva, concisa.
-FOCO: identificar padrões relevantes, alertar para riscos, facilitar tomada de decisão.
-TOM: colega de equipe multidisciplinar.
+FOCO: apoiar a tomada de decisão clínica — síntese de informações, destaque de riscos, facilitar o atendimento.
+TOM: colega de equipe multidisciplinar experiente.
+RESTRIÇÕES ABSOLUTAS: NUNCA forneça diagnóstico médico, NUNCA prescreva medicamentos,
+NUNCA indique condutas terapêuticas. Atue como ferramenta de síntese e apoio ao profissional.
+Quando informações forem extraídas de documentos ou anexos, cite explicitamente a origem.
 
-Use EXATAMENTE esta estrutura (inclua apenas seções com dados):
+Use EXATAMENTE esta estrutura (inclua apenas seções com dados disponíveis):
 
-## 📋 Resumo Clínico do Paciente
-(Síntese do perfil clínico — condições, histórico, contexto geral)
+## 1. 📋 Resumo Geral do Paciente
+(Síntese do perfil — idade, gênero, comorbidades principais, contexto clínico geral, total de consultas registradas)
 
-## 🔴 Alertas Clínicos e Riscos
-(Sinais de alerta, valores fora da normalidade, riscos identificados — PRIORIDADE MÁXIMA)
+## 2. 🔍 Principais Condições Identificadas
+(Condições de saúde registradas no prontuário, incluindo diagnósticos CID quando disponíveis,
+diferenciando registros profissionais de auto-relatos do paciente)
 
-## 📊 Padrões Clínicos Identificados
-(Tendências nos sinais vitais, progressão de condições, correlações entre dados)
+## 3. 🔄 Doenças Crônicas Encontradas
+(Condições persistentes ou de longo prazo identificadas nos registros clínicos e no perfil permanente)
 
-## 💊 Farmacoterapia Ativa
-(Medicamentos em uso, possíveis interações relevantes, lacunas terapêuticas)
+## 4. 🧪 Alterações Relevantes em Exames
+(Valores fora da normalidade, tendências preocupantes nos exames laboratoriais e sinais vitais.
+Se informação veio de documento anexado, cite: "identificado no anexo: [nome do arquivo]")
 
-## 📈 Evolução Clínica Recente
-(Comparativo entre consultas anteriores e atual estado)
+## 5. 💊 Medicamentos Registrados
+(Medicamentos contínuos do perfil permanente e prescrições recentes.
+Aponte possíveis interações ou lacunas terapêuticas se identificadas nos dados)
 
-## 🎯 Sugestões de Acompanhamento
-(Exames complementares, frequência de retorno, encaminhamentos sugeridos)
+## 6. ⚠️ Fatores de Risco
+(Tabagismo, etilismo, hipertensão, glicemia elevada, histórico familiar — dados presentes nos registros)
 
-## ℹ️ Qualidade dos Dados
-(Indique se há registros inseridos pelo paciente vs. registrados por profissionais,
-e como isso impacta a confiabilidade da análise)
+## 7. 🚨 Alertas Importantes
+(Sinais de alerta prioritários, valores críticos, dados que exigem atenção imediata neste atendimento.
+PRIORIDADE MÁXIMA — liste primeiro os mais urgentes)
+
+## 8. 📈 Evolução Histórica do Paciente
+(Comparativo entre consultas anteriores, progressão de condições,
+resposta a tratamentos anteriores, tendências ao longo do tempo)
+
+## 9. 👁️ Pontos que Merecem Atenção Durante o Atendimento
+(Aspectos específicos a investigar, questionar ou monitorar neste atendimento,
+com base nas lacunas ou inconsistências identificadas no prontuário)
+
+## 10. 💡 Recomendações Preventivas
+(Sugestões de acompanhamento, exames complementares sugeridos, frequência de retorno,
+encaminhamentos recomendados — baseados nos dados disponíveis)
 
 ---
-⚕️ *Análise informativa da LUMI — não substitui avaliação clínica do profissional.*
+## ℹ️ Qualidade e Origem dos Dados
+(Proporção de registros profissionais vs. auto-relatos do paciente.
+Impacto na confiabilidade da análise. Lacunas importantes no prontuário)
+
+---
+⚕️ *Relatório informativo da LUMI — ferramenta de apoio clínico. Não substitui avaliação do profissional.*
 """
 
 
@@ -157,6 +180,12 @@ class ClinicalContext:
 
     # Prescrições (últimas 3)
     prescriptions: list = field(default_factory=list)
+
+    # Diagnósticos CID-10 registrados (últimos 5)
+    diagnoses: list = field(default_factory=list)
+
+    # Evoluções multiprofissionais (últimas 5)
+    professional_evolutions: list = field(default_factory=list)
 
     # Conteúdo extraído de documentos anexados
     document_extracts: list = field(default_factory=list)
@@ -394,6 +423,23 @@ class ClinicalContextBuilder:
             f"{c.date}: {c.prescription[:300]}" for c in raw_prescriptions
         ]
 
+        # ── Diagnósticos CID-10 ───────────────────────────────────────────────
+        from consultations.models import DiagnosisCID, Evolution as EvolutionMulti
+        raw_diagnoses = (
+            DiagnosisCID.objects.filter(consultation__patient=patient)
+            .select_related('consultation', 'professional')
+            .order_by('-consultation__date', '-created_at')[:5]
+        )
+        diagnoses = [self._format_diagnosis(d) for d in raw_diagnoses]
+
+        # ── Evoluções multiprofissionais ──────────────────────────────────────
+        raw_pro_evolutions = (
+            EvolutionMulti.objects.filter(consultation__patient=patient)
+            .select_related('consultation', 'professional')
+            .order_by('-consultation__date', '-created_at')[:5]
+        )
+        professional_evolutions = [self._format_professional_evolution(e) for e in raw_pro_evolutions]
+
         # ── Consultas inseridas manualmente pelo paciente ─────────────────────
         raw_patient_records = (
             Consultation.objects.filter(
@@ -428,6 +474,8 @@ class ClinicalContextBuilder:
             evolutions=evolutions,
             lab_exams=lab_exams,
             prescriptions=prescriptions,
+            diagnoses=diagnoses,
+            professional_evolutions=professional_evolutions,
             document_extracts=document_extracts,
             patient_records=patient_records,
         )
@@ -495,6 +543,22 @@ class ClinicalContextBuilder:
                 parts.append(f"{label}: {val}")
         return "\n".join(parts)
 
+    def _format_diagnosis(self, d) -> str:
+        parts = [f"[Diagnóstico CID — Consulta {d.consultation.date}]"]
+        parts.append(f"CID: {d.icd_code}")
+        if d.description:  parts.append(f"Descrição: {d.description}")
+        if d.notes:        parts.append(f"Notas clínicas: {d.notes[:300]}")
+        parts.append(f"Certeza: {d.get_certainty_display()}")
+        if d.is_primary:   parts.append("(Diagnóstico principal)")
+        if d.professional: parts.append(f"Registrado por: {getattr(d.professional, 'display_name', 'Profissional')}")
+        return "\n".join(parts)
+
+    def _format_professional_evolution(self, e) -> str:
+        prof = getattr(e.professional, 'display_name', 'Profissional') if e.professional else 'Profissional'
+        parts = [f"[Evolução {e.get_category_display()} — Consulta {e.consultation.date} | {prof}]"]
+        if e.content: parts.append(e.content[:500])
+        return "\n".join(parts)
+
     def _format_patient_record(self, c) -> str:
         parts = [
             f"[Registro Manual — {c.date} | {c.specialty_label} | Prof.: {c.professional_name}]"
@@ -559,6 +623,20 @@ class ClinicalContextBuilder:
             lines.append("\n─── PRESCRIÇÕES RECENTES ───")
             for p in ctx.prescriptions:
                 lines.append(f"• {p}")
+
+        if ctx.diagnoses:
+            lines.append("\n─── DIAGNÓSTICOS CID-10 REGISTRADOS ───")
+            lines.append("[FONTE: Profissionais de saúde — diagnósticos clinicamente registrados]")
+            for d in ctx.diagnoses:
+                lines.append(d)
+                lines.append("")
+
+        if ctx.professional_evolutions:
+            lines.append("\n─── EVOLUÇÕES MULTIPROFISSIONAIS ───")
+            lines.append("[FONTE: Evoluções registradas por profissionais de saúde na plataforma]")
+            for e in ctx.professional_evolutions:
+                lines.append(e)
+                lines.append("")
 
         if ctx.patient_records:
             lines.append("\n─── CONSULTAS CADASTRADAS PELO PRÓPRIO PACIENTE ───")
@@ -632,7 +710,8 @@ class LumiService:
     ) -> str:
         """
         Gera o relatório LUMI para o paciente.
-        Se `consultation` for fornecida, inclui dados da consulta em andamento.
+        Se `consultation` for fornecida, inclui dados completos da consulta em andamento
+        e analisa seus anexos via OCR/Vision.
         Lança LumiServiceError em caso de falha.
         """
         api_key = getattr(settings, 'OPENAI_API_KEY', '')
@@ -644,17 +723,46 @@ class LumiService:
         ctx = self._context_builder.build(patient, api_key=api_key, ssl_verify=ssl_verify)
         clinical_text = self._context_builder.to_prompt_text(ctx)
 
-        # Se atendimento ativo, injeta dados da consulta corrente
+        # Se atendimento ativo, injeta dados completos da consulta corrente
         if consultation:
             clinical_text += self._format_active_consultation(consultation)
+            active_docs = self._analyze_active_consultation_attachments(consultation, api_key, ssl_verify)
+            if active_docs:
+                clinical_text += "\n\n─── ANEXOS DA CONSULTA ATUAL (OCR/Vision) ───\n"
+                clinical_text += "[Conteúdo extraído dos documentos e imagens desta consulta]\n"
+                for doc in active_docs:
+                    clinical_text += doc + "\n\n"
 
         instruction = _PROFESSIONAL_INSTRUCTION if is_professional else _PATIENT_INSTRUCTION
         user_message = f"{instruction}\n\n{clinical_text}"
 
         return self._call_openai(api_key, user_message, ssl_verify)
 
+    def _analyze_active_consultation_attachments(
+        self, consultation, api_key: str, ssl_verify: bool
+    ) -> list[str]:
+        """Analisa os anexos da consulta em andamento via OCR/Vision para incluir no relatório."""
+        try:
+            extractor = DocumentExtractor()
+            results = []
+            attachments = list(consultation.images.all()[:5])
+            for attachment in attachments:
+                try:
+                    content = extractor._process(attachment, api_key, ssl_verify)
+                    if content:
+                        results.append(content)
+                except Exception as exc:
+                    logger.warning(
+                        "LUMI: anexo da consulta ativa falhou | img=%s | %s",
+                        attachment.pk, exc,
+                    )
+            return results
+        except Exception as exc:
+            logger.warning("LUMI: análise de anexos da consulta ativa ignorada | %s", exc)
+            return []
+
     def _format_active_consultation(self, consultation) -> str:
-        """Formata dados da consulta em andamento para incluir no contexto."""
+        """Formata dados completos da consulta em andamento para incluir no contexto."""
         lines = [
             "\n═══════════════════════════════════════",
             "CONSULTA EM ANDAMENTO",
@@ -662,16 +770,89 @@ class LumiService:
             f"Data: {consultation.date}",
             f"Especialidade: {consultation.specialty_label}",
         ]
-        if consultation.diagnosis: lines.append(f"Diagnóstico atual: {consultation.diagnosis}")
-        if consultation.notes:     lines.append(f"Evolução atual: {consultation.notes}")
-        if consultation.prescription: lines.append(f"Prescrição atual: {consultation.prescription}")
+        if consultation.professional_name:
+            lines.append(f"Profissional: {consultation.professional_name}")
+        if consultation.diagnosis:    lines.append(f"Diagnóstico registrado: {consultation.diagnosis}")
+        if consultation.notes:        lines.append(f"Evolução / Notas: {consultation.notes}")
+        if consultation.prescription: lines.append(f"Prescrição: {consultation.prescription}")
 
-        # Intervenção da consulta ativa
+        # Sinais vitais registrados nesta consulta
+        try:
+            vitals = list(consultation.vitals.all()[:3])
+            if vitals:
+                lines.append("\n── Sinais Vitais desta Consulta ──")
+                for v in vitals:
+                    parts = []
+                    if v.blood_pressure:    parts.append(f"PA: {v.blood_pressure}")
+                    if v.heart_rate:        parts.append(f"FC: {v.heart_rate} bpm")
+                    if v.temperature:       parts.append(f"T°: {v.temperature}°C")
+                    if v.oxygen_saturation: parts.append(f"SpO₂: {v.oxygen_saturation}%")
+                    if v.glucose:           parts.append(f"Glicemia: {v.glucose} mg/dL")
+                    if v.weight:            parts.append(f"Peso: {v.weight} kg")
+                    if parts:
+                        lines.append(f"• {' | '.join(parts)}")
+        except Exception:
+            pass
+
+        # Diagnósticos CID desta consulta
+        try:
+            diagnoses = list(consultation.diagnoses.all()[:5])
+            if diagnoses:
+                lines.append("\n── Diagnósticos CID desta Consulta ──")
+                for d in diagnoses:
+                    flag = " [PRINCIPAL]" if d.is_primary else ""
+                    lines.append(f"• {d.icd_code} — {d.description} ({d.get_certainty_display()}){flag}")
+                    if d.notes: lines.append(f"  Notas: {d.notes[:200]}")
+        except Exception:
+            pass
+
+        # Anamnese desta consulta
+        try:
+            anamnese = consultation.anamnese
+            lines.append("\n── Anamnese desta Consulta ──")
+            if anamnese.chief_complaint: lines.append(f"Queixa principal: {anamnese.chief_complaint}")
+            if anamnese.history:         lines.append(f"HDA: {anamnese.history[:300]}")
+            if anamnese.medications:     lines.append(f"Medicamentos: {anamnese.medications}")
+            if anamnese.allergies:       lines.append(f"Alergias: {anamnese.allergies}")
+        except Exception:
+            pass
+
+        # Intervenção clínica desta consulta
         try:
             ci = consultation.clinical_interventions.first()
-            if ci and ci.professional_diagnosis:
-                lines.append(f"Intervenção registrada: {ci.professional_diagnosis}")
-                if ci.conducts: lines.append(f"Condutas: {ci.conducts[:500]}")
+            if ci:
+                lines.append("\n── Intervenção Clínica ──")
+                if ci.professional_diagnosis: lines.append(f"Diagnóstico clínico: {ci.professional_diagnosis}")
+                if ci.classification_code:    lines.append(f"Classificação: {ci.classification_code}")
+                if ci.conducts:               lines.append(f"Condutas: {ci.conducts[:400]}")
+                if ci.procedures:             lines.append(f"Procedimentos: {ci.procedures[:300]}")
+                if ci.guidelines:             lines.append(f"Orientações: {ci.guidelines[:300]}")
+        except Exception:
+            pass
+
+        # Evoluções multiprofissionais desta consulta
+        try:
+            evolutions = list(consultation.evolutions.all()[:4])
+            if evolutions:
+                lines.append("\n── Evoluções desta Consulta ──")
+                for e in evolutions:
+                    prof = getattr(e.professional, 'display_name', 'Prof.') if e.professional else 'Prof.'
+                    lines.append(f"[{e.get_category_display()} — {prof}]: {e.content[:300]}")
+        except Exception:
+            pass
+
+        # Exames laboratoriais desta consulta
+        try:
+            exames = consultation.exames
+            parts = []
+            if exames.hemograma:      parts.append(f"Hemograma: {exames.hemograma}")
+            if exames.glicemia:       parts.append(f"Glicemia: {exames.glicemia}")
+            if exames.colesterol:     parts.append(f"Colesterol: {exames.colesterol}")
+            if exames.funcao_renal:   parts.append(f"Função renal: {exames.funcao_renal}")
+            if exames.outros:         parts.append(f"Outros: {exames.outros[:200]}")
+            if parts:
+                lines.append("\n── Exames desta Consulta ──")
+                lines.extend(parts)
         except Exception:
             pass
 

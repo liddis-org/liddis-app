@@ -195,13 +195,13 @@ def _accessible_consultations(user):
     """
     Retorna queryset de Consultation acessível ao usuário:
     - Pacientes: consultas onde são o paciente.
-    - Profissionais: consultas que realizaram via sessão (com vínculo ativo).
+    - Superusuário / ADMIN: todas as consultas do sistema.
+    - Profissionais: consultas que realizaram via sessão ou com pacientes vinculados.
     """
     if _is_professional(user):
+        if user.is_superuser or user.role == 'ADMIN':
+            return Consultation.objects.all()
         from users.models import PatientProfessionalAccess
-        if user.role == 'ADMIN' or user.is_superuser:
-            return Consultation.objects.filter(session__professional=user)
-        # Profissional vê apenas pacientes com vínculo ativo
         linked_patients = PatientProfessionalAccess.objects.filter(
             professional=user, is_active=True
         ).values_list('patient_id', flat=True)
@@ -539,13 +539,20 @@ def upload_image(request, pk):
         file = request.FILES.get('image')
         valid_tabs = [t for t, _ in ConsultationImage.TAB_CHOICES]
         if file and tab in valid_tabs and _valid_attachment(file):
-            ConsultationImage.objects.create(
-                consultation=consultation,
-                tab=tab,
-                image=file,
-                caption=request.POST.get('caption', ''),
-            )
-            messages.success(request, 'Arquivo anexado com sucesso!')
+            try:
+                ConsultationImage.objects.create(
+                    consultation=consultation,
+                    tab=tab,
+                    image=file,
+                    caption=request.POST.get('caption', ''),
+                )
+                messages.success(request, 'Arquivo anexado com sucesso!')
+            except Exception as exc:
+                _log.error(
+                    'upload_image falhou | consulta=%s | tab=%s | arquivo=%s | erro=%s',
+                    pk, tab, file.name, exc,
+                )
+                messages.error(request, 'Falha ao armazenar o arquivo. Verifique o storage e tente novamente.')
         else:
             messages.error(request, 'Arquivo inválido. Use JPG, PNG, WEBP ou PDF (máx. 20 MB).')
     return redirect(f'/consultas/{pk}/?tab={tab}')
@@ -567,12 +574,18 @@ def delete_image(request, pk, img_pk):
 @login_required
 def attachment_proxy(request, pk, img_pk):
     """
-    Serve anexos da consulta com controle de acesso.
+    Serve anexos da consulta com controle de acesso e auditoria LGPD.
     Em produção (GCS): faz streaming via SDK do GCS.
     Em desenvolvimento: serve do filesystem local.
     """
     consultation = get_object_or_404(_accessible_consultations(request.user), pk=pk)
     attachment = get_object_or_404(ConsultationImage, pk=img_pk, consultation=consultation)
+
+    log_access(
+        request, 'view', 'attachment',
+        resource_id=str(img_pk),
+        patient=consultation.patient,
+    )
 
     filename = attachment.filename
     content_type, _ = mimetypes.guess_type(filename)
@@ -585,21 +598,39 @@ def attachment_proxy(request, pk, img_pk):
             from google.cloud import storage as gcs_storage
             client = gcs_storage.Client()
             blob = client.bucket(gcs_bucket).blob(attachment.image.name)
+
+            if not blob.exists():
+                _log.error(
+                    'attachment_proxy blob inexistente | bucket=%s | blob=%s | img=%s',
+                    gcs_bucket, attachment.image.name, img_pk,
+                )
+                raise Http404
+
             data = blob.download_as_bytes()
             response = HttpResponse(data, content_type=content_type)
+        except Http404:
+            raise
         except Exception as exc:
-            _log.error('attachment_proxy GCS error | pk=%s | img=%s | %s', pk, img_pk, exc)
+            _log.error(
+                'attachment_proxy GCS error | pk=%s | img=%s | blob=%s | erro=%s',
+                pk, img_pk, attachment.image.name, exc,
+            )
             raise Http404
     else:
         from django.http import FileResponse
         try:
             response = FileResponse(open(attachment.image.path, 'rb'), content_type=content_type)
-        except (FileNotFoundError, ValueError):
+        except (FileNotFoundError, ValueError) as exc:
+            _log.warning(
+                'attachment_proxy arquivo local ausente | pk=%s | img=%s | path=%s | %s',
+                pk, img_pk, getattr(attachment.image, 'path', 'N/A'), exc,
+            )
             raise Http404
 
     disposition = 'inline' if content_type.startswith(('image/', 'application/pdf')) else 'attachment'
     response['Content-Disposition'] = f'{disposition}; filename="{filename}"'
     response['X-Content-Type-Options'] = 'nosniff'
+    response['Cache-Control'] = 'private, no-cache, no-store'
     return response
 
 
