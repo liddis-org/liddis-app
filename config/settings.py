@@ -167,6 +167,12 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 CSRF_COOKIE_HTTPONLY = False   # False = padrão Django; True impede forms server-rendered após rotação de sessão
 CSRF_COOKIE_SAMESITE = 'Lax'
 
+# ── Proxy reverso (Cloudflare Worker → Cloud Run) ─────────────────────────────
+# O Worker encaminha X-Forwarded-Host com o domínio real do usuário.
+# Sem isso, Django vê Host: *.run.app e allauth constrói redirect_uri errado,
+# fazendo o callback OAuth ir direto ao Cloud Run (sem cookie de sessão).
+USE_X_FORWARDED_HOST = True
+
 # ── Segurança HTTPS (ativas apenas em produção) ────────────────────────────────
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER          = ('HTTP_X_FORWARDED_PROTO', 'https')
