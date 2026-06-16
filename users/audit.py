@@ -22,15 +22,21 @@ def log_access(
     patient=None,
     success: bool = True,
     detail: dict | None = None,
+    actor=None,
 ):
     """
     Grava um registro de auditoria de forma não-bloqueante.
     Falhas de gravação são logadas mas não propagadas.
+
+    `actor` é opcional — por padrão é derivado de `request.user`. Necessário
+    informar explicitamente no logout, pois `request.user` já foi resetado
+    para AnonymousUser quando o signal `user_logged_out` é disparado.
     """
     try:
         from users.models import AuditLog
 
-        actor = request.user if request.user.is_authenticated else None
+        if actor is None:
+            actor = request.user if request.user.is_authenticated else None
 
         AuditLog.objects.create(
             actor=actor,
