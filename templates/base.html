@@ -115,6 +115,17 @@ body::before{
   position:sticky;top:0;z-index:50;
 }
 .topbar-title{font-size:14px;font-weight:700;color:var(--text)}
+.home-btn{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 12px;border-radius:var(--radius-sm);
+  color:var(--muted);text-decoration:none;
+  font-size:12px;font-weight:600;
+  border:1px solid var(--border-soft);
+  transition:all .15s;
+}
+.home-btn:hover{background:var(--surface-2);color:var(--teal);border-color:var(--border)}
+.home-btn-icon{width:15px;height:15px;flex-shrink:0;stroke:currentColor}
+@media (max-width:480px){.home-btn-label{display:none}.home-btn{padding:6px 9px}}
 .topbar-user{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
 .avatar{
   width:30px;height:30px;
@@ -454,7 +465,7 @@ tbody tr:hover td{background:var(--surface-2)}
   <!-- Nav -->
   <div class="sidebar-nav">
     <div class="nav-section">Principal</div>
-    <a class="nav-link {% block nav_dashboard %}{% endblock %}" href="{% url 'dashboard' %}">
+    <a class="nav-link js-home-nav {% block nav_dashboard %}{% endblock %}" href="{% url 'dashboard' %}">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
       Início
     </a>
@@ -551,9 +562,15 @@ tbody tr:hover td{background:var(--surface-2)}
       </button>
       <span class="topbar-title">{% block topbar_title %}LIDDIS{% endblock %}</span>
     </div>
-    <div class="topbar-user">
-      <span class="user-role-label" style="font-size:11px;color:var(--muted)">{{ user.get_role_display }}</span>
-      <div class="avatar">{{ user.username|first|upper }}</div>
+    <div style="display:flex;align-items:center;gap:16px">
+      <a href="{% url 'dashboard' %}" class="home-btn js-home-nav" aria-label="Página inicial" title="Página inicial">
+        <svg class="home-btn-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+        <span class="home-btn-label">Início</span>
+      </a>
+      <div class="topbar-user">
+        <span class="user-role-label" style="font-size:11px;color:var(--muted)">{{ user.get_role_display }}</span>
+        <div class="avatar">{{ user.username|first|upper }}</div>
+      </div>
     </div>
   </div>
 
@@ -588,6 +605,19 @@ tbody tr:hover td{background:var(--surface-2)}
 </div>
 <div class="sidebar-overlay" id="sidebar-overlay"></div>
 <script>
+(function(){
+  // Confirma antes de navegar para a página inicial — evita perda de contexto
+  // durante atendimentos/consultas. Não encerra a sessão, apenas confirma a navegação.
+  var dashboardUrl = "{% url 'dashboard' %}";
+  document.querySelectorAll('.js-home-nav').forEach(function(link){
+    link.addEventListener('click', function(e){
+      if (window.location.pathname === dashboardUrl) return;
+      if (!window.confirm('Tem certeza que deseja retornar para a página inicial?')) {
+        e.preventDefault();
+      }
+    });
+  });
+})();
 (function(){
   var hamburger = document.getElementById('hamburger');
   var sidebar   = document.querySelector('.sidebar');

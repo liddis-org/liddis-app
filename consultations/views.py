@@ -3,7 +3,6 @@ import logging
 import mimetypes
 import os
 
-from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
@@ -592,40 +591,25 @@ def attachment_proxy(request, pk, img_pk):
     if not content_type:
         content_type = 'application/octet-stream'
 
-    gcs_bucket = getattr(settings, 'GCS_BUCKET_NAME', '')
-    if gcs_bucket and not settings.DEBUG:
-        try:
-            from google.cloud import storage as gcs_storage
-            client = gcs_storage.Client()
-            blob = client.bucket(gcs_bucket).blob(attachment.image.name)
-
-            if not blob.exists():
-                _log.error(
-                    'attachment_proxy blob inexistente | bucket=%s | blob=%s | img=%s',
-                    gcs_bucket, attachment.image.name, img_pk,
-                )
-                raise Http404
-
-            data = blob.download_as_bytes()
-            response = HttpResponse(data, content_type=content_type)
-        except Http404:
-            raise
-        except Exception as exc:
+    # Lê via storage configurado (GCS em produção, filesystem em dev) — delega ao
+    # backend ativo em STORAGES['default'] em vez de acessar GCS/disco diretamente.
+    try:
+        if not attachment.image.storage.exists(attachment.image.name):
             _log.error(
-                'attachment_proxy GCS error | pk=%s | img=%s | blob=%s | erro=%s',
-                pk, img_pk, attachment.image.name, exc,
+                'attachment_proxy arquivo inexistente no storage | blob=%s | img=%s',
+                attachment.image.name, img_pk,
             )
             raise Http404
-    else:
-        from django.http import FileResponse
-        try:
-            response = FileResponse(open(attachment.image.path, 'rb'), content_type=content_type)
-        except (FileNotFoundError, ValueError) as exc:
-            _log.warning(
-                'attachment_proxy arquivo local ausente | pk=%s | img=%s | path=%s | %s',
-                pk, img_pk, getattr(attachment.image, 'path', 'N/A'), exc,
-            )
-            raise Http404
+        with attachment.image.open('rb') as f:
+            response = HttpResponse(f.read(), content_type=content_type)
+    except Http404:
+        raise
+    except Exception as exc:
+        _log.error(
+            'attachment_proxy storage error | pk=%s | img=%s | arquivo=%s | erro=%s',
+            pk, img_pk, attachment.image.name, exc,
+        )
+        raise Http404
 
     disposition = 'inline' if content_type.startswith(('image/', 'application/pdf')) else 'attachment'
     response['Content-Disposition'] = f'{disposition}; filename="{filename}"'

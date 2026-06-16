@@ -332,22 +332,14 @@ class DocumentExtractor:
     # ── Storage helper ────────────────────────────────────────────────────────
 
     def _read_bytes(self, attachment) -> Optional[bytes]:
-        gcs_bucket = getattr(settings, 'GCS_BUCKET_NAME', '')
-        if gcs_bucket and not settings.DEBUG:
-            try:
-                from google.cloud import storage as gcs_storage
-                client = gcs_storage.Client()
-                blob = client.bucket(gcs_bucket).blob(attachment.image.name)
-                return blob.download_as_bytes()
-            except Exception as exc:
-                logger.warning("GCS read failed | %s | %s", attachment.image.name, exc)
-                return None
-        else:
-            try:
-                with open(attachment.image.path, 'rb') as f:
-                    return f.read()
-            except (FileNotFoundError, ValueError):
-                return None
+        """Lê o arquivo via storage configurado (GCS em produção, filesystem em dev) —
+        delega ao backend ativo em STORAGES['default'] em vez de acessar GCS/disco diretamente."""
+        try:
+            with attachment.image.open('rb') as f:
+                return f.read()
+        except Exception as exc:
+            logger.warning("Leitura de anexo falhou | %s | %s", attachment.image.name, exc)
+            return None
 
 
 # ──────────────────────────────────────────────────────────────────────────────

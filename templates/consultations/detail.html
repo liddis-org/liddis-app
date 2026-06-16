@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}Consulta — HealthData Hub{% endblock %}
 {% block topbar_title %}Detalhe da Consulta{% endblock %}
 {% block nav_consultations %}active{% endblock %}
@@ -138,12 +139,74 @@
     {% endif %}
   </div>
   <div style="display:flex;gap:10px;flex-wrap:wrap">
+    {% if is_professional %}
+    <button type="button" onclick="lumiConsultaAbrir()"
+            style="display:inline-flex;align-items:center;gap:8px;padding:9px 16px;
+                   background:rgba(56,225,200,.12);border:1px solid rgba(56,225,200,.3);
+                   border-radius:var(--radius-sm);color:#38e1c8;font-size:13px;
+                   font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s">
+      <img src="{% static 'lumi/lumi-icon.svg' %}" width="18" height="18" style="border-radius:4px" alt="LUMI">
+      Consultar LUMI
+    </button>
+    {% endif %}
     {% if allowed_actions.edit %}
     <a href="{% url 'consultation_update' consultation.pk %}" class="btn btn-secondary">Editar</a>
     {% endif %}
     <a href="{% url 'consultation_list' %}" class="btn btn-secondary">← Voltar</a>
   </div>
 </div>
+
+{% if is_professional %}
+<!-- ══ Modal LUMI — Análise desta consulta (já salva, com anexos) ══ -->
+<div id="modal-lumi-consulta"
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;
+            align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+              padding:28px;max-width:640px;width:100%;max-height:85vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+      <img src="{% static 'lumi/lumi-icon.svg' %}" width="36" height="36" style="border-radius:10px" alt="LUMI">
+      <div>
+        <div style="font-size:15px;font-weight:700;color:var(--text)">LUMI</div>
+        <div style="font-size:12px;color:var(--muted)">Análise desta consulta — inclui anexos via OCR/Vision</div>
+      </div>
+    </div>
+
+    <div id="lc-initial">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:18px">
+        A LUMI vai analisar o prontuário completo de <strong>{{ consultation.patient.display_name }}</strong>,
+        incluindo os dados e anexos desta consulta.
+      </p>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button type="button" onclick="lumiConsultaFechar()" class="btn btn-secondary">Cancelar</button>
+        <button type="button" onclick="lumiConsultaGerar()" class="btn btn-primary">Gerar Análise</button>
+      </div>
+    </div>
+
+    <div id="lc-loading" style="display:none;text-align:center;padding:24px 0">
+      <div style="font-size:13px;color:var(--muted)">Analisando prontuário e anexos...</div>
+    </div>
+
+    <div id="lc-erro" style="display:none" class="alert alert-error"></div>
+
+    <div id="lc-resultado" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:700;color:#38e1c8">Relatório LUMI</div>
+        <button onclick="lumiConsultaCopiar()" class="btn btn-secondary btn-sm">Copiar</button>
+      </div>
+      <pre id="lc-report" style="white-space:pre-wrap;font-family:inherit;font-size:13px;
+                                  line-height:1.6;color:var(--text);background:var(--surface-2);
+                                  padding:16px;border-radius:var(--radius-sm)"></pre>
+      <div style="text-align:right;margin-top:14px">
+        <button type="button" onclick="lumiConsultaFechar()" class="btn btn-secondary">Fechar</button>
+      </div>
+    </div>
+
+    <p style="font-size:11px;color:var(--muted-2);margin-top:16px;text-align:center">
+      ⚕️ A LUMI não realiza diagnósticos. Análise exclusivamente informativa e preventiva.
+    </p>
+  </div>
+</div>
+{% endif %}
 
 <div style="max-width:840px">
   <div class="card">
@@ -622,5 +685,57 @@ document.querySelectorAll('.tab-btn').forEach(function(btn) {
     history.replaceState(null, '', url);
   });
 });
+
+{% if is_professional %}
+// ── LUMI — Análise desta consulta (já salva, com anexos reais) ─────────────────
+const LUMI_URL_CONSULTA  = "{% url 'lumi_report' %}";
+const CSRF_CONSULTA      = "{{ csrf_token }}";
+const PATIENT_ID_CONSULTA = "{{ consultation.patient.pk }}";
+const CONSULTATION_ID    = "{{ consultation.pk }}";
+
+function lumiConsultaAbrir() {
+  document.getElementById('modal-lumi-consulta').style.display = 'flex';
+  document.getElementById('lc-initial').style.display = 'block';
+  document.getElementById('lc-loading').style.display = 'none';
+  document.getElementById('lc-erro').style.display = 'none';
+  document.getElementById('lc-resultado').style.display = 'none';
+}
+
+function lumiConsultaFechar() {
+  document.getElementById('modal-lumi-consulta').style.display = 'none';
+}
+
+async function lumiConsultaGerar() {
+  document.getElementById('lc-initial').style.display = 'none';
+  document.getElementById('lc-loading').style.display = 'block';
+  document.getElementById('lc-erro').style.display = 'none';
+  document.getElementById('lc-resultado').style.display = 'none';
+
+  try {
+    const resp = await fetch(LUMI_URL_CONSULTA, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_CONSULTA },
+      body: JSON.stringify({ patient_id: PATIENT_ID_CONSULTA, consultation_id: CONSULTATION_ID }),
+    });
+    const data = await resp.json();
+
+    if (!resp.ok || data.error) throw new Error(data.error || 'Erro ao gerar análise.');
+
+    document.getElementById('lc-report').textContent = data.report;
+    document.getElementById('lc-resultado').style.display = 'block';
+  } catch(err) {
+    const el = document.getElementById('lc-erro');
+    el.textContent = err.message;
+    el.style.display = 'block';
+  } finally {
+    document.getElementById('lc-loading').style.display = 'none';
+  }
+}
+
+function lumiConsultaCopiar() {
+  const text = document.getElementById('lc-report').textContent;
+  navigator.clipboard.writeText(text);
+}
+{% endif %}
 </script>
 {% endblock %}
