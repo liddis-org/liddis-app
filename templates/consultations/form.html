@@ -140,7 +140,9 @@
       <button type="button" class="tab-btn {% if active_tab == 'geral' or not active_tab %}active{% endif %}"
               data-tab="geral" role="tab">Informações Gerais</button>
       <button type="button" class="tab-btn {% if active_tab == 'anamnese' %}active{% endif %}"
-              data-tab="anamnese" role="tab">Anamnese</button>
+              data-tab="anamnese" role="tab">Avaliação Clínica</button>
+      <button type="button" class="tab-btn {% if active_tab == 'vitais' %}active{% endif %}"
+              data-tab="vitais" role="tab">Sinais Vitais</button>
       <button type="button" class="tab-btn {% if active_tab == 'exames' %}active{% endif %}"
               data-tab="exames" role="tab">Exames Laboratoriais</button>
     </div>
@@ -263,7 +265,10 @@
         </div>
         {% endif %}
 
-        <div class="drop-zone" style="margin-top:10px"
+        <input type="text" class="input" name="caption_diagnostico"
+               placeholder="Legenda dos arquivos (opcional)"
+               style="margin-bottom:8px">
+        <div class="drop-zone" style="margin-top:4px"
              onclick="document.getElementById('img_diagnostico').click()">
           <input type="file" name="images_diagnostico" id="img_diagnostico"
                  accept="image/*,.pdf,application/pdf" multiple data-preview="preview_diagnostico"
@@ -312,7 +317,10 @@
         </div>
         {% endif %}
 
-        <div class="drop-zone" style="margin-top:10px"
+        <input type="text" class="input" name="caption_prescricao"
+               placeholder="Legenda dos arquivos (opcional)"
+               style="margin-bottom:8px;margin-top:8px">
+        <div class="drop-zone" style="margin-top:4px"
              onclick="document.getElementById('img_prescricao').click()">
           <input type="file" name="images_prescricao" id="img_prescricao"
                  accept="image/*,.pdf,application/pdf" multiple data-preview="preview_prescricao"
@@ -402,7 +410,10 @@
         </div>
         {% endif %}
 
-        <div class="drop-zone" style="margin-top:10px"
+        <input type="text" class="input" name="caption_anamnese"
+               placeholder="Legenda dos arquivos (opcional)"
+               style="margin-bottom:8px">
+        <div class="drop-zone" style="margin-top:4px"
              onclick="document.getElementById('img_anamnese').click()">
           <input type="file" name="images_anamnese" id="img_anamnese"
                  accept="image/*,.pdf,application/pdf" multiple data-preview="preview_anamnese"
@@ -412,6 +423,60 @@
           <div style="font-size:11px;margin-top:3px;opacity:.6">JPG · PNG · WEBP · PDF</div>
         </div>
         <div class="img-grid" id="preview_anamnese"></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         ABA: Sinais Vitais
+    ═════════════════════════════════════════════════════════════════════════ -->
+    <div class="tab-panel {% if active_tab == 'vitais' %}active{% endif %}"
+         id="tab-vitais" role="tabpanel">
+
+      <div style="background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.15);border-radius:8px;padding:10px 14px;margin-bottom:20px;font-size:12px;color:var(--green)">
+        Registre aqui os sinais vitais medidos durante esta consulta ou visita. Todos os campos são opcionais.
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+        <div class="form-group">
+          <label>Data da medição *</label>
+          {{ vitals_form.date }}
+          {{ vitals_form.date.errors }}
+        </div>
+        <div class="form-group">
+          <label>Pressão Arterial</label>
+          {{ vitals_form.blood_pressure }}
+        </div>
+        <div class="form-group">
+          <label>Freq. Cardíaca (bpm)</label>
+          {{ vitals_form.heart_rate }}
+        </div>
+        <div class="form-group">
+          <label>Temperatura (°C)</label>
+          {{ vitals_form.temperature }}
+        </div>
+        <div class="form-group">
+          <label>Saturação O₂ (%)</label>
+          {{ vitals_form.oxygen_saturation }}
+        </div>
+        <div class="form-group">
+          <label>Glicemia (mg/dL)</label>
+          {{ vitals_form.glucose }}
+        </div>
+        <div class="form-group">
+          <label>Peso (kg)</label>
+          {{ vitals_form.weight }}
+        </div>
+        <div class="form-group">
+          <label>Altura (cm)</label>
+          {{ vitals_form.height }}
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:8px">
+        <label>Observações</label>
+        {{ vitals_form.notes }}
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-top:-4px">
+        Apenas preencha os campos que foram aferidos nesta consulta.
       </div>
     </div>
 
@@ -499,7 +564,10 @@
         </div>
         {% endif %}
 
-        <div class="drop-zone" style="margin-top:10px"
+        <input type="text" class="input" name="caption_exames"
+               placeholder="Legenda dos arquivos (opcional)"
+               style="margin-bottom:8px">
+        <div class="drop-zone" style="margin-top:4px"
              onclick="document.getElementById('img_exames').click()">
           <input type="file" name="images_exames" id="img_exames"
                  accept="image/*,.pdf,application/pdf" multiple data-preview="preview_exames"

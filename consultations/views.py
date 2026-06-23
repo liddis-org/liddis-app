@@ -428,6 +428,7 @@ class ConsultationCreateView(LoginRequiredMixin, CreateView):
         data = self.request.POST if self.request.POST else None
         ctx['anamnese_form'] = AnamneseForm(data, prefix='anamnese')
         ctx['exames_form'] = ExameLaboratorialForm(data, prefix='exames')
+        ctx['vitals_form'] = VitalSignForm(data, prefix='vitais')
         ctx['active_tab'] = (self.request.POST or {}).get('active_tab', 'geral')
         ctx['tab_choices'] = ConsultationImage.TAB_CHOICES
         return ctx
@@ -443,7 +444,16 @@ class ConsultationCreateView(LoginRequiredMixin, CreateView):
         response = super().form_valid(form)
         anamnese_form = AnamneseForm(self.request.POST, prefix='anamnese')
         exames_form = ExameLaboratorialForm(self.request.POST, prefix='exames')
+        vitals_form = VitalSignForm(self.request.POST, prefix='vitais')
         _save_sub_forms(self.request, self.object, anamnese_form, exames_form)
+        if vitals_form.is_valid():
+            cd = vitals_form.cleaned_data
+            if any(v is not None and v != '' and v is not False for v in cd.values()):
+                vital = vitals_form.save(commit=False)
+                vital.patient = self.request.user
+                vital.consultation = self.object
+                vital.recorded_by = self.request.user
+                vital.save()
         _handle_image_uploads(self.request, self.object)
         log_access(self.request, 'create', 'consultation', resource_id=self.object.pk)
         messages.success(self.request, 'Consulta registrada com sucesso!')
@@ -479,6 +489,7 @@ class ConsultationUpdateView(LoginRequiredMixin, UpdateView):
         data = self.request.POST if self.request.POST else None
         ctx['anamnese_form'] = AnamneseForm(data, prefix='anamnese', instance=anamnese)
         ctx['exames_form'] = ExameLaboratorialForm(data, prefix='exames', instance=exames)
+        ctx['vitals_form'] = VitalSignForm(data, prefix='vitais')
         ctx['images_by_tab'] = {
             tab: list(consultation.images.filter(tab=tab))
             for tab, _ in ConsultationImage.TAB_CHOICES
@@ -494,7 +505,16 @@ class ConsultationUpdateView(LoginRequiredMixin, UpdateView):
         anamnese, exames = _get_or_init_sub_models(consultation)
         anamnese_form = AnamneseForm(self.request.POST, prefix='anamnese', instance=anamnese)
         exames_form = ExameLaboratorialForm(self.request.POST, prefix='exames', instance=exames)
+        vitals_form = VitalSignForm(self.request.POST, prefix='vitais')
         _save_sub_forms(self.request, consultation, anamnese_form, exames_form)
+        if vitals_form.is_valid():
+            cd = vitals_form.cleaned_data
+            if any(v is not None and v != '' and v is not False for v in cd.values()):
+                vital = vitals_form.save(commit=False)
+                vital.patient = consultation.patient
+                vital.consultation = consultation
+                vital.recorded_by = self.request.user
+                vital.save()
         _handle_image_uploads(self.request, consultation)
         log_access(self.request, 'edit', 'consultation', resource_id=consultation.pk)
         messages.success(self.request, 'Consulta atualizada com sucesso!')

@@ -191,7 +191,14 @@
     <div id="lc-resultado" style="display:none">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div style="font-size:12px;font-weight:700;color:#38e1c8">Relatório LUMI</div>
-        <button onclick="lumiConsultaCopiar()" class="btn btn-secondary btn-sm">Copiar</button>
+        <div style="display:flex;gap:8px">
+          <button onclick="lumiConsultaCopiar()" class="btn btn-secondary btn-sm">Copiar</button>
+          <button onclick="lumiExportarPDF('lc-report','{{ consultation.patient.display_name }}')"
+                  class="btn btn-secondary btn-sm"
+                  style="border-color:rgba(56,225,200,.4);color:#38e1c8">
+            ↓ Exportar PDF
+          </button>
+        </div>
       </div>
       <pre id="lc-report" style="white-space:pre-wrap;font-family:inherit;font-size:13px;
                                   line-height:1.6;color:var(--text);background:var(--surface-2);
@@ -735,6 +742,33 @@ async function lumiConsultaGerar() {
 function lumiConsultaCopiar() {
   const text = document.getElementById('lc-report').textContent;
   navigator.clipboard.writeText(text);
+}
+
+function lumiExportarPDF(reportId, patientName) {
+  var text = document.getElementById(reportId).textContent;
+  var now  = new Date();
+  var dateStr = now.toLocaleDateString('pt-BR') + ' às ' + now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+  var escaped = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">' +
+    '<title>Relatório LUMI — LIDDIS</title><style>' +
+    'body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:28px;color:#1a1a1a;font-size:13px}' +
+    '.header{border-bottom:2px solid #0099cc;padding-bottom:16px;margin-bottom:24px}' +
+    '.logo{font-size:22px;font-weight:900;color:#0099cc;letter-spacing:-0.5px}' +
+    '.meta{font-size:11px;color:#555;margin-top:8px;line-height:1.6}' +
+    '.report{white-space:pre-wrap;line-height:1.9;color:#1a1a1a}' +
+    '.footer{border-top:1px solid #ddd;margin-top:28px;padding-top:12px;font-size:10px;color:#888;text-align:center}' +
+    '@media print{.no-print{display:none!important}}' +
+    '</style></head><body>' +
+    '<div class="header">' +
+    '<div class="logo">LIDDIS · LUMI</div>' +
+    '<div class="meta">Paciente: <strong>' + (patientName||'N/A') + '</strong><br>Gerado em: ' + dateStr + '</div>' +
+    '</div>' +
+    '<div class="report">' + escaped + '</div>' +
+    '<div class="footer">⚕️ A LUMI não realiza diagnósticos. Análise exclusivamente informativa e preventiva. · LIDDIS</div>' +
+    '<script class="no-print">window.onload=function(){window.print();}<\/script>' +
+    '</body></html>';
+  var win = window.open('','_blank');
+  if (win) { win.document.write(html); win.document.close(); }
 }
 {% endif %}
 </script>
