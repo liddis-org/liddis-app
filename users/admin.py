@@ -121,9 +121,9 @@ class UserPlanAdmin(admin.ModelAdmin):
     list_display   = ('user', 'plan', 'is_active', 'valid_until', 'granted_by', 'created_at')
     list_filter    = ('plan', 'is_active')
     search_fields  = ('user__email', 'user__username', 'user__first_name', 'user__last_name')
-    readonly_fields = ('id', 'created_at')
-    raw_id_fields   = ('user', 'granted_by')
-    date_hierarchy  = 'created_at'
+    readonly_fields    = ('id', 'created_at')
+    autocomplete_fields = ['user', 'granted_by']
+    date_hierarchy     = 'created_at'
     actions = ['activate_plan', 'deactivate_plan']
 
     def save_model(self, request, obj, form, change):
