@@ -94,6 +94,27 @@
 {% endblock %}
 
 {% block content %}
+
+{% if not has_lumi_access %}
+<!-- ── Sem acesso ────────────────────────────────────────────────────────── -->
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:40px 20px">
+  <img src="{% static 'lumi/lumi-icon.svg' %}" width="120" height="120"
+       style="opacity:.5;filter:grayscale(60%);margin-bottom:28px" alt="LUMI">
+  <div style="font-size:24px;font-weight:800;color:var(--text);margin-bottom:12px">
+    LUMI não está disponível no seu plano
+  </div>
+  <p style="font-size:14px;color:var(--muted);max-width:440px;line-height:1.8;margin-bottom:28px">
+    O acesso à LUMI, nossa inteligência artificial clínica, está disponível apenas para usuários com plano ativo.
+    Entre em contato com o administrador da plataforma para ativar o acesso.
+  </p>
+  <a href="mailto:contato@liddis.com.br?subject=Solicitar%20acesso%20LUMI"
+     style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#7F77DD,#38bdf8);color:#fff;font-weight:700;font-size:14px;padding:12px 28px;border-radius:12px;text-decoration:none">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+    Solicitar acesso
+  </a>
+</div>
+
+{% else %}
 <!-- ── Hero ─────────────────────────────────────────────────────────────── -->
 <div class="lumi-hero" style="display:flex;align-items:center;gap:32px;flex-wrap:wrap">
   <!-- Texto -->
@@ -172,5 +193,6 @@
     Consulte sempre um profissional de saúde habilitado para avaliação clínica.
   </p>
 </div>
+{% endif %}
 {% endblock %}
 

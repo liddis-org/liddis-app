@@ -449,3 +449,48 @@ class PlatformFeedback(models.Model):
     def __str__(self):
         user = self.user.username if self.user else '(anônimo)'
         return f'Feedback de {user} — média {self.average_score}'
+
+
+# ── Plano de Usuário (controle de acesso LUMI) ────────────────────────────────
+
+class UserPlan(models.Model):
+    class Plan(models.TextChoices):
+        FREE       = 'free',       'Grátis'
+        PRO        = 'pro',        'Pro'
+        ENTERPRISE = 'enterprise', 'Enterprise'
+
+    id         = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user       = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='user_plan',
+        verbose_name='Usuário',
+    )
+    plan       = models.CharField(max_length=20, choices=Plan.choices, default=Plan.FREE, verbose_name='Plano')
+    is_active  = models.BooleanField(default=True, verbose_name='Ativo')
+    valid_until = models.DateTimeField(null=True, blank=True, verbose_name='Válido até')
+    granted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='plans_granted',
+        verbose_name='Concedido por',
+    )
+    notes      = models.TextField(blank=True, verbose_name='Observações')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table            = 'user_plans'
+        verbose_name        = 'Plano de Usuário'
+        verbose_name_plural = 'Planos de Usuário'
+
+    def __str__(self):
+        return f'{self.user} — {self.get_plan_display()}'
+
+    @property
+    def is_valid(self):
+        if not self.is_active:
+            return False
+        if self.valid_until and self.valid_until < timezone.now():
+            return False
+        return True

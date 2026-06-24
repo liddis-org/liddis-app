@@ -3,6 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from .models import (
     CustomUser, VerificationCode, Organization, OrganizationMember,
     PatientProfile, PatientProfessionalAccess, AuditLog, PlatformFeedback,
+    UserPlan,
 )
 
 
@@ -113,3 +114,29 @@ class PlatformFeedbackAdmin(admin.ModelAdmin):
     readonly_fields = ('id', 'created_at')
     raw_id_fields  = ('user',)
     date_hierarchy = 'created_at'
+
+
+@admin.register(UserPlan)
+class UserPlanAdmin(admin.ModelAdmin):
+    list_display   = ('user', 'plan', 'is_active', 'valid_until', 'granted_by', 'created_at')
+    list_filter    = ('plan', 'is_active')
+    search_fields  = ('user__email', 'user__username', 'user__first_name', 'user__last_name')
+    readonly_fields = ('id', 'created_at')
+    raw_id_fields   = ('user', 'granted_by')
+    date_hierarchy  = 'created_at'
+    actions = ['activate_plan', 'deactivate_plan']
+
+    def save_model(self, request, obj, form, change):
+        if not obj.granted_by_id:
+            obj.granted_by = request.user
+        super().save_model(request, obj, form, change)
+
+    @admin.action(description='Ativar plano selecionado')
+    def activate_plan(self, request, queryset):
+        count = queryset.update(is_active=True)
+        self.message_user(request, f'{count} plano(s) ativado(s).')
+
+    @admin.action(description='Desativar plano selecionado')
+    def deactivate_plan(self, request, queryset):
+        count = queryset.update(is_active=False)
+        self.message_user(request, f'{count} plano(s) desativado(s).')

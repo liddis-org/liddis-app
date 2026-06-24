@@ -365,6 +365,18 @@ def can_access_patient(professional, patient) -> bool:
     ).exists()
 
 
+def has_lumi_access(user) -> bool:
+    """Retorna True se o usuário tem um plano ativo com acesso à LUMI."""
+    if not user or not user.is_authenticated:
+        return False
+    if user.is_superuser:
+        return True
+    try:
+        return user.user_plan.is_valid
+    except Exception:
+        return False
+
+
 def filter_evolutions_for_user(queryset, user):
     """
     Aplica filtro de categorias de evolução ao queryset de Evolution.

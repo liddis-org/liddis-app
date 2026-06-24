@@ -16,8 +16,10 @@ _lumi_service = LumiService()
 @login_required
 def lumi_page(request):
     """Página informativa da LUMI."""
+    from users.permissions import has_lumi_access
     return render(request, 'lumi/index.html', {
         'is_professional': request.user.role != 'PATIENT',
+        'has_lumi_access': has_lumi_access(request.user),
     })
 
 
@@ -32,6 +34,10 @@ def lumi_report(request):
 
     Retorna JSON: {report, generated_at} ou {error}.
     """
+    from users.permissions import has_lumi_access
+    if not has_lumi_access(request.user):
+        return JsonResponse({'error': 'Acesso à LUMI não disponível no seu plano atual. Entre em contato para ativar.'}, status=403)
+
     user = request.user
     is_professional = user.role != 'PATIENT'
 
