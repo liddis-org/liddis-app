@@ -654,7 +654,7 @@ body,.sidebar,.card,.stat-card,.topbar,.nav-link,
       <span class="topbar-title">{% block topbar_title %}LIDDIS{% endblock %}</span>
     </div>
     <div style="display:flex;align-items:center;gap:16px">
-      <a href="{% url 'home' %}" class="home-btn js-home-nav" aria-label="Ir para Página Inicial" title="Ir para Página Inicial">
+      <a href="{% url 'landing' %}" class="home-btn js-home-nav" aria-label="Ir para Página Inicial" title="Ir para Página Inicial">
         <i data-lucide="house" style="width:15px;height:15px;stroke:currentColor"></i>
         <span class="home-btn-label">Ir para Página Inicial</span>
       </a>
@@ -718,7 +718,7 @@ body,.sidebar,.card,.stat-card,.topbar,.nav-link,
 <div class="sidebar-overlay" id="sidebar-overlay"></div>
 <script>
 (function(){
-  var landingUrl   = "{% url 'home' %}";
+  var landingUrl   = "{% url 'landing' %}";
   var dashboardUrl = "{% url 'dashboard' %}";
 
   var backdrop = document.getElementById('liddis-nav-backdrop');
