@@ -556,7 +556,7 @@ body,.sidebar,.card,.stat-card,.topbar,.nav-link,
   <!-- Nav -->
   <div class="sidebar-nav">
     <div class="nav-section">Principal</div>
-    <a class="nav-link js-home-nav {% block nav_dashboard %}{% endblock %}" href="{% url 'dashboard' %}">
+    <a class="nav-link {% block nav_dashboard %}{% endblock %}" href="{% url 'dashboard' %}">
       <i data-lucide="house" style="width:16px;height:16px;stroke:currentColor;flex-shrink:0"></i>
       Início
     </a>
@@ -654,9 +654,9 @@ body,.sidebar,.card,.stat-card,.topbar,.nav-link,
       <span class="topbar-title">{% block topbar_title %}LIDDIS{% endblock %}</span>
     </div>
     <div style="display:flex;align-items:center;gap:16px">
-      <a href="{% url 'dashboard' %}" class="home-btn js-home-nav" aria-label="Página inicial" title="Página inicial">
+      <a href="{% url 'home' %}" class="home-btn js-home-nav" aria-label="Ir para Página Inicial" title="Ir para Página Inicial">
         <i data-lucide="house" style="width:15px;height:15px;stroke:currentColor"></i>
-        <span class="home-btn-label">Início</span>
+        <span class="home-btn-label">Ir para Página Inicial</span>
       </a>
       <button id="theme-btn" onclick="toggleTheme()"
               style="width:36px;height:36px;border-radius:var(--radius-sm);background:var(--surface-2);border:1px solid var(--border-soft);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;"
@@ -749,14 +749,13 @@ body,.sidebar,.card,.stat-card,.topbar,.nav-link,
     });
   }
 
-  // Links .js-home-nav (Início / topbar) — vão para o dashboard interno
+  // Botão topbar "Ir para Página Inicial" → landing page pública (mesmo destino da logo)
   document.querySelectorAll('.js-home-nav').forEach(function(link){
     link.addEventListener('click', function(e){
-      if(window.location.pathname === dashboardUrl) return;
       e.preventDefault();
       openDialog(
-        dashboardUrl,
-        'Você será redirecionado para o painel principal.<br>Dados não salvos podem ser perdidos.'
+        landingUrl,
+        'Você será redirecionado para a página pública da LIDDIS.<br>Sua sessão permanecerá ativa.'
       );
     });
   });
