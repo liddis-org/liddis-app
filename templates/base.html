@@ -263,6 +263,53 @@ tbody tr:hover td{background:var(--surface-2)}
 .page-header h2{font-size:20px;font-weight:800;color:var(--text)}
 .page-header p{font-size:13px;color:var(--muted);margin-top:2px}
 
+/* ── CONFIRM DIALOG ──────────────────────────────────────────────────────── */
+.liddis-dialog-backdrop{
+  display:none;position:fixed;inset:0;
+  background:rgba(4,7,13,.7);
+  backdrop-filter:blur(6px);
+  z-index:1000;
+  align-items:center;justify-content:center;
+}
+.liddis-dialog-backdrop.open{display:flex}
+.liddis-dialog{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:32px 28px 24px;
+  width:100%;max-width:360px;margin:20px;
+  box-shadow:0 32px 80px rgba(0,0,0,.55),0 0 0 1px var(--border-soft),var(--shadow-teal);
+  transform:scale(.93) translateY(8px);opacity:0;
+  transition:transform .22s cubic-bezier(.34,1.56,.64,1),opacity .18s ease;
+}
+.liddis-dialog-backdrop.open .liddis-dialog{transform:scale(1) translateY(0);opacity:1}
+.liddis-dialog-icon{
+  width:52px;height:52px;border-radius:14px;
+  background:var(--teal-glow);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 18px;color:var(--teal);
+}
+.liddis-dialog h3{
+  font-size:16px;font-weight:700;text-align:center;
+  margin-bottom:8px;color:var(--text);
+}
+.liddis-dialog p{
+  font-size:13px;color:var(--muted);
+  text-align:center;line-height:1.65;margin-bottom:24px;
+}
+.liddis-dialog-btns{display:flex;gap:10px}
+.liddis-dialog-btns .btn{flex:1;justify-content:center}
+
+/* ── LOGO CLICÁVEL ───────────────────────────────────────────────────────── */
+button.sidebar-logo{
+  width:100%;text-align:left;
+  background:none;border:none;font-family:inherit;
+  cursor:pointer;
+  transition:background .15s;border-radius:0;
+}
+button.sidebar-logo:hover{background:var(--surface-2)}
+button.sidebar-logo:focus-visible{outline:2px solid var(--teal);outline-offset:-2px}
+
 /* ── MISC ────────────────────────────────────────────────────────────────── */
 .text-muted{color:var(--muted);font-size:13px}
 .mt-4{margin-top:16px}
@@ -485,8 +532,9 @@ body,.sidebar,.card,.stat-card,.topbar,.nav-link,
 <!-- ══ /LUMI SVG SPRITE ═════════════════════════════════════════════════════ -->
 
 <nav class="sidebar">
-  <!-- Logo -->
-  <div class="sidebar-logo">
+  <!-- Logo — clique abre diálogo de confirmação para retornar à landing page -->
+  <button class="sidebar-logo" id="logo-btn"
+          aria-label="Voltar à página inicial da LIDDIS" title="Página inicial">
     <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -503,7 +551,7 @@ body,.sidebar,.card,.stat-card,.topbar,.nav-link,
       <h1>LIDDIS</h1>
       <p>Inteligência Clínica</p>
     </div>
-  </div>
+  </button>
 
   <!-- Nav -->
   <div class="sidebar-nav">
@@ -651,19 +699,79 @@ body,.sidebar,.card,.stat-card,.topbar,.nav-link,
     {% block content %}{% endblock %}
   </div>
 </div>
+<!-- ══ CONFIRM DIALOG — logo → landing page ══════════════════════════════ -->
+<div class="liddis-dialog-backdrop" id="liddis-nav-backdrop"
+     role="dialog" aria-modal="true" aria-labelledby="liddis-dialog-title">
+  <div class="liddis-dialog" id="liddis-nav-dialog">
+    <div class="liddis-dialog-icon">
+      <i data-lucide="house" style="width:24px;height:24px;stroke:currentColor"></i>
+    </div>
+    <h3 id="liddis-dialog-title">Deseja voltar para a página inicial?</h3>
+    <p id="liddis-dialog-desc">Você será redirecionado para a página pública da LIDDIS.<br>Sua sessão permanecerá ativa.</p>
+    <div class="liddis-dialog-btns">
+      <button class="btn btn-secondary" id="liddis-dialog-no">Não</button>
+      <button class="btn btn-primary" id="liddis-dialog-yes">Sim</button>
+    </div>
+  </div>
+</div>
+
 <div class="sidebar-overlay" id="sidebar-overlay"></div>
 <script>
 (function(){
-  // Confirma antes de navegar para a página inicial — evita perda de contexto
-  // durante atendimentos/consultas. Não encerra a sessão, apenas confirma a navegação.
+  var landingUrl   = "{% url 'home' %}";
   var dashboardUrl = "{% url 'dashboard' %}";
+
+  var backdrop = document.getElementById('liddis-nav-backdrop');
+  var dialog   = document.getElementById('liddis-nav-dialog');
+  var btnYes   = document.getElementById('liddis-dialog-yes');
+  var btnNo    = document.getElementById('liddis-dialog-no');
+  var descEl   = document.getElementById('liddis-dialog-desc');
+  var _target  = landingUrl;
+
+  function openDialog(url, desc){
+    _target = url;
+    if(desc && descEl) descEl.innerHTML = desc;
+    backdrop.classList.add('open');
+    setTimeout(function(){ btnNo && btnNo.focus(); }, 60);
+  }
+  function closeDialog(){
+    backdrop.classList.remove('open');
+  }
+
+  // Logo — vai para a landing page pública
+  var logoBtnEl = document.getElementById('logo-btn');
+  if(logoBtnEl){
+    logoBtnEl.addEventListener('click', function(){
+      openDialog(
+        landingUrl,
+        'Você será redirecionado para a página pública da LIDDIS.<br>Sua sessão permanecerá ativa.'
+      );
+    });
+  }
+
+  // Links .js-home-nav (Início / topbar) — vão para o dashboard interno
   document.querySelectorAll('.js-home-nav').forEach(function(link){
     link.addEventListener('click', function(e){
-      if (window.location.pathname === dashboardUrl) return;
-      if (!window.confirm('Tem certeza que deseja retornar para a página inicial?')) {
-        e.preventDefault();
-      }
+      if(window.location.pathname === dashboardUrl) return;
+      e.preventDefault();
+      openDialog(
+        dashboardUrl,
+        'Você será redirecionado para o painel principal.<br>Dados não salvos podem ser perdidos.'
+      );
     });
+  });
+
+  if(btnYes) btnYes.addEventListener('click', function(){ window.location.href = _target; });
+  if(btnNo)  btnNo.addEventListener('click', closeDialog);
+
+  // Clique no backdrop → fechar
+  if(backdrop) backdrop.addEventListener('click', function(e){
+    if(e.target === backdrop) closeDialog();
+  });
+
+  // Escape → fechar
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && backdrop && backdrop.classList.contains('open')) closeDialog();
   });
 })();
 (function(){
