@@ -7,13 +7,23 @@
 <title>LIDDIS — Inteligência Clínica</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;1,400;1,700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 /* ── RESET & TOKENS ───────────────────────────────────────────────────────── */
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;font-size:16px}
 
 :root{
+  /* Typefaces */
+  --font-display:'Fraunces', Georgia, serif;
+  --font-body:   'DM Sans', system-ui, sans-serif;
+  /* Type Scale */
+  --text-xs:0.75rem; --text-sm:0.8125rem; --text-base:1rem;
+  --text-xl:1.25rem; --text-3xl:2rem;     --text-5xl:3.5rem;
+  /* Line Heights */
+  --lh-tight:1.1; --lh-snug:1.25; --lh-normal:1.5; --lh-relaxed:1.65;
+  /* Letter Spacing */
+  --ls-tight:-0.03em; --ls-snug:-0.02em; --ls-wide:0.05em; --ls-wider:0.10em;
   --bg:        #070e1a;
   --surface:   #0d1b2e;
   --surface-2: #112038;
@@ -33,7 +43,9 @@ html{scroll-behavior:smooth;font-size:16px}
 }
 
 body{
-  font-family:'DM Sans',system-ui,sans-serif;
+  font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
   background:var(--bg);
   color:var(--text);
   min-height:100vh;
@@ -601,7 +613,42 @@ footer{
   .footer-grid{grid-template-columns:1fr}
   .footer-bottom{flex-direction:column;text-align:center}
 }
+
+/* ── TIPOGRAFIA DISPLAY (Fraunces) ───────────────────────────────────────── */
+.hero-title,.section-title,.cta-title,.step-title,.diff-title,h1,h2{
+  font-family:var(--font-display);text-wrap:balance;
+}
+.hero-stat .num{
+  font-family:var(--font-display);
+  font-feature-settings:"tnum";letter-spacing:var(--ls-tight);
+}
+.plan-price-box .val,.plan-price-box .free-tag{
+  font-family:var(--font-display);
+  font-feature-settings:"tnum";letter-spacing:var(--ls-tight);
+}
+p,li,.diff-text,.step-text,.hero-sub,.section-sub{text-wrap:pretty}
+.section-sub{max-width:65ch}
+
+/* ── CORES DOS ÍCONES LUCIDE NOS DIFERENCIAIS ────────────────────────────── */
+.diff-icon.t{color:#7F77DD}
+.diff-icon.g{color:#1D9E75}
+.diff-icon.p{color:#85B7EB}
+.diff-icon.y{color:#EF9F27}
+.diff-icon.r{color:#97C459}
+.diff-icon.c{color:#5DCAA5}
+.diff-icon svg{stroke-width:1.7;width:26px;height:26px}
+
+/* ── PLAN BTN → FLEX P/ ÍCONES ──────────────────────────────────────────── */
+.plan-btn{display:flex;align-items:center;justify-content:center;gap:8px}
+.mobile-cta{display:flex;align-items:center;justify-content:center;gap:8px}
+
+/* ── CONTAINER RESPONSIVO ────────────────────────────────────────────────── */
+.container{padding-inline:clamp(1.25rem,5vw,3rem)}
+
+/* ── FOCUS ACESSÍVEL ─────────────────────────────────────────────────────── */
+:focus-visible{outline:2px solid currentColor;outline-offset:3px;border-radius:3px}
 </style>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 <body>
 
@@ -653,7 +700,7 @@ footer{
     <a href="#como-funciona">Como Funciona</a>
     <a href="#contato">Contato</a>
     <a href="{% url 'login' %}">Entrar</a>
-    <a class="mobile-cta" href="{% url 'register' %}">Cadastre-se grátis →</a>
+    <a class="mobile-cta" href="{% url 'register' %}">Cadastre-se grátis <i data-lucide="arrow-right" aria-hidden="true" style="width:14px;height:14px;stroke-width:2.5"></i></a>
   </div>
 </nav>
 
@@ -683,7 +730,7 @@ footer{
         Quero começar agora — é grátis
       </a>
       <a class="btn-hero-secondary" href="#planos">
-        Ver planos e preços →
+        Ver planos e preços <i data-lucide="arrow-right" aria-hidden="true" style="width:15px;height:15px;stroke-width:2.5"></i>
       </a>
     </div>
 
@@ -726,75 +773,42 @@ footer{
     <div class="diff-grid">
       <div class="diff-card reveal reveal-delay-1">
         <div class="diff-icon t">
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="5" y="8" width="18" height="14" rx="3" stroke="#7F77DD" stroke-width="1.6" fill="none"/>
-            <path d="M10 8V6a1 1 0 011-1h6a1 1 0 011 1v2" stroke="#7F77DD" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-            <circle cx="10" cy="15" r="1.8" stroke="#AFA9EC" stroke-width="1.4" fill="none"/>
-            <circle cx="18" cy="15" r="1.8" stroke="#AFA9EC" stroke-width="1.4" fill="none"/>
-            <path d="M12 15h4" stroke="#534AB7" stroke-width="1.3" stroke-linecap="round" fill="none"/>
-            <path d="M10 19h8" stroke="#7F77DD" stroke-width="1.4" stroke-linecap="round" fill="none"/>
-            <path d="M3 14h2M23 14h2" stroke="#534AB7" stroke-width="1.4" stroke-linecap="round" fill="none"/>
-          </svg>
+          <i data-lucide="brain-circuit" aria-hidden="true"></i>
         </div>
         <div class="diff-title">IA que pensa por você</div>
         <div class="diff-text">Pare de adivinhar. Nossa inteligência artificial analisa padrões, antecipa tendências e entrega insights prontos para agir — antes que você precise pedir.</div>
       </div>
       <div class="diff-card reveal reveal-delay-2">
         <div class="diff-icon g">
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="3" y="16" width="5" height="8" rx="1.5" stroke="#1D9E75" stroke-width="1.6" fill="none"/>
-            <rect x="11.5" y="10" width="5" height="14" rx="1.5" stroke="#1D9E75" stroke-width="1.6" fill="none"/>
-            <rect x="20" y="4" width="5" height="20" rx="1.5" stroke="#1D9E75" stroke-width="1.6" fill="none"/>
-            <path d="M3 22l5-5 5.5 3 5.5-8L25 7" stroke="#5DCAA5" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-            <circle cx="25" cy="7" r="1.5" fill="#5DCAA5"/>
-          </svg>
+          <i data-lucide="layout-dashboard" aria-hidden="true"></i>
         </div>
         <div class="diff-title">Visibilidade total em tempo real</div>
         <div class="diff-text">Chega de relatórios desatualizados. Veja o que está acontecendo agora com dashboards interativos que se atualizam automaticamente.</div>
       </div>
       <div class="diff-card reveal reveal-delay-3">
         <div class="diff-icon p">
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="6" y="12" width="16" height="12" rx="2.5" stroke="#85B7EB" stroke-width="1.6" fill="none"/>
-            <path d="M10 12V9a4 4 0 018 0v3" stroke="#85B7EB" stroke-width="1.6" stroke-linecap="round" fill="none"/>
-            <circle cx="14" cy="18" r="2" stroke="#378ADD" stroke-width="1.5" fill="none"/>
-            <path d="M14 20v2" stroke="#378ADD" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-          </svg>
+          <i data-lucide="shield-check" aria-hidden="true"></i>
         </div>
         <div class="diff-title">Seus dados, blindados</div>
         <div class="diff-text">Criptografia AES-256, conformidade LGPD e autenticação em dois fatores. Porque a segurança dos seus dados não é opcional.</div>
       </div>
       <div class="diff-card reveal reveal-delay-1">
         <div class="diff-icon y">
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M16 3L7 16h7l-2 9 10-13h-7l1-9z" stroke="#EF9F27" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-          </svg>
+          <i data-lucide="zap" aria-hidden="true"></i>
         </div>
         <div class="diff-title">Rápido quando você mais precisa</div>
         <div class="diff-text">99.9% de disponibilidade e resposta abaixo de 2 segundos. Infraestrutura em nuvem que cresce com o seu negócio — sem travar, sem surpresas.</div>
       </div>
       <div class="diff-card reveal reveal-delay-2">
         <div class="diff-icon r">
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M11 7.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7z" stroke="#639922" stroke-width="1.6" fill="none"/>
-            <path d="M17 13.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7z" stroke="#639922" stroke-width="1.6" fill="none"/>
-            <path d="M14.2 9.8l-.4 2M14.2 18.2l-.4-2" stroke="#97C459" stroke-width="1.4" stroke-linecap="round" fill="none"/>
-          </svg>
+          <i data-lucide="plug-2" aria-hidden="true"></i>
         </div>
         <div class="diff-title">Conecta com o que você já usa</div>
         <div class="diff-text">Não jogue fora o que já funciona. O LIDDIS se integra aos seus sistemas atuais via API REST e continua o trabalho de onde você parou.</div>
       </div>
       <div class="diff-card reveal reveal-delay-3">
         <div class="diff-icon c">
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="9" y="2" width="10" height="17" rx="2.5" stroke="#1D9E75" stroke-width="1.6" fill="none"/>
-            <path d="M12 5.5h4" stroke="#5DCAA5" stroke-width="1.3" stroke-linecap="round" fill="none"/>
-            <circle cx="14" cy="16" r="1" fill="#1D9E75"/>
-            <path d="M14 19v3" stroke="#1D9E75" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-            <path d="M10 26h8" stroke="#1D9E75" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-            <rect x="2" y="15" width="6" height="9" rx="1.5" stroke="#0F6E56" stroke-width="1.4" fill="none"/>
-            <rect x="20" y="17" width="6" height="7" rx="1.5" stroke="#0F6E56" stroke-width="1.4" fill="none"/>
-          </svg>
+          <i data-lucide="smartphone" aria-hidden="true"></i>
         </div>
         <div class="diff-title">Na palma da sua mão</div>
         <div class="diff-text">Do celular ao desktop, a experiência é a mesma. Acesse, gerencie e decida de onde estiver — sem instalar nada, sem complicação.</div>
@@ -844,12 +858,12 @@ footer{
         </div>
 
         <ul class="plan-features">
-          <li><span class="plan-check yes">✓</span> Portal de dados básico</li>
-          <li><span class="plan-check yes">✓</span> Centralização de documentos</li>
-          <li><span class="plan-check yes">✓</span> Exportação manual de dados</li>
+          <li><i data-lucide="check-circle-2" aria-hidden="true" style="width:17px;height:17px;color:var(--green);flex-shrink:0;margin-top:2px"></i> Portal de dados básico</li>
+          <li><i data-lucide="check-circle-2" aria-hidden="true" style="width:17px;height:17px;color:var(--green);flex-shrink:0;margin-top:2px"></i> Centralização de documentos</li>
+          <li><i data-lucide="check-circle-2" aria-hidden="true" style="width:17px;height:17px;color:var(--green);flex-shrink:0;margin-top:2px"></i> Exportação manual de dados</li>
         </ul>
 
-        <a class="plan-btn outline" href="{% url 'register' %}">Começar grátis →</a>
+        <a class="plan-btn outline" href="{% url 'register' %}">Começar grátis <i data-lucide="arrow-right" aria-hidden="true" style="width:14px;height:14px;stroke-width:2.5"></i></a>
       </div>
 
       <!-- ── Premium / Pro (FEATURED) ──────────────────────────────────── -->
@@ -877,13 +891,13 @@ footer{
         </div>
 
         <ul class="plan-features">
-          <li><span class="plan-check yes">✓</span> Tudo do plano Free</li>
-          <li><span class="plan-check yes">✓</span> IA para análise preditiva</li>
-          <li><span class="plan-check yes">✓</span> Resumo automático de dados</li>
-          <li><span class="plan-check yes">✓</span> Dashboard de acompanhamento</li>
+          <li><i data-lucide="check-circle-2" aria-hidden="true" style="width:17px;height:17px;color:var(--green);flex-shrink:0;margin-top:2px"></i> Tudo do plano Free</li>
+          <li><i data-lucide="check-circle-2" aria-hidden="true" style="width:17px;height:17px;color:var(--green);flex-shrink:0;margin-top:2px"></i> IA para análise preditiva</li>
+          <li><i data-lucide="check-circle-2" aria-hidden="true" style="width:17px;height:17px;color:var(--green);flex-shrink:0;margin-top:2px"></i> Resumo automático de dados</li>
+          <li><i data-lucide="check-circle-2" aria-hidden="true" style="width:17px;height:17px;color:var(--green);flex-shrink:0;margin-top:2px"></i> Dashboard de acompanhamento</li>
         </ul>
 
-        <a class="plan-btn solid" href="{% url 'register' %}">Assinar Premium →</a>
+        <a class="plan-btn solid" href="{% url 'register' %}">Assinar Premium <i data-lucide="arrow-right" aria-hidden="true" style="width:14px;height:14px;stroke-width:2.5"></i></a>
       </div>
 
       <!-- ── Professional / Advanced ───────────────────────────────────── -->
@@ -910,14 +924,14 @@ footer{
         </div>
 
         <ul class="plan-features">
-          <li><span class="plan-check yes">✓</span> Tudo do plano Premium</li>
-          <li><span class="plan-check yes">✓</span> API para integração com sistemas</li>
-          <li><span class="plan-check yes">✓</span> Controle avançado de dados</li>
-          <li><span class="plan-check yes">✓</span> Acesso completo às informações</li>
-          <li><span class="plan-check yes">✓</span> Inteligência sobre histórico</li>
+          <li><i data-lucide="check-circle-2" aria-hidden="true" style="width:17px;height:17px;color:var(--green);flex-shrink:0;margin-top:2px"></i> Tudo do plano Premium</li>
+          <li><i data-lucide="check-circle-2" aria-hidden="true" style="width:17px;height:17px;color:var(--green);flex-shrink:0;margin-top:2px"></i> API para integração com sistemas</li>
+          <li><i data-lucide="check-circle-2" aria-hidden="true" style="width:17px;height:17px;color:var(--green);flex-shrink:0;margin-top:2px"></i> Controle avançado de dados</li>
+          <li><i data-lucide="check-circle-2" aria-hidden="true" style="width:17px;height:17px;color:var(--green);flex-shrink:0;margin-top:2px"></i> Acesso completo às informações</li>
+          <li><i data-lucide="check-circle-2" aria-hidden="true" style="width:17px;height:17px;color:var(--green);flex-shrink:0;margin-top:2px"></i> Inteligência sobre histórico</li>
         </ul>
 
-        <a class="plan-btn green" href="{% url 'register' %}">Assinar Professional →</a>
+        <a class="plan-btn green" href="{% url 'register' %}">Assinar Professional <i data-lucide="arrow-right" aria-hidden="true" style="width:14px;height:14px;stroke-width:2.5"></i></a>
       </div>
 
       <!-- ── Enterprise / Organization ─────────────────────────────────── -->
@@ -944,15 +958,15 @@ footer{
         </div>
 
         <ul class="plan-features">
-          <li><span class="plan-check yes">✓</span> Tudo do plano Professional</li>
-          <li><span class="plan-check yes">✓</span> Configuração personalizada</li>
-          <li><span class="plan-check yes">✓</span> Desenvolvimento sob demanda</li>
-          <li><span class="plan-check yes">✓</span> IA para análise em massa</li>
-          <li><span class="plan-check yes">✓</span> Multiusuário (até 10 usuários)</li>
-          <li><span class="plan-check yes">✓</span> Dashboard avançado</li>
+          <li><i data-lucide="check-circle-2" aria-hidden="true" style="width:17px;height:17px;color:var(--green);flex-shrink:0;margin-top:2px"></i> Tudo do plano Professional</li>
+          <li><i data-lucide="check-circle-2" aria-hidden="true" style="width:17px;height:17px;color:var(--green);flex-shrink:0;margin-top:2px"></i> Configuração personalizada</li>
+          <li><i data-lucide="check-circle-2" aria-hidden="true" style="width:17px;height:17px;color:var(--green);flex-shrink:0;margin-top:2px"></i> Desenvolvimento sob demanda</li>
+          <li><i data-lucide="check-circle-2" aria-hidden="true" style="width:17px;height:17px;color:var(--green);flex-shrink:0;margin-top:2px"></i> IA para análise em massa</li>
+          <li><i data-lucide="check-circle-2" aria-hidden="true" style="width:17px;height:17px;color:var(--green);flex-shrink:0;margin-top:2px"></i> Multiusuário (até 10 usuários)</li>
+          <li><i data-lucide="check-circle-2" aria-hidden="true" style="width:17px;height:17px;color:var(--green);flex-shrink:0;margin-top:2px"></i> Dashboard avançado</li>
         </ul>
 
-        <a class="plan-btn gold" href="#contato">Falar com vendas →</a>
+        <a class="plan-btn gold" href="#contato">Falar com vendas <i data-lucide="arrow-right" aria-hidden="true" style="width:14px;height:14px;stroke-width:2.5"></i></a>
       </div>
 
     </div>
@@ -1011,7 +1025,7 @@ footer{
       Não fique para trás — comece agora, é grátis.
     </p>
     <div class="cta-actions">
-      <a class="btn-hero-primary" href="{% url 'register' %}">Criar minha conta grátis →</a>
+      <a class="btn-hero-primary" href="{% url 'register' %}">Criar minha conta grátis <i data-lucide="arrow-right" aria-hidden="true" style="width:16px;height:16px;stroke-width:2.5"></i></a>
       <a class="btn-hero-secondary" href="{% url 'login' %}">Já tenho conta</a>
     </div>
   </div>
@@ -1139,5 +1153,6 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){
   });
 });
 </script>
+<script>document.addEventListener('DOMContentLoaded',function(){lucide.createIcons();});</script>
 </body>
 </html>
