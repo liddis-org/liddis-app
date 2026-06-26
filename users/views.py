@@ -77,8 +77,6 @@ def require_patient(view_func):
 # ── Home ───────────────────────────────────────────────────────────────────────
 
 def home(request):
-    if request.user.is_authenticated:
-        return redirect('dashboard')
     return render(request, 'home.html')
 
 
