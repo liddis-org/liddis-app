@@ -5,11 +5,16 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>{% block title %}LIDDIS — Inteligência Clínica{% endblock %}</title>
+<script>(function(){const t=localStorage.getItem('liddis-theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 /* ── LIDDIS DESIGN SYSTEM ─────────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 :root {
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-sans:    'DM Sans', system-ui, sans-serif;
   --bg:          #070e1a;
   --surface:     #0d1b2e;
   --surface-2:   #112038;
@@ -36,7 +41,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{
-  font-family:'Inter',system-ui,sans-serif;
+  font-family:var(--font-sans);
   background:var(--bg);
   color:var(--text);
   min-height:100vh;
@@ -156,11 +161,18 @@ body::before{
   border:1px solid var(--border-soft);
   border-radius:var(--radius);
   padding:20px 24px;
+  transition:box-shadow .2s,border-color .2s;
 }
+.stat-card:hover{box-shadow:var(--shadow);border-color:var(--border)}
 .stat-card .stat-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
 .stat-card .stat-value{font-size:26px;font-weight:800;color:var(--text)}
 .stat-card .stat-sub{font-size:11px;color:var(--muted);margin-top:4px}
 .stat-card .stat-icon{font-size:24px;float:right;margin-top:-4px;opacity:.7}
+.stat-icon-wrap{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.stat-icon-wrap svg,.stat-icon-wrap i{width:20px;height:20px}
+.stat-icon-wrap.teal{background:rgba(0,212,255,.12);color:var(--teal)}
+.stat-icon-wrap.green{background:rgba(74,222,128,.12);color:var(--green)}
+.stat-icon-wrap.warn{background:rgba(251,191,36,.1);color:var(--warning)}
 
 /* ── FORMS ───────────────────────────────────────────────────────────────── */
 .form-group{margin-bottom:16px}
@@ -269,6 +281,37 @@ tbody tr:hover td{background:var(--surface-2)}
   --primary-dark:  var(--teal-dark);
   --surface-alt:   var(--surface-2);
   --text-muted:    var(--muted);
+}
+
+/* ── TIPOGRAFIA DISPLAY ──────────────────────────────────────────────────── */
+h1,h2,h3,
+.sidebar-logo-text h1,
+.page-header h2,
+.stat-value,.stat-card .stat-value,
+.topbar-title,
+.section-title,.hero-title,.plan-name,
+.nav-section,
+.auth-logo h1{font-family:var(--font-display)}
+
+/* ── LIGHT THEME ─────────────────────────────────────────────────────────── */
+[data-theme="light"]{
+  --bg:          #eff3f8;
+  --surface:     #ffffff;
+  --surface-2:   #e8f0f9;
+  --surface-3:   #d8e4f0;
+  --text:        #0c1829;
+  --muted:       #4a6680;
+  --muted-2:     #8aa0b8;
+  --border:      rgba(0,170,210,.18);
+  --border-soft: rgba(0,0,0,.07);
+  --shadow:      0 4px 24px rgba(0,0,0,.07);
+  --shadow-teal: 0 0 20px rgba(0,180,220,.15);
+}
+
+/* ── THEME TRANSITIONS ───────────────────────────────────────────────────── */
+body,.sidebar,.card,.stat-card,.topbar,.nav-link,
+.input,select,.btn,.badge,.alert{
+  transition:background-color .3s ease,border-color .3s ease,color .3s ease;
 }
 
 /* ── HAMBURGER (só no mobile) ────────────────────────────────────────────── */
@@ -466,44 +509,44 @@ tbody tr:hover td{background:var(--surface-2)}
   <div class="sidebar-nav">
     <div class="nav-section">Principal</div>
     <a class="nav-link js-home-nav {% block nav_dashboard %}{% endblock %}" href="{% url 'dashboard' %}">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+      <i data-lucide="house" style="width:16px;height:16px;stroke:currentColor;flex-shrink:0"></i>
       Início
     </a>
 
     {% if user.role == 'PATIENT' %}
       <a class="nav-link {% block nav_consultations %}{% endblock %}" href="{% url 'consultation_list' %}">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+        <i data-lucide="clipboard-list" style="width:16px;height:16px;stroke:currentColor;flex-shrink:0"></i>
         Minhas Consultas
       </a>
       <a class="nav-link {% block nav_vitals %}{% endblock %}" href="{% url 'vitals' %}">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+        <i data-lucide="activity" style="width:16px;height:16px;stroke:currentColor;flex-shrink:0"></i>
         Sinais Vitais
       </a>
       <a class="nav-link {% block nav_analytics %}{% endblock %}" href="{% url 'analytics' %}">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <i data-lucide="bar-chart-2" style="width:16px;height:16px;stroke:currentColor;flex-shrink:0"></i>
         Dashboard
       </a>
       <a class="nav-link {% block nav_accesses %}{% endblock %}" href="{% url 'my_accesses' %}">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        <i data-lucide="link" style="width:16px;height:16px;stroke:currentColor;flex-shrink:0"></i>
         Vínculos
       </a>
       <div class="nav-section">Atendimento</div>
       <a class="nav-link {% block nav_atendimento %}{% endblock %}" href="{% url 'iniciar_atendimento' %}">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16 10,8"/></svg>
+        <i data-lucide="play-circle" style="width:16px;height:16px;stroke:currentColor;flex-shrink:0"></i>
         Iniciar Atendimento
       </a>
     {% else %}
       <a class="nav-link {% block nav_accesses_pro %}{% endblock %}" href="{% url 'my_accesses' %}">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <i data-lucide="users" style="width:16px;height:16px;stroke:currentColor;flex-shrink:0"></i>
         Meus Pacientes
       </a>
       <a class="nav-link {% block nav_meus_atendimentos %}{% endblock %}" href="{% url 'meus_atendimentos' %}">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><polyline points="9,11 9,17"/><polyline points="12,11 12,17"/><polyline points="15,11 15,17"/></svg>
+        <i data-lucide="clipboard-list" style="width:16px;height:16px;stroke:currentColor;flex-shrink:0"></i>
         Meus Atendimentos
       </a>
       <div class="nav-section">Atendimento</div>
       <a class="nav-link {% block nav_entrar %}{% endblock %}" href="{% url 'entrar_atendimento' %}">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><polyline points="16,11 18,13 22,9"/></svg>
+        <i data-lucide="user-check" style="width:16px;height:16px;stroke:currentColor;flex-shrink:0"></i>
         Atender Paciente
       </a>
     {% endif %}
@@ -519,17 +562,17 @@ tbody tr:hover td{background:var(--surface-2)}
 
     <div class="nav-section">Conta</div>
     <a class="nav-link {% block nav_profile %}{% endblock %}" href="{% url 'profile' %}">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <i data-lucide="user" style="width:16px;height:16px;stroke:currentColor;flex-shrink:0"></i>
       Meu Perfil
     </a>
 
     <div class="nav-section">Sobre</div>
     <a class="nav-link {% block nav_quem_somos %}{% endblock %}" href="{% url 'quem_somos' %}">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <i data-lucide="info" style="width:16px;height:16px;stroke:currentColor;flex-shrink:0"></i>
       Quem Somos
     </a>
     <a class="nav-link {% block nav_feedback %}{% endblock %}" href="{% url 'platform_feedback' %}">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="9" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="15" y1="10" x2="15" y2="10"/></svg>
+      <i data-lucide="message-square" style="width:16px;height:16px;stroke:currentColor;flex-shrink:0"></i>
       Sua Experiência
     </a>
   </div>
@@ -546,7 +589,7 @@ tbody tr:hover td{background:var(--surface-2)}
     <form method="post" action="{% url 'logout' %}" style="margin:0">
       {% csrf_token %}
       <button type="submit" style="background:none;border:none;cursor:pointer;padding:0;margin-top:4px;color:var(--muted-2);font-family:inherit;font-size:inherit;display:flex;align-items:center;gap:6px;width:100%">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex-shrink:0"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <i data-lucide="log-out" style="width:13px;height:13px;stroke:currentColor;flex-shrink:0"></i>
         Sair
       </button>
     </form>
@@ -564,9 +607,14 @@ tbody tr:hover td{background:var(--surface-2)}
     </div>
     <div style="display:flex;align-items:center;gap:16px">
       <a href="{% url 'dashboard' %}" class="home-btn js-home-nav" aria-label="Página inicial" title="Página inicial">
-        <svg class="home-btn-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+        <i data-lucide="house" style="width:15px;height:15px;stroke:currentColor"></i>
         <span class="home-btn-label">Início</span>
       </a>
+      <button id="theme-btn" onclick="toggleTheme()"
+              style="width:36px;height:36px;border-radius:var(--radius-sm);background:var(--surface-2);border:1px solid var(--border-soft);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;"
+              aria-label="Alternar tema">
+        <i id="theme-icon" data-lucide="moon" style="width:15px;height:15px"></i>
+      </button>
       <div class="topbar-user">
         <span class="user-role-label" style="font-size:11px;color:var(--muted)">{{ user.get_role_display }}</span>
         <div class="avatar">{{ user.username|first|upper }}</div>
@@ -649,6 +697,23 @@ tbody tr:hover td{background:var(--surface-2)}
     });
   });
 })();
+</script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+function toggleTheme(){
+  var cur=document.documentElement.getAttribute('data-theme');
+  var next=cur==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',next);
+  localStorage.setItem('liddis-theme',next);
+  var icon=document.getElementById('theme-icon');
+  if(icon){icon.setAttribute('data-lucide',next==='dark'?'moon':'sun');lucide.createIcons();}
+}
+document.addEventListener('DOMContentLoaded',function(){
+  lucide.createIcons();
+  var theme=document.documentElement.getAttribute('data-theme');
+  var icon=document.getElementById('theme-icon');
+  if(icon){icon.setAttribute('data-lucide',theme==='dark'?'moon':'sun');lucide.createIcons();}
+});
 </script>
 {% block extra_js %}{% endblock %}
 </body>

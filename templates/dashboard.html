@@ -10,7 +10,7 @@
     <h2>Olá, {{ user.first_name|default:user.username }}!</h2>
     <p>
       {% if is_professional %}
-        Painel do profissional — {{ user.get_role_display }}
+        Painel do Profissional de Saúde
       {% else %}
         Aqui está um resumo da sua saúde
       {% endif %}
@@ -43,18 +43,21 @@
 
 <div class="card-grid card-grid-3 mt-4">
   <div class="stat-card">
+    <div class="stat-icon-wrap teal"><i data-lucide="clipboard-list"></i></div>
     <div class="stat-label">Atendimentos realizados</div>
-    <div><span class="stat-value">{{ total_atendimentos }}</span><span class="stat-icon">📋</span></div>
+    <div class="stat-value">{{ total_atendimentos }}</div>
     <div class="stat-sub">pelo sistema</div>
   </div>
   <div class="stat-card">
+    <div class="stat-icon-wrap green"><i data-lucide="clock"></i></div>
     <div class="stat-label">Último atendimento</div>
-    <div><span class="stat-value" style="font-size:16px">{{ ultimo_atendimento|default:"—" }}</span><span class="stat-icon">🕐</span></div>
+    <div class="stat-value" style="font-size:16px">{{ ultimo_atendimento|default:"—" }}</div>
     <div class="stat-sub">via token</div>
   </div>
   <div class="stat-card">
+    <div class="stat-icon-wrap warn"><i data-lucide="user-check"></i></div>
     <div class="stat-label">Perfil</div>
-    <div><span class="stat-value" style="font-size:16px">{{ user.get_role_display }}</span><span class="stat-icon">👤</span></div>
+    <div class="stat-value" style="font-size:16px">{{ user.get_role_display }}</div>
     <div class="stat-sub"><a href="{% url 'profile' %}" style="color:var(--teal);font-size:12px">Editar perfil</a></div>
   </div>
 </div>
@@ -121,31 +124,36 @@
 <!-- ── DASHBOARD DO PACIENTE ── -->
 <div class="card-grid card-grid-3 mt-4">
   <div class="stat-card">
+    <div class="stat-icon-wrap teal"><i data-lucide="clipboard-list"></i></div>
     <div class="stat-label">Consultas registradas</div>
-    <div><span class="stat-value">{{ total_consultations }}</span><span class="stat-icon">📋</span></div>
+    <div class="stat-value">{{ total_consultations }}</div>
     <div class="stat-sub">no total</div>
   </div>
 
   {% if latest_vital %}
   <div class="stat-card">
+    <div class="stat-icon-wrap green"><i data-lucide="activity"></i></div>
     <div class="stat-label">Última pressão</div>
-    <div><span class="stat-value">{{ latest_vital.blood_pressure|default:"—" }}</span><span class="stat-icon">🩺</span></div>
+    <div class="stat-value">{{ latest_vital.blood_pressure|default:"—" }}</div>
     <div class="stat-sub">{{ latest_vital.date }}</div>
   </div>
   <div class="stat-card">
+    <div class="stat-icon-wrap warn"><i data-lucide="scale"></i></div>
     <div class="stat-label">Último peso</div>
-    <div><span class="stat-value">{% if latest_vital.weight %}{{ latest_vital.weight }} kg{% else %}—{% endif %}</span><span class="stat-icon">⚖️</span></div>
+    <div class="stat-value">{% if latest_vital.weight %}{{ latest_vital.weight }} kg{% else %}—{% endif %}</div>
     <div class="stat-sub">{{ latest_vital.date }}</div>
   </div>
   {% else %}
   <div class="stat-card">
+    <div class="stat-icon-wrap green"><i data-lucide="activity"></i></div>
     <div class="stat-label">Sinais vitais</div>
-    <div><span class="stat-value">—</span><span class="stat-icon">🩺</span></div>
+    <div class="stat-value">—</div>
     <div class="stat-sub"><a href="{% url 'vitals' %}" style="color:var(--teal);font-size:12px">Registrar agora</a></div>
   </div>
   <div class="stat-card">
+    <div class="stat-icon-wrap teal"><i data-lucide="user"></i></div>
     <div class="stat-label">Tipo de conta</div>
-    <div><span class="stat-value" style="font-size:18px">{{ user.get_role_display }}</span><span class="stat-icon">👤</span></div>
+    <div class="stat-value" style="font-size:18px">{{ user.get_role_display }}</div>
     <div class="stat-sub">{{ user.email }}</div>
   </div>
   {% endif %}
@@ -178,7 +186,7 @@
     <div>
       <h3 style="font-size:16px;font-weight:700;margin-bottom:4px">Iniciar Atendimento</h3>
       <p style="font-size:13px;color:var(--muted)">
-        Gere um código único para compartilhar com seu médico durante a consulta.
+        Gere um código único para compartilhar com seu profissional de saúde durante a consulta.
         Ele usará esse código para registrar os dados diretamente no seu histórico.
       </p>
     </div>
