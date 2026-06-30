@@ -1,5 +1,10 @@
+import json
 import logging
 import functools
+import threading
+from urllib.request import Request, urlopen
+from urllib.error import URLError
+from urllib.parse import quote
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
@@ -78,6 +83,84 @@ def require_patient(view_func):
 
 def home(request):
     return render(request, 'home.html')
+
+
+# ── WhatsApp ────────────────────────────────────────────────────────────────────
+
+_PLANOS_WA = {
+    'premium': {
+        'nome': 'Premium / Pro',
+        'msg':  'Olá! Tenho interesse no plano *Premium* da LIDDIS. Podem me ajudar?',
+    },
+    'professional': {
+        'nome': 'Professional / Advanced',
+        'msg':  'Olá! Tenho interesse no plano *Professional* da LIDDIS. Podem me ajudar?',
+    },
+    'enterprise': {
+        'nome': 'Enterprise / Organization',
+        'msg':  'Olá! Gostaria de falar sobre o plano *Enterprise* da LIDDIS. Quero falar com vendas.',
+    },
+}
+
+
+def _notify_whatsapp_admin(plano_nome: str) -> None:
+    """Notifica o admin via WhatsApp Business Cloud API (roda em background thread)."""
+    token    = getattr(settings, 'WHATSAPP_API_TOKEN', '')
+    phone_id = getattr(settings, 'WHATSAPP_PHONE_NUMBER_ID', '')
+    admin    = getattr(settings, 'WHATSAPP_ADMIN_NUMBER', '')
+
+    if not all([token, phone_id, admin]):
+        return  # credenciais não configuradas — ignora silenciosamente
+
+    body = json.dumps({
+        'messaging_product': 'whatsapp',
+        'to': admin,
+        'type': 'text',
+        'text': {
+            'body': (
+                f'🔔 *LIDDIS — Novo Interesse*\n\n'
+                f'Um usuário clicou em *{plano_nome}*.\n'
+                f'Entre em contato para fechar a venda! 🚀'
+            )
+        },
+    }).encode()
+
+    req = Request(
+        f'https://graph.facebook.com/v18.0/{phone_id}/messages',
+        data=body,
+        headers={
+            'Authorization': f'Bearer {token}',
+            'Content-Type':  'application/json',
+        },
+        method='POST',
+    )
+    try:
+        with urlopen(req, timeout=5):
+            logger.info('Admin notificado via WhatsApp: plano %s', plano_nome)
+    except URLError as exc:
+        logger.warning('Falha na notificação WhatsApp admin: %s', exc)
+
+
+def whatsapp_redirect(request, plano):
+    """Redireciona o usuário para o WhatsApp de vendas + notifica o admin em background."""
+    cfg = _PLANOS_WA.get(plano)
+    if not cfg:
+        return redirect('landing')
+
+    number = getattr(settings, 'WHATSAPP_SALES_NUMBER', '')
+    if not number:
+        logger.error('WHATSAPP_SALES_NUMBER não configurado no .env')
+        return redirect('landing')
+
+    # Dispara notificação ao admin sem bloquear o redirect do usuário
+    threading.Thread(
+        target=_notify_whatsapp_admin,
+        args=(cfg['nome'],),
+        daemon=True,
+    ).start()
+
+    wa_url = f"https://wa.me/{number}?text={quote(cfg['msg'])}"
+    return redirect(wa_url)
 
 
 # ── Helpers de envio ───────────────────────────────────────────────────────────

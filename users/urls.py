@@ -7,6 +7,7 @@ from .views import (
     quem_somos,
     my_accesses, grant_access, revoke_access,
     platform_feedback,
+    whatsapp_redirect,
 )
 
 urlpatterns = [
@@ -29,6 +30,9 @@ urlpatterns = [
     path('vinculos/',                      my_accesses,  name='my_accesses'),
     path('vinculos/conceder/',             grant_access, name='grant_access'),
     path('vinculos/revogar/<uuid:access_id>/', revoke_access, name='revoke_access'),
+
+    # WhatsApp — redirect de vendas
+    path('whatsapp/<slug:plano>/', whatsapp_redirect, name='whatsapp_plano'),
 
     # API REST
     path('api-register/', RegisterAPIView.as_view(), name='api_register'),

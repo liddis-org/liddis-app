@@ -897,7 +897,7 @@ p,li,.diff-text,.step-text,.hero-sub,.section-sub{text-wrap:pretty}
           <li><i data-lucide="check-circle-2" aria-hidden="true" style="width:17px;height:17px;color:var(--green);flex-shrink:0;margin-top:2px"></i> Dashboard de acompanhamento</li>
         </ul>
 
-        <a class="plan-btn solid" href="{% url 'register' %}">Assinar Premium <i data-lucide="arrow-right" aria-hidden="true" style="width:14px;height:14px;stroke-width:2.5"></i></a>
+        <a class="plan-btn solid" href="{% url 'whatsapp_plano' 'premium' %}" target="_blank" rel="noopener">Assinar Premium <i data-lucide="arrow-right" aria-hidden="true" style="width:14px;height:14px;stroke-width:2.5"></i></a>
       </div>
 
       <!-- ── Professional / Advanced ───────────────────────────────────── -->
@@ -931,7 +931,7 @@ p,li,.diff-text,.step-text,.hero-sub,.section-sub{text-wrap:pretty}
           <li><i data-lucide="check-circle-2" aria-hidden="true" style="width:17px;height:17px;color:var(--green);flex-shrink:0;margin-top:2px"></i> Inteligência sobre histórico</li>
         </ul>
 
-        <a class="plan-btn green" href="{% url 'register' %}">Assinar Professional <i data-lucide="arrow-right" aria-hidden="true" style="width:14px;height:14px;stroke-width:2.5"></i></a>
+        <a class="plan-btn green" href="{% url 'whatsapp_plano' 'professional' %}" target="_blank" rel="noopener">Assinar Professional <i data-lucide="arrow-right" aria-hidden="true" style="width:14px;height:14px;stroke-width:2.5"></i></a>
       </div>
 
       <!-- ── Enterprise / Organization ─────────────────────────────────── -->
@@ -966,7 +966,7 @@ p,li,.diff-text,.step-text,.hero-sub,.section-sub{text-wrap:pretty}
           <li><i data-lucide="check-circle-2" aria-hidden="true" style="width:17px;height:17px;color:var(--green);flex-shrink:0;margin-top:2px"></i> Dashboard avançado</li>
         </ul>
 
-        <a class="plan-btn gold" href="#contato">Falar com vendas <i data-lucide="arrow-right" aria-hidden="true" style="width:14px;height:14px;stroke-width:2.5"></i></a>
+        <a class="plan-btn gold" href="{% url 'whatsapp_plano' 'enterprise' %}" target="_blank" rel="noopener">Falar com vendas <i data-lucide="arrow-right" aria-hidden="true" style="width:14px;height:14px;stroke-width:2.5"></i></a>
       </div>
 
     </div>

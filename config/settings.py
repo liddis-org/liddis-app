@@ -272,6 +272,15 @@ TWILIO_AUTH_TOKEN   = config('TWILIO_AUTH_TOKEN', default='')
 TWILIO_PHONE_NUMBER = config('TWILIO_PHONE_NUMBER', default='')
 SMS_ENABLED = bool(TWILIO_ACCOUNT_SID)
 
+# ── WhatsApp ──────────────────────────────────────────────────────────────────
+# Número de vendas — para onde o usuário é redirecionado (sem '+', ex: 5511999999999)
+WHATSAPP_SALES_NUMBER    = config('WHATSAPP_SALES_NUMBER', default='')
+# WhatsApp Business Cloud API (Meta) — para notificar o admin quando alguém clica
+# Obtenha em: developers.facebook.com → seu App → WhatsApp → API Setup
+WHATSAPP_API_TOKEN       = config('WHATSAPP_API_TOKEN', default='')
+WHATSAPP_PHONE_NUMBER_ID = config('WHATSAPP_PHONE_NUMBER_ID', default='')
+WHATSAPP_ADMIN_NUMBER    = config('WHATSAPP_ADMIN_NUMBER', default='')
+
 # ── REST Framework ─────────────────────────────────────────────────────────────
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
