@@ -2,6 +2,29 @@
 {% block title %}Meu Perfil — HealthData Hub{% endblock %}
 {% block topbar_title %}Meu Perfil{% endblock %}
 
+{% block extra_css %}
+<style>
+.toggle-group {
+  display: flex; gap: 0; border-radius: 10px; overflow: hidden;
+  border: 1px solid var(--border-soft); width: fit-content; margin-top: 8px;
+}
+.toggle-group input[type="radio"] { display: none; }
+.toggle-group label {
+  padding: 9px 20px; font-size: 13px; font-weight: 600; color: var(--muted);
+  cursor: pointer; background: var(--surface-2);
+  border-right: 1px solid var(--border-soft);
+  transition: background .15s, color .15s; user-select: none; white-space: nowrap;
+}
+.toggle-group label:last-of-type { border-right: none; }
+.toggle-group label:hover { background: var(--surface-3, #2a2a2a); color: var(--text); }
+.toggle-group input[value="no"]:checked   + label { background: var(--green);  color: #fff; }
+.toggle-group input[value="yes"]:checked  + label { background: var(--danger); color: #fff; }
+.toggle-group input[value="former"]:checked + label { background: #f59e0b; color: #fff; }
+.toggle-group input[value="occasionally"]:checked + label { background: #f59e0b; color: #fff; }
+.toggle-group input[value=""]:checked + label { background: var(--surface-3, #2a2a2a); color: var(--muted); }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="page-header">
   <div>
@@ -10,7 +33,10 @@
   </div>
 </div>
 
-<div class="card" style="max-width:640px">
+<div style="display:flex;flex-direction:column;gap:20px;max-width:640px">
+
+<!-- ── Card: Dados pessoais ── -->
+<div class="card">
   <!-- Avatar / info rápida -->
   <div style="display:flex;align-items:center;gap:20px;margin-bottom:28px;padding-bottom:24px;border-bottom:1px solid var(--border)">
     <div class="avatar" style="width:64px;height:64px;font-size:26px;border-radius:50%;background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0">
@@ -28,6 +54,7 @@
 
   <form method="post" novalidate>
     {% csrf_token %}
+    <input type="hidden" name="_action" value="profile">
 
     <div class="form-row">
       <div class="form-group">
@@ -100,4 +127,88 @@
     Usuário: <strong>{{ user.username }}</strong>
   </div>
 </div>
+
+<!-- ── Card: Dados clínicos (somente pacientes) ── -->
+{% if is_patient and clinical_form %}
+<div class="card" style="border-top:3px solid var(--teal)">
+  <div style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border-soft)">
+    <h3 style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px">🩺 Dados Clínicos Permanentes</h3>
+    <p style="font-size:13px;color:var(--muted)">
+      Informações de saúde disponíveis para os profissionais que você vincula.
+      Mantê-las atualizadas melhora a qualidade do atendimento e das análises da LUMI.
+    </p>
+  </div>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="_action" value="clinical">
+
+    <div style="display:grid;gap:20px">
+
+      <!-- Peso -->
+      <div class="form-group" style="margin:0">
+        <label style="font-weight:700;font-size:14px">⚖ Peso (kg)</label>
+        <div style="font-size:12px;color:var(--muted);margin:3px 0 6px">Seu peso habitual</div>
+        <div style="max-width:180px">{{ clinical_form.weight }}</div>
+        {% if clinical_form.weight.errors %}<div class="errorlist">{{ clinical_form.weight.errors }}</div>{% endif %}
+      </div>
+
+      <!-- Alergias -->
+      <div class="form-group" style="margin:0">
+        <label style="font-weight:700;font-size:14px">⚠ Alergias conhecidas</label>
+        <div style="font-size:12px;color:var(--muted);margin:3px 0 6px">Medicamentos, alimentos, látex, contraste, etc.</div>
+        {{ clinical_form.allergies }}
+        {% if clinical_form.allergies.errors %}<div class="errorlist">{{ clinical_form.allergies.errors }}</div>{% endif %}
+      </div>
+
+      <!-- Medicamentos contínuos -->
+      <div class="form-group" style="margin:0">
+        <label style="font-weight:700;font-size:14px">💊 Medicamentos de uso contínuo</label>
+        <div style="font-size:12px;color:var(--muted);margin:3px 0 6px">Inclua nome, dose e frequência quando possível</div>
+        {{ clinical_form.continuous_medications }}
+        {% if clinical_form.continuous_medications.errors %}<div class="errorlist">{{ clinical_form.continuous_medications.errors }}</div>{% endif %}
+      </div>
+
+      <!-- Comorbidades -->
+      <div class="form-group" style="margin:0">
+        <label style="font-weight:700;font-size:14px">🏥 Comorbidades / Condições crônicas</label>
+        <div style="font-size:12px;color:var(--muted);margin:3px 0 6px">HAS, DM2, Hipotireoidismo, Asma, DPOC, etc.</div>
+        {{ clinical_form.comorbidities }}
+        {% if clinical_form.comorbidities.errors %}<div class="errorlist">{{ clinical_form.comorbidities.errors }}</div>{% endif %}
+      </div>
+
+      <!-- Tabagismo + Etilismo -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="form-group" style="margin:0">
+          <label style="font-weight:700;font-size:14px;display:block;margin-bottom:2px">🚬 Tabagismo</label>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Uso atual ou passado</div>
+          <div class="toggle-group">
+            {% for widget in clinical_form.smokes %}
+            {{ widget.tag }}<label for="{{ widget.id_for_label }}">{{ widget.choice_label }}</label>
+            {% endfor %}
+          </div>
+          {% if clinical_form.smokes.errors %}<div class="errorlist" style="margin-top:6px">{{ clinical_form.smokes.errors }}</div>{% endif %}
+        </div>
+        <div class="form-group" style="margin:0">
+          <label style="font-weight:700;font-size:14px;display:block;margin-bottom:2px">🍺 Etilismo</label>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Frequência de consumo</div>
+          <div class="toggle-group">
+            {% for widget in clinical_form.drinks %}
+            {{ widget.tag }}<label for="{{ widget.id_for_label }}">{{ widget.choice_label }}</label>
+            {% endfor %}
+          </div>
+          {% if clinical_form.drinks.errors %}<div class="errorlist" style="margin-top:6px">{{ clinical_form.drinks.errors }}</div>{% endif %}
+        </div>
+      </div>
+
+    </div>
+
+    <div style="display:flex;gap:12px;margin-top:24px;padding-top:18px;border-top:1px solid var(--border-soft)">
+      <button type="submit" class="btn btn-primary">Salvar dados clínicos</button>
+    </div>
+  </form>
+</div>
+{% endif %}
+
+</div><!-- /flex wrapper -->
 {% endblock %}

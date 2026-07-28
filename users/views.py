@@ -551,15 +551,46 @@ def analytics(request):
 
 @login_required
 def profile(request):
+    from consultations.models import PatientClinicalSummary
+    from consultations.forms import PatientClinicalSummaryForm
+
+    is_patient = request.user.role == 'PATIENT'
+    clinical_summary = None
+    clinical_form = None
+
+    if is_patient:
+        clinical_summary, _ = PatientClinicalSummary.objects.get_or_create(patient=request.user)
+
     if request.method == 'POST':
-        form = ProfileForm(request.POST, instance=request.user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Perfil atualizado com sucesso!')
-            return redirect('profile')
+        action = request.POST.get('_action', 'profile')
+
+        if action == 'clinical' and is_patient:
+            form = ProfileForm(instance=request.user)
+            clinical_form = PatientClinicalSummaryForm(request.POST, instance=clinical_summary)
+            if clinical_form.is_valid():
+                obj = clinical_form.save(commit=False)
+                obj.updated_by = request.user
+                obj.save()
+                messages.success(request, 'Dados clínicos atualizados com sucesso!')
+                return redirect('profile')
+        else:
+            form = ProfileForm(request.POST, instance=request.user)
+            if is_patient:
+                clinical_form = PatientClinicalSummaryForm(instance=clinical_summary)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Perfil atualizado com sucesso!')
+                return redirect('profile')
     else:
         form = ProfileForm(instance=request.user)
-    return render(request, 'users/profile.html', {'form': form})
+        if is_patient:
+            clinical_form = PatientClinicalSummaryForm(instance=clinical_summary)
+
+    return render(request, 'users/profile.html', {
+        'form': form,
+        'clinical_form': clinical_form,
+        'is_patient': is_patient,
+    })
 
 
 def quem_somos(request):
