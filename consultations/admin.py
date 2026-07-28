@@ -105,7 +105,7 @@ class ExpectedEvolutionAdmin(admin.ModelAdmin):
 
 @admin.register(PatientClinicalSummary)
 class PatientClinicalSummaryAdmin(admin.ModelAdmin):
-    list_display   = ('patient', 'smokes', 'drinks', 'updated_by', 'updated_at')
+    list_display   = ('patient', 'weight', 'smokes', 'drinks', 'updated_by', 'updated_at')
     search_fields  = ('patient__email', 'patient__username')
     readonly_fields = ('id', 'created_at', 'updated_at')
     raw_id_fields  = ('patient', 'updated_by')

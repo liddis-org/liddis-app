@@ -356,10 +356,15 @@ class ConsultationDetailView(LoginRequiredMixin, DetailView):
         ctx['block3_label']        = _block3_label(user)
 
         # Perfil clínico permanente do paciente (Descrição do Paciente)
-        try:
-            ctx['clinical_summary'] = patient.clinical_summary
-        except PatientClinicalSummary.DoesNotExist:
-            ctx['clinical_summary'] = None
+        # get_or_create garante que o registro exista para qualquer paciente,
+        # permitindo que profissionais preencham os dados a partir do detalhe da consulta.
+        if _is_professional(user):
+            ctx['clinical_summary'], _ = PatientClinicalSummary.objects.get_or_create(patient=patient)
+        else:
+            try:
+                ctx['clinical_summary'] = patient.clinical_summary
+            except PatientClinicalSummary.DoesNotExist:
+                ctx['clinical_summary'] = None
         ctx['can_edit_clinical_summary'] = _is_professional(user)
 
         # Dados demográficos do paciente (carregados automaticamente do banco)
@@ -827,11 +832,9 @@ def atendimento_consulta(request, token):
         patient=patient
     ).select_related('session').order_by('-date')[:10]
 
-    # Perfil clínico permanente do paciente
-    try:
-        clinical_summary = patient.clinical_summary
-    except PatientClinicalSummary.DoesNotExist:
-        clinical_summary = None
+    # Perfil clínico permanente do paciente — get_or_create para garantir
+    # que o profissional sempre veja e possa editar os dados após salvar a consulta.
+    clinical_summary, _ = PatientClinicalSummary.objects.get_or_create(patient=patient)
 
     # Último sinal vital registrado
     ultimo_vital = VitalSign.objects.filter(patient=patient).order_by('-date', '-created_at').first()
