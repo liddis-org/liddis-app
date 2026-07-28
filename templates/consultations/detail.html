@@ -598,7 +598,13 @@
             <p class="field-value">{{ clinical_summary.comorbidities }}</p>
           </div>
           {% endif %}
-          <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+            {% if clinical_summary.weight %}
+            <div>
+              <div class="field-label">Peso de referência</div>
+              <span class="badge badge-teal">⚖ {{ clinical_summary.weight }} kg</span>
+            </div>
+            {% endif %}
             {% if clinical_summary.smokes %}
             <div>
               <div class="field-label">Tabagismo</div>

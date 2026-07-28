@@ -156,16 +156,18 @@ class PatientClinicalSummaryForm(forms.ModelForm):
 
     class Meta:
         model = PatientClinicalSummary
-        fields = ['allergies', 'continuous_medications', 'comorbidities', 'smokes', 'drinks']
+        fields = ['allergies', 'continuous_medications', 'comorbidities', 'weight', 'smokes', 'drinks']
         widgets = {
             'allergies':              forms.Textarea(attrs={**_TA(3), 'placeholder': 'Penicilina, dipirona, látex, amendoim...'}),
             'continuous_medications': forms.Textarea(attrs={**_TA(3), 'placeholder': 'Metformina 850mg 2x/dia, Losartana 50mg...'}),
             'comorbidities':          forms.Textarea(attrs={**_TA(3), 'placeholder': 'DM2, HAS, Hipotireoidismo, Asma...'}),
+            'weight':                 forms.NumberInput(attrs={**_I, 'placeholder': 'Ex: 72.5', 'step': '0.1', 'min': '1', 'max': '500'}),
         }
         labels = {
             'allergies':              'Alergias conhecidas',
             'continuous_medications': 'Medicamentos de uso contínuo',
             'comorbidities':          'Comorbidades / Condições crônicas',
+            'weight':                 'Peso de referência (kg)',
         }
 
 

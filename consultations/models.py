@@ -549,6 +549,7 @@ class PatientClinicalSummary(models.Model):
     allergies              = models.TextField(blank=True, verbose_name='Alergias conhecidas')
     continuous_medications = models.TextField(blank=True, verbose_name='Medicamentos de uso contínuo')
     comorbidities          = models.TextField(blank=True, verbose_name='Comorbidades / Condições crônicas')
+    weight                 = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True, verbose_name='Peso de referência (kg)')
     smokes                 = models.CharField(max_length=10, choices=SMOKE_CHOICES, blank=True, verbose_name='Tabagismo')
     drinks                 = models.CharField(max_length=15, choices=DRINK_CHOICES, blank=True, verbose_name='Etilismo')
     updated_by = models.ForeignKey(

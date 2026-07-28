@@ -566,8 +566,9 @@
         <div style="font-size:12px">{{ clinical_summary.continuous_medications }}</div>
       </div>
       {% endif %}
-      {% if clinical_summary.smokes or clinical_summary.drinks %}
+      {% if clinical_summary.weight or clinical_summary.smokes or clinical_summary.drinks %}
       <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+        {% if clinical_summary.weight %}<span class="badge badge-teal">⚖ {{ clinical_summary.weight }} kg</span>{% endif %}
         {% if clinical_summary.smokes %}<span class="badge badge-yellow">🚬 {{ clinical_summary.get_smokes_display }}</span>{% endif %}
         {% if clinical_summary.drinks %}<span class="badge badge-yellow">🍺 {{ clinical_summary.get_drinks_display }}</span>{% endif %}
       </div>

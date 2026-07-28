@@ -163,6 +163,10 @@ class ClinicalContext:
     smokes: str
     drinks: str
 
+    # Campos permanentes adicionais
+    blood_type: str = ''
+    weight: Optional[float] = None
+
     # Sinais vitais (últimos 5)
     vitals: list = field(default_factory=list)
 
@@ -363,8 +367,16 @@ class ClinicalContextBuilder:
             continuous_medications = summary.continuous_medications or ''
             smokes                 = summary.get_smokes_display() if summary.smokes else ''
             drinks                 = summary.get_drinks_display() if summary.drinks else ''
+            weight                 = float(summary.weight) if summary.weight else None
         except Exception:
             comorbidities = allergies = continuous_medications = smokes = drinks = ''
+            weight = None
+
+        # ── Tipo sanguíneo (PatientProfile) ──────────────────────────────────
+        try:
+            blood_type = patient.patient_profile.blood_type or ''
+        except Exception:
+            blood_type = ''
 
         # ── Sinais vitais ─────────────────────────────────────────────────────
         raw_vitals = (
@@ -460,6 +472,8 @@ class ClinicalContextBuilder:
             continuous_medications=continuous_medications,
             smokes=smokes,
             drinks=drinks,
+            blood_type=blood_type,
+            weight=weight,
             vitals=vitals,
             anamneses=anamneses,
             interventions=interventions,
@@ -572,12 +586,15 @@ class ClinicalContextBuilder:
         if ctx.patient_gender: lines.append(f"Sexo: {ctx.patient_gender}")
 
         lines.append("\n─── PERFIL CLÍNICO PERMANENTE ───")
+        if ctx.blood_type:             lines.append(f"Tipo sanguíneo: {ctx.blood_type}")
+        if ctx.weight:                 lines.append(f"Peso de referência: {ctx.weight} kg")
         if ctx.comorbidities:          lines.append(f"Comorbidades: {ctx.comorbidities}")
         if ctx.allergies:              lines.append(f"Alergias: {ctx.allergies}")
         if ctx.continuous_medications: lines.append(f"Medicamentos contínuos: {ctx.continuous_medications}")
         if ctx.smokes:                 lines.append(f"Tabagismo: {ctx.smokes}")
         if ctx.drinks:                 lines.append(f"Etilismo: {ctx.drinks}")
-        if not any([ctx.comorbidities, ctx.allergies, ctx.continuous_medications]):
+        if not any([ctx.comorbidities, ctx.allergies, ctx.continuous_medications,
+                    ctx.blood_type, ctx.weight]):
             lines.append("(Perfil clínico permanente não preenchido)")
 
         if ctx.vitals:
