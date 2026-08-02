@@ -4,16 +4,27 @@
 
 {% block extra_css %}
 <style>
+/* Scoped label override — base.html aplica text-transform:uppercase em .form-group label */
+.clinical-card .form-group > label {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
 .toggle-group {
   display: flex; gap: 0; border-radius: 10px; overflow: hidden;
-  border: 1px solid var(--border-soft); width: fit-content; margin-top: 8px;
+  border: 1px solid var(--border-soft); width: fit-content;
+  margin-top: 6px; max-width: 100%;
 }
 .toggle-group input[type="radio"] { display: none; }
 .toggle-group label {
-  padding: 9px 20px; font-size: 13px; font-weight: 600; color: var(--muted);
+  padding: 9px 18px; font-size: 13px; font-weight: 600; color: var(--muted);
   cursor: pointer; background: var(--surface-2);
   border-right: 1px solid var(--border-soft);
   transition: background .15s, color .15s; user-select: none; white-space: nowrap;
+  text-transform: none; letter-spacing: 0;
 }
 .toggle-group label:last-of-type { border-right: none; }
 .toggle-group label:hover { background: var(--surface-3, #2a2a2a); color: var(--text); }
@@ -130,7 +141,7 @@
 
 <!-- ── Card: Dados clínicos (somente pacientes) ── -->
 {% if is_patient and clinical_form %}
-<div class="card" style="border-top:3px solid var(--teal)">
+<div class="card clinical-card" style="border-top:3px solid var(--teal)">
   <div style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border-soft)">
     <h3 style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px">🩺 Dados Clínicos Permanentes</h3>
     <p style="font-size:13px;color:var(--muted)">
@@ -147,7 +158,7 @@
 
       <!-- Peso -->
       <div class="form-group" style="margin:0">
-        <label style="font-weight:700;font-size:14px">⚖ Peso (kg)</label>
+        <label>⚖ Peso (kg)</label>
         <div style="font-size:12px;color:var(--muted);margin:3px 0 6px">Seu peso habitual</div>
         <div style="max-width:180px">{{ clinical_form.weight }}</div>
         {% if clinical_form.weight.errors %}<div class="errorlist">{{ clinical_form.weight.errors }}</div>{% endif %}
@@ -155,7 +166,7 @@
 
       <!-- Alergias -->
       <div class="form-group" style="margin:0">
-        <label style="font-weight:700;font-size:14px">⚠ Alergias conhecidas</label>
+        <label>⚠ Alergias conhecidas</label>
         <div style="font-size:12px;color:var(--muted);margin:3px 0 6px">Medicamentos, alimentos, látex, contraste, etc.</div>
         {{ clinical_form.allergies }}
         {% if clinical_form.allergies.errors %}<div class="errorlist">{{ clinical_form.allergies.errors }}</div>{% endif %}
@@ -163,7 +174,7 @@
 
       <!-- Medicamentos contínuos -->
       <div class="form-group" style="margin:0">
-        <label style="font-weight:700;font-size:14px">💊 Medicamentos de uso contínuo</label>
+        <label>💊 Medicamentos de uso contínuo</label>
         <div style="font-size:12px;color:var(--muted);margin:3px 0 6px">Inclua nome, dose e frequência quando possível</div>
         {{ clinical_form.continuous_medications }}
         {% if clinical_form.continuous_medications.errors %}<div class="errorlist">{{ clinical_form.continuous_medications.errors }}</div>{% endif %}
@@ -171,34 +182,34 @@
 
       <!-- Comorbidades -->
       <div class="form-group" style="margin:0">
-        <label style="font-weight:700;font-size:14px">🏥 Comorbidades / Condições crônicas</label>
+        <label>🏥 Comorbidades / Condições crônicas</label>
         <div style="font-size:12px;color:var(--muted);margin:3px 0 6px">HAS, DM2, Hipotireoidismo, Asma, DPOC, etc.</div>
         {{ clinical_form.comorbidities }}
         {% if clinical_form.comorbidities.errors %}<div class="errorlist">{{ clinical_form.comorbidities.errors }}</div>{% endif %}
       </div>
 
-      <!-- Tabagismo + Etilismo -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-        <div class="form-group" style="margin:0">
-          <label style="font-weight:700;font-size:14px;display:block;margin-bottom:2px">🚬 Tabagismo</label>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Uso atual ou passado</div>
-          <div class="toggle-group">
-            {% for widget in clinical_form.smokes %}
-            {{ widget.tag }}<label for="{{ widget.id_for_label }}">{{ widget.choice_label }}</label>
-            {% endfor %}
-          </div>
-          {% if clinical_form.smokes.errors %}<div class="errorlist" style="margin-top:6px">{{ clinical_form.smokes.errors }}</div>{% endif %}
+      <!-- Tabagismo -->
+      <div class="form-group" style="margin:0">
+        <label>🚬 Tabagismo</label>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Uso atual ou passado</div>
+        <div class="toggle-group">
+          {% for widget in clinical_form.smokes %}
+          {{ widget.tag }}<label for="{{ widget.id_for_label }}">{{ widget.choice_label }}</label>
+          {% endfor %}
         </div>
-        <div class="form-group" style="margin:0">
-          <label style="font-weight:700;font-size:14px;display:block;margin-bottom:2px">🍺 Etilismo</label>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Frequência de consumo</div>
-          <div class="toggle-group">
-            {% for widget in clinical_form.drinks %}
-            {{ widget.tag }}<label for="{{ widget.id_for_label }}">{{ widget.choice_label }}</label>
-            {% endfor %}
-          </div>
-          {% if clinical_form.drinks.errors %}<div class="errorlist" style="margin-top:6px">{{ clinical_form.drinks.errors }}</div>{% endif %}
+        {% if clinical_form.smokes.errors %}<div class="errorlist" style="margin-top:6px">{{ clinical_form.smokes.errors }}</div>{% endif %}
+      </div>
+
+      <!-- Etilismo -->
+      <div class="form-group" style="margin:0">
+        <label>🍺 Etilismo</label>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Frequência de consumo</div>
+        <div class="toggle-group">
+          {% for widget in clinical_form.drinks %}
+          {{ widget.tag }}<label for="{{ widget.id_for_label }}">{{ widget.choice_label }}</label>
+          {% endfor %}
         </div>
+        {% if clinical_form.drinks.errors %}<div class="errorlist" style="margin-top:6px">{{ clinical_form.drinks.errors }}</div>{% endif %}
       </div>
 
     </div>
