@@ -7,7 +7,6 @@ VARIÁVEIS ESPERADAS NO CONTEXTO (todas já presentes em ConsultationDetailView)
 
   consultation          → objeto Consultation
   evaluation_label      → ex: "Avaliação de Enfermagem", "Avaliação Médica"
-  classification_hint   → ex: "NANDA", "CID-10", "DSM-5", "CIF"
   diagnosis_label       → ex: "DIAGNÓSTICO DE ENFERMAGEM", "DIAGNÓSTICO MÉDICO"
   clinical_intervention → objeto ClinicalIntervention (ou None)
   expected_evolution    → objeto ExpectedEvolution (ou None)
@@ -320,26 +319,7 @@ select.av-priority-select:focus { outline: none; border-color: #00d4aa; }
       {% if clinical_intervention %}
         {{ clinical_intervention.professional_diagnosis|default:"—" }}
       {% else %}—{% endif %}
-      {# VARIÁVEL: sistema de classificação (NANDA / CID-10 / DSM-5 / CIF…) #}
-      {% if classification_hint %}
-        <span class="av-tag av-tag-blue" style="margin-left:8px;">{{ classification_hint }}</span>
-      {% endif %}
     </div>
-
-    {# Código de classificação #}
-    {% if clinical_intervention and clinical_intervention.classification_code %}
-    <div style="margin-top:12px;">
-      <div class="av-field-label">Código / Classificação ({{ classification_hint }})</div>
-      <div class="av-field-value{% if is_professional and allowed_actions.edit_anamnese %} editable{% endif %}"
-           {% if is_professional and allowed_actions.edit_anamnese %}
-             contenteditable="true"
-             data-field="classification_code"
-             data-placeholder="ex: 00030, J18.9, F32.1..."
-           {% endif %}>
-        {{ clinical_intervention.classification_code }}
-      </div>
-    </div>
-    {% endif %}
   </div>
 
   {# ══════════════════════════════════════════════════════════════════════ #}

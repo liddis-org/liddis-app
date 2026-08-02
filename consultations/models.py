@@ -87,6 +87,15 @@ class Consultation(models.Model):
         db_index=True,
     )
 
+    # Profissional que realizou / criou a consulta — chave de ownership para RBAC
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='consultations_created',
+        verbose_name='Criado por',
+    )
+
     # Campos semânticos para IA
     ai_summary      = models.TextField(blank=True, verbose_name='Resumo gerado por IA')
     ai_last_analysis = models.DateTimeField(null=True, blank=True, verbose_name='Última análise IA')
@@ -596,7 +605,6 @@ class ClinicalIntervention(models.Model):
         verbose_name='Profissional',
     )
     professional_diagnosis = models.TextField(blank=True, verbose_name='Diagnóstico clínico do profissional')
-    classification_code    = models.CharField(max_length=50, blank=True, verbose_name='Código de classificação (NANDA, CID-10, DSM…)')
     related_factors        = models.TextField(blank=True, verbose_name='Fatores relacionados / etiologia')
     conducts               = models.TextField(blank=True, verbose_name='Condutas clínicas (uma por linha)')
     procedures             = models.TextField(blank=True, verbose_name='Procedimentos realizados')

@@ -74,21 +74,6 @@ _DIAGNOSIS_LABEL = {
     'PATIENT':           'AVALIAÇÃO CLÍNICA',
 }
 
-_CLASSIFICATION_HINT = {
-    'DOCTOR':            'CID-11 / CIAP-2',
-    'NURSE':             'NANDA',
-    'PHYSIO':            'CIF',
-    'NUTRITIONIST':      'CID-10 / TUSS',
-    'SPEECH_THERAPIST':  'CID-10',
-    'PHYSICAL_EDUCATOR': 'CID-10',
-    'PSYCHOLOGIST':      'DSM-5-TR',
-    'DENTIST':           'CID-10 / TUSS',
-    'OCC_THERAPIST':     'CIF / CID-10',
-    'PHARMACIST':        'CID-10',
-    'BIOMEDICO':         'CID-10',
-    'ADMIN':             'CID-10',
-}
-
 # Rótulo do Bloco 1 completo (inclui sistema de classificação)
 _BLOCK1_LABEL = {
     'DOCTOR':            'Diagnóstico Médico (CID-11 / CIAP-2)',
@@ -166,10 +151,6 @@ def _diagnosis_label(user):
     return _DIAGNOSIS_LABEL.get(user.role, 'DIAGNÓSTICO CLÍNICO')
 
 
-def _classification_hint(user):
-    return _CLASSIFICATION_HINT.get(user.role, 'CID-10')
-
-
 def _block1_label(user):
     return _BLOCK1_LABEL.get(user.role, 'Diagnóstico Clínico')
 
@@ -208,6 +189,24 @@ def _accessible_consultations(user):
             Q(session__professional=user) | Q(patient__in=linked_patients)
         )
     return Consultation.objects.filter(patient=user)
+
+
+def _writable_consultations(user):
+    """
+    Queryset de consultas que o usuário pode EDITAR / MODIFICAR.
+    Regra de negócio:
+      - Paciente: apenas registros que ele próprio criou manualmente.
+      - ADMIN / superuser: todas as consultas.
+      - Demais profissionais: apenas as consultas onde são o criador (created_by).
+    """
+    if not _is_professional(user):
+        return Consultation.objects.filter(
+            patient=user,
+            record_origin=Consultation.RecordOrigin.PATIENT_MANUAL,
+        )
+    if user.is_superuser or user.role == 'ADMIN':
+        return Consultation.objects.all()
+    return Consultation.objects.filter(created_by=user)
 
 
 def _get_or_init_sub_models(consultation):
@@ -346,14 +345,13 @@ class ConsultationDetailView(LoginRequiredMixin, DetailView):
         )
         ctx['tab_choices']   = ConsultationImage.TAB_CHOICES
         ctx['active_tab']    = self.request.GET.get('tab', 'geral')
-        ctx['is_professional']     = _is_professional(user)
-        ctx['evaluation_label']    = _evaluation_label(user)
-        ctx['diagnosis_label']     = _diagnosis_label(user)
-        ctx['classification_hint'] = _classification_hint(user)
-        ctx['block1_label']        = _block1_label(user)
-        ctx['block1_sublabel']     = _block1_sublabel(user)
-        ctx['block2_label']        = _block2_label(user)
-        ctx['block3_label']        = _block3_label(user)
+        ctx['is_professional']  = _is_professional(user)
+        ctx['evaluation_label'] = _evaluation_label(user)
+        ctx['diagnosis_label']  = _diagnosis_label(user)
+        ctx['block1_label']     = _block1_label(user)
+        ctx['block1_sublabel']  = _block1_sublabel(user)
+        ctx['block2_label']     = _block2_label(user)
+        ctx['block3_label']     = _block3_label(user)
 
         # Perfil clínico permanente do paciente (Descrição do Paciente)
         # get_or_create garante que o registro exista para qualquer paciente,
@@ -395,17 +393,24 @@ class ConsultationDetailView(LoginRequiredMixin, DetailView):
             and consultation.patient_id == user.pk
             and consultation.is_patient_record
         )
+        # Profissional é dono apenas se foi quem criou a consulta
+        is_admin_or_super = user.is_superuser or user.role == 'ADMIN'
+        is_consultation_owner = (
+            _is_professional(user) and
+            (is_admin_or_super or consultation.created_by_id == user.pk)
+        )
+        ctx['is_consultation_owner'] = is_consultation_owner
         ctx['allowed_actions'] = {
-            'edit':             has_permission(user, 'consultation', 'edit') or is_owner_patient,
-            'delete':           has_permission(user, 'consultation', 'delete') or is_owner_patient,
+            'edit':             (has_permission(user, 'consultation', 'edit') and is_consultation_owner) or is_owner_patient,
+            'delete':           (has_permission(user, 'consultation', 'delete') and is_consultation_owner) or is_owner_patient,
             'view_anamnese':    has_permission(user, 'anamnese',     'view'),
-            'edit_anamnese':    has_permission(user, 'anamnese',     'edit') or is_owner_patient,
+            'edit_anamnese':    (has_permission(user, 'anamnese',     'edit') and is_consultation_owner) or is_owner_patient,
             'view_exams':       has_permission(user, 'exams',        'view'),
             'view_prescription':has_permission(user, 'prescription', 'view'),
             'view_diagnosis':   has_permission(user, 'diagnosis',    'view'),
             'view_images':      has_permission(user, 'images',       'view'),
-            'upload_images':    has_permission(user, 'images',       'create') or is_owner_patient,
-            'delete_images':    has_permission(user, 'images',       'delete') or is_owner_patient,
+            'upload_images':    (has_permission(user, 'images',       'create') and is_consultation_owner) or is_owner_patient,
+            'delete_images':    (has_permission(user, 'images',       'delete') and is_consultation_owner) or is_owner_patient,
         }
         return ctx
 
@@ -479,11 +484,9 @@ class ConsultationUpdateView(LoginRequiredMixin, UpdateView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        qs = _accessible_consultations(self.request.user)
-        # Segurança: pacientes só editam registros que eles mesmos cadastraram
-        if not _is_professional(self.request.user):
-            qs = qs.filter(record_origin=Consultation.RecordOrigin.PATIENT_MANUAL)
-        return qs
+        # Profissionais só editam consultas que realizaram; admin e superuser editam tudo;
+        # pacientes só editam os próprios registros manuais.
+        return _writable_consultations(self.request.user)
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -539,11 +542,8 @@ class ConsultationDeleteView(LoginRequiredMixin, DeleteView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        qs = _accessible_consultations(self.request.user)
-        # Segurança: pacientes só excluem registros que eles mesmos cadastraram
-        if not _is_professional(self.request.user):
-            qs = qs.filter(record_origin=Consultation.RecordOrigin.PATIENT_MANUAL)
-        return qs
+        # Mesma regra do update: só o criador pode excluir (admin exclui tudo)
+        return _writable_consultations(self.request.user)
 
     def form_valid(self, form):
         log_access(self.request, 'delete', 'consultation', resource_id=self.object.pk)
@@ -555,9 +555,11 @@ class ConsultationDeleteView(LoginRequiredMixin, DeleteView):
 
 @login_required
 def upload_image(request, pk):
-    consultation = get_object_or_404(
-        _accessible_consultations(request.user), pk=pk
-    )
+    # Verifica acesso de leitura; depois verifica direito de escrita (ownership)
+    consultation = get_object_or_404(_accessible_consultations(request.user), pk=pk)
+    if not _writable_consultations(request.user).filter(pk=pk).exists():
+        messages.error(request, 'Você não tem permissão para anexar arquivos a esta consulta.')
+        return redirect(f'/consultas/{pk}/')
     tab = request.POST.get('tab', 'anamnese')
     if request.method == 'POST':
         file = request.FILES.get('image')
@@ -584,9 +586,10 @@ def upload_image(request, pk):
 
 @login_required
 def delete_image(request, pk, img_pk):
-    consultation = get_object_or_404(
-        _accessible_consultations(request.user), pk=pk
-    )
+    consultation = get_object_or_404(_accessible_consultations(request.user), pk=pk)
+    if not _writable_consultations(request.user).filter(pk=pk).exists():
+        messages.error(request, 'Você não tem permissão para remover arquivos desta consulta.')
+        return redirect(f'/consultas/{pk}/')
     image = get_object_or_404(ConsultationImage, pk=img_pk, consultation=consultation)
     tab = image.tab
     image.image.delete(save=False)
@@ -853,6 +856,7 @@ def atendimento_consulta(request, token):
             consultation.professional_name = request.user.get_full_name() or request.user.username
             consultation.profession = request.user.profession
             consultation.specialty = request.user.professional_specialty or 'outro'
+            consultation.created_by = request.user
             consultation.save()
             _save_sub_forms(request, consultation, anamnese_form, exames_form)
             _handle_image_uploads(request, consultation)
@@ -937,14 +941,13 @@ def atendimento_consulta(request, token):
         'evolution_form':     evolution_form,
         'tab_choices':        ConsultationImage.TAB_CHOICES,
         'active_tab':         request.POST.get('active_tab', 'geral'),
-        'professional':        request.user,
-        'evaluation_label':    _evaluation_label(request.user),
-        'diagnosis_label':     _diagnosis_label(request.user),
-        'classification_hint': _classification_hint(request.user),
-        'block1_label':        _block1_label(request.user),
-        'block1_sublabel':     _block1_sublabel(request.user),
-        'block2_label':        _block2_label(request.user),
-        'block3_label':        _block3_label(request.user),
+        'professional':      request.user,
+        'evaluation_label':  _evaluation_label(request.user),
+        'diagnosis_label':   _diagnosis_label(request.user),
+        'block1_label':      _block1_label(request.user),
+        'block1_sublabel':   _block1_sublabel(request.user),
+        'block2_label':      _block2_label(request.user),
+        'block3_label':      _block3_label(request.user),
         'historico_anterior':  historico_anterior,
         'clinical_summary':   clinical_summary,
         'ultimo_vital':       ultimo_vital,

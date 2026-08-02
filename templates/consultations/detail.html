@@ -372,19 +372,13 @@
                 <p class="field-value" style="font-size:13px">{{ clinical_intervention.professional_diagnosis }}</p>
               </div>
               {% endif %}
-              {% if clinical_intervention.classification_code %}
-              <div class="aval-field">
-                <div class="field-label">Código</div>
-                <span class="badge badge-teal">{{ clinical_intervention.classification_code }}</span>
-              </div>
-              {% endif %}
               {% if clinical_intervention.related_factors %}
               <div class="aval-field">
                 <div class="field-label">{{ block1_sublabel|default:"Fatores relacionados" }}</div>
                 <p class="field-value" style="font-size:13px">{{ clinical_intervention.related_factors }}</p>
               </div>
               {% endif %}
-              {% if not clinical_intervention.professional_diagnosis and not clinical_intervention.classification_code and not clinical_intervention.related_factors %}
+              {% if not clinical_intervention.professional_diagnosis and not clinical_intervention.related_factors %}
                 <p style="color:var(--muted);font-size:12px">Não registrado.</p>
               {% endif %}
             {% else %}

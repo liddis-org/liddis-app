@@ -330,12 +330,11 @@ class ClinicalInterventionForm(forms.ModelForm):
     class Meta:
         model  = ClinicalIntervention
         fields = [
-            'professional_diagnosis', 'classification_code', 'related_factors',
+            'professional_diagnosis', 'related_factors',
             'conducts', 'procedures', 'guidelines', 'clinical_actions',
         ]
         widgets = {
             'professional_diagnosis': forms.TextInput(attrs={**_I, 'placeholder': 'Ex: Troca de Gases Prejudicada, Déficit Nutricional...'}),
-            'classification_code':    forms.TextInput(attrs={**_I, 'placeholder': 'Ex: NANDA, CID-10, DSM-5, NCP...'}),
             'related_factors':        forms.Textarea(attrs={**_TA(3), 'placeholder': 'Fatores causais ou contribuintes para o diagnóstico...'}),
             'conducts':               forms.Textarea(attrs={**_TA(5), 'placeholder': 'Digite uma conduta por linha:\nMonitorização contínua de oximetria\nPositionamento em decúbito elevado\nAdministração de O₂ conforme prescrição'}),
             'procedures':             forms.Textarea(attrs={**_TA(3), 'placeholder': 'Procedimentos realizados durante o atendimento (curativo, sondagem, punção...)'}),
@@ -344,7 +343,6 @@ class ClinicalInterventionForm(forms.ModelForm):
         }
         labels = {
             'professional_diagnosis': 'Diagnóstico clínico',
-            'classification_code':    'Código de classificação',
             'related_factors':        'Fatores relacionados / etiologia',
             'conducts':               'Condutas (uma por linha)',
             'procedures':             'Procedimentos realizados',

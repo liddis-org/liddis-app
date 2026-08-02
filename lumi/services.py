@@ -518,7 +518,6 @@ class ClinicalContextBuilder:
             f"{getattr(i.professional, 'display_name', 'Profissional') if i.professional else 'Profissional'}]"
         ]
         if i.professional_diagnosis: parts.append(f"Diagnóstico: {i.professional_diagnosis}")
-        if i.classification_code:    parts.append(f"Classificação: {i.classification_code}")
         if i.related_factors:        parts.append(f"Fatores relacionados: {i.related_factors}")
         if i.conducts:               parts.append(f"Condutas: {i.conducts}")
         if i.procedures:             parts.append(f"Procedimentos: {i.procedures}")
@@ -832,7 +831,6 @@ class LumiService:
             if ci:
                 lines.append("\n── Intervenção Clínica ──")
                 if ci.professional_diagnosis: lines.append(f"Diagnóstico clínico: {ci.professional_diagnosis}")
-                if ci.classification_code:    lines.append(f"Classificação: {ci.classification_code}")
                 if ci.conducts:               lines.append(f"Condutas: {ci.conducts[:400]}")
                 if ci.procedures:             lines.append(f"Procedimentos: {ci.procedures[:300]}")
                 if ci.guidelines:             lines.append(f"Orientações: {ci.guidelines[:300]}")

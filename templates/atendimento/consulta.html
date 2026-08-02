@@ -349,15 +349,9 @@
               <label>Diagnóstico clínico</label>
               {{ intervention_form.professional_diagnosis }}
             </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Código de classificação <span style="font-size:11px;color:var(--muted);font-weight:400">({{ classification_hint }})</span></label>
-                {{ intervention_form.classification_code }}
-              </div>
-              <div class="form-group">
-                <label>{{ intervention_form.related_factors.label }}</label>
-                {{ intervention_form.related_factors }}
-              </div>
+            <div class="form-group">
+              <label>{{ intervention_form.related_factors.label }}</label>
+              {{ intervention_form.related_factors }}
             </div>
 
             <hr style="border:none;border-top:1px solid var(--border-soft);margin:18px 0">
