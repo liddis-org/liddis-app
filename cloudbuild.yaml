@@ -39,10 +39,30 @@ steps:
       - '--all-tags'
       - 'southamerica-east1-docker.pkg.dev/$PROJECT_ID/liddis/$_SERVICE'
 
-  # ── 3. Deploy no Cloud Run ─────────────────────────────────────────────────
+  # ── 3. Migrations do banco de dados ───────────────────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'migrate'
+    waitFor: ['push']
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'jobs'
+      - 'create'
+      - 'liddis-migrate-$BUILD_ID'
+      - '--image=southamerica-east1-docker.pkg.dev/$PROJECT_ID/liddis/$_SERVICE:$BUILD_ID'
+      - '--region=$_REGION'
+      - '--command=python'
+      - '--args=manage.py,migrate,--no-input'
+      - '--set-secrets=SECRET_KEY=liddis-secret-key:latest,DATABASE_URL=liddis-database-url:latest'
+      - '--set-env-vars=DEBUG=False'
+      - '--max-retries=1'
+      - '--execute-now'
+      - '--wait'
+
+  # ── 4. Deploy no Cloud Run ─────────────────────────────────────────────────
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'deploy'
-    waitFor: ['push']
+    waitFor: ['migrate']
     entrypoint: gcloud
     args:
       - 'run'
