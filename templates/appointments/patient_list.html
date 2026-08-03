@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Meus Agendamentos — LIDDIS{% endblock %}
+{% block nav_appointments %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Meus Agendamentos</h1>
+    <p class="page-subtitle">Gerencie suas consultas agendadas</p>
+  </div>
+  <a href="{% url 'appointment_create' %}" class="btn btn-primary">
+    <i data-lucide="plus" style="width:15px;height:15px"></i>
+    Novo Agendamento
+  </a>
+</div>
+
+<!-- Filtros -->
+<div class="card" style="margin-bottom:16px;padding:16px">
+  <form method="get" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+    <select name="status" class="form-control" style="width:auto;min-width:160px" onchange="this.form.submit()">
+      <option value="">Todos os status</option>
+      {% for value, label in status_choices %}
+        <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    {% if selected_status %}
+      <a href="{% url 'appointment_list' %}" class="btn btn-ghost" style="font-size:13px">Limpar filtro</a>
+    {% endif %}
+  </form>
+</div>
+
+{% if appointments %}
+  <div style="display:flex;flex-direction:column;gap:12px">
+    {% for apt in appointments %}
+    <div class="card" style="padding:20px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+      <div style="display:flex;gap:16px;align-items:center;flex:1;min-width:0">
+        <!-- Data -->
+        <div style="text-align:center;min-width:56px;background:var(--surface-2);border-radius:10px;padding:10px 8px">
+          <div style="font-size:20px;font-weight:700;color:var(--text);line-height:1;font-variant-numeric:tabular-nums">{{ apt.scheduled_date|date:"d" }}</div>
+          <div style="font-size:10px;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">{{ apt.scheduled_date|date:"M" }}</div>
+        </div>
+
+        <!-- Info -->
+        <div style="min-width:0">
+          <div style="font-weight:600;font-size:14px;color:var(--text)">
+            {% if apt.professional %}{{ apt.professional.get_full_name }}{% else %}Profissional não definido{% endif %}
+          </div>
+          <div style="font-size:12px;color:var(--text-2);margin-top:3px">
+            <i data-lucide="clock" style="width:12px;height:12px;vertical-align:-1px"></i>
+            {{ apt.scheduled_time|time:"H:i" }}
+            {% if apt.location %} &nbsp;&bull;&nbsp; {{ apt.location }}{% endif %}
+            &nbsp;&bull;&nbsp; {{ apt.get_appointment_type_display }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Status + Ações -->
+      <div style="display:flex;gap:10px;align-items:center;flex-shrink:0">
+        <span class="badge badge-{{ apt.status_color }}" style="font-size:11px">{{ apt.get_status_display }}</span>
+        <a href="{% url 'appointment_detail' apt.pk %}" class="btn btn-ghost" style="font-size:12px;padding:6px 14px">Ver</a>
+        {% if apt.is_cancellable %}
+          <a href="{% url 'appointment_cancel' apt.pk %}" class="btn btn-ghost" style="font-size:12px;padding:6px 14px;color:var(--red, #ef4444)">Cancelar</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Paginação -->
+  {% if is_paginated %}
+  <div style="display:flex;justify-content:center;gap:8px;margin-top:24px">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}" class="btn btn-ghost">Anterior</a>
+    {% endif %}
+    <span style="padding:8px 16px;color:var(--text-2);font-size:13px">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}" class="btn btn-ghost">Próxima</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+{% else %}
+  <div class="card" style="padding:48px;text-align:center">
+    <i data-lucide="calendar-off" style="width:40px;height:40px;color:var(--text-2);margin-bottom:12px"></i>
+    <p style="color:var(--text-2);margin:0 0 16px">Nenhum agendamento encontrado.</p>
+    <a href="{% url 'appointment_create' %}" class="btn btn-primary">Agendar consulta</a>
+  </div>
+{% endif %}
+{% endblock %}

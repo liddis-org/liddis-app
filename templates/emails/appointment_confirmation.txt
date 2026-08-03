@@ -1,0 +1,16 @@
+LIDDIS — Consulta confirmada
+
+Olá, {{ appointment.patient.get_full_name }}!
+
+Seu agendamento foi registrado com sucesso.
+
+Profissional : {% if appointment.professional %}{{ appointment.professional.get_full_name }}{% else %}—{% endif %}
+Data         : {{ appointment.scheduled_date|date:"d/m/Y" }}
+Horário      : {{ appointment.scheduled_time|time:"H:i" }}
+{% if appointment.location %}Local        : {{ appointment.location }}
+{% endif %}Tipo         : {{ appointment.get_appointment_type_display }}
+
+Para cancelar ou remarcar acesse: https://liddis.com.br/agendamentos/
+
+Este é um e-mail automático — não responda a esta mensagem.
+LIDDIS

@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Novo Agendamento — LIDDIS{% endblock %}
+{% block nav_appointments %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+  #slots-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .slot-btn {
+    padding: 6px 16px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface-2); color: var(--text); cursor: pointer; font-size: 13px;
+    transition: all .15s;
+  }
+  .slot-btn:hover, .slot-btn.selected {
+    background: var(--teal-glow); border-color: var(--teal-border); color: var(--teal);
+  }
+  #no-slots { color: var(--text-2); font-size: 13px; display: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Novo Agendamento</h1>
+    <p class="page-subtitle">Escolha o profissional, data e horário</p>
+  </div>
+  {% if is_professional %}
+    <a href="{% url 'professional_agenda' %}" class="btn btn-ghost">Voltar à agenda</a>
+  {% else %}
+    <a href="{% url 'appointment_list' %}" class="btn btn-ghost">Voltar</a>
+  {% endif %}
+</div>
+
+<div class="card" style="max-width:640px;padding:28px">
+  {% if form.errors %}
+    <div class="alert alert-error" style="margin-bottom:20px">
+      {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+      {% for field in form %}{% for error in field.errors %}{{ field.label }}: {{ error }}<br>{% endfor %}{% endfor %}
+    </div>
+  {% endif %}
+
+  <form method="post" id="appointment-form">
+    {% csrf_token %}
+
+    <div class="form-group">
+      <label>{{ form.professional.label }}</label>
+      {{ form.professional }}
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="form-group">
+        <label>{{ form.scheduled_date.label }}</label>
+        {{ form.scheduled_date }}
+      </div>
+      <div class="form-group">
+        <label>Horário</label>
+        {{ form.scheduled_time }}
+        <div id="slots-container"></div>
+        <div id="no-slots">Nenhum slot disponível nesta data.</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="form-group">
+        <label>{{ form.appointment_type.label }}</label>
+        {{ form.appointment_type }}
+      </div>
+      <div class="form-group">
+        <label>{{ form.specialty.label }}</label>
+        {{ form.specialty }}
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>{{ form.location.label }}</label>
+      {{ form.location }}
+    </div>
+
+    <div class="form-group">
+      <label>{{ form.notes.label }}</label>
+      {{ form.notes }}
+    </div>
+
+    <div style="display:flex;gap:12px;margin-top:8px">
+      <button type="submit" class="btn btn-primary">Confirmar Agendamento</button>
+      {% if is_professional %}
+        <a href="{% url 'professional_agenda' %}" class="btn btn-ghost">Cancelar</a>
+      {% else %}
+        <a href="{% url 'appointment_list' %}" class="btn btn-ghost">Cancelar</a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  var profSelect = document.getElementById('id_professional');
+  var dateInput  = document.getElementById('id_scheduled_date');
+  var timeInput  = document.getElementById('id_scheduled_time');
+  var container  = document.getElementById('slots-container');
+  var noSlots    = document.getElementById('no-slots');
+
+  function loadSlots() {
+    var profId = profSelect ? profSelect.value : '';
+    var date   = dateInput ? dateInput.value : '';
+    if (!profId || !date) return;
+
+    container.innerHTML = '<span style="color:var(--text-2);font-size:13px">Carregando...</span>';
+    noSlots.style.display = 'none';
+
+    fetch('/agendamentos/api/slots/?professional_id=' + profId + '&date=' + date)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        container.innerHTML = '';
+        if (!data.slots || data.slots.length === 0) {
+          noSlots.style.display = 'block';
+          return;
+        }
+        data.slots.forEach(function(slot) {
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'slot-btn';
+          btn.textContent = slot;
+          if (timeInput.value === slot) btn.classList.add('selected');
+          btn.addEventListener('click', function() {
+            timeInput.value = slot;
+            container.querySelectorAll('.slot-btn').forEach(function(b) { b.classList.remove('selected'); });
+            btn.classList.add('selected');
+          });
+          container.appendChild(btn);
+        });
+      })
+      .catch(function() { container.innerHTML = ''; });
+  }
+
+  if (profSelect) profSelect.addEventListener('change', loadSlots);
+  if (dateInput)  dateInput.addEventListener('change', loadSlots);
+
+  // Carrega na abertura se já houver valores
+  if (profSelect && profSelect.value && dateInput && dateInput.value) loadSlots();
+})();
+</script>
+{% endblock %}

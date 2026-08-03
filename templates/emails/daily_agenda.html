@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 0; }
+  .container { max-width: 600px; margin: 32px auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+  .header { background: #0d1b2e; padding: 28px 32px; }
+  .header h1 { color: #00d4ff; font-size: 22px; margin: 0; letter-spacing: 2px; }
+  .header p { color: #94a3b8; font-size: 13px; margin: 6px 0 0; }
+  .body { padding: 32px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+  th { text-align: left; font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: .5px; padding: 8px 12px; border-bottom: 2px solid #e5e7eb; }
+  td { padding: 10px 12px; font-size: 13px; color: #374151; border-bottom: 1px solid #f3f4f6; }
+  tr:last-child td { border-bottom: none; }
+  .time { font-weight: 700; color: #1d4ed8; font-variant-numeric: tabular-nums; }
+  .footer { padding: 20px 32px; background: #f9fafb; border-top: 1px solid #e5e7eb; font-size: 11px; color: #9ca3af; text-align: center; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>LIDDIS</h1>
+    <p>Agenda do dia &mdash; {{ date|date:"d/m/Y" }}</p>
+  </div>
+  <div class="body">
+    <p style="color:#374151;font-size:14px">
+      Olá, {{ professional.get_full_name }}! Você tem <strong>{{ appointments|length }} consulta(s)</strong> hoje.
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Horário</th>
+          <th>Paciente</th>
+          <th>Tipo</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for apt in appointments %}
+        <tr>
+          <td class="time">{{ apt.scheduled_time|time:"H:i" }}</td>
+          <td>{{ apt.patient.get_full_name|default:apt.patient.username }}</td>
+          <td>{{ apt.get_appointment_type_display }}</td>
+          <td>{{ apt.get_status_display }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <p style="margin-top:24px;color:#6b7280;font-size:13px">
+      Veja sua agenda completa em <strong>liddis.com.br/agendamentos/agenda/</strong>
+    </p>
+  </div>
+  <div class="footer">
+    LIDDIS &mdash; Este é um e-mail automático, não responda a esta mensagem.
+  </div>
+</div>
+</body>
+</html>

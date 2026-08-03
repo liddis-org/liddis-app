@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 0; }
+  .container { max-width: 560px; margin: 32px auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+  .header { background: #0d1b2e; padding: 28px 32px; text-align: center; }
+  .header h1 { color: #00d4ff; font-size: 22px; margin: 0; letter-spacing: 2px; }
+  .body { padding: 32px; }
+  .highlight { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 16px 20px; border-radius: 8px; margin: 20px 0; }
+  .highlight .time { font-size: 28px; font-weight: 700; color: #1d4ed8; }
+  .footer { padding: 20px 32px; background: #f9fafb; border-top: 1px solid #e5e7eb; font-size: 11px; color: #9ca3af; text-align: center; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>LIDDIS</h1>
+  </div>
+  <div class="body">
+    <h2 style="color:#1a2940;margin-top:0">Lembrete de consulta hoje</h2>
+    <p style="color:#374151;font-size:14px">Olá, {{ appointment.patient.get_full_name }}! Você tem uma consulta agendada para hoje.</p>
+
+    <div class="highlight">
+      <div class="time">{{ appointment.scheduled_time|time:"H:i" }}</div>
+      <div style="color:#374151;font-size:13px;margin-top:4px">
+        {% if appointment.professional %}{{ appointment.professional.get_full_name }}{% endif %}
+        {% if appointment.location %} &mdash; {{ appointment.location }}{% endif %}
+      </div>
+    </div>
+
+    <p style="color:#6b7280;font-size:13px">
+      Acesse <strong>liddis.com.br</strong> para ver os detalhes ou cancelar.
+    </p>
+  </div>
+  <div class="footer">
+    LIDDIS &mdash; Este é um e-mail automático, não responda a esta mensagem.
+  </div>
+</div>
+</body>
+</html>

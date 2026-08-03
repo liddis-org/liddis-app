@@ -80,6 +80,9 @@ urlpatterns = [
     # LUMI — IA clínica
     path('lumi/', include('lumi.urls')),
 
+    # Agendamentos
+    path('agendamentos/', include('appointments.urls')),
+
     # API REST
     path('api/auth/token/',         TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/auth/token/refresh/', TokenRefreshView.as_view(),    name='token_refresh'),

@@ -1,0 +1,11 @@
+LIDDIS — Agenda do dia {{ date|date:"d/m/Y" }}
+
+Olá, {{ professional.get_full_name }}!
+Você tem {{ appointments|length }} consulta(s) hoje.
+
+{% for apt in appointments %}{{ apt.scheduled_time|time:"H:i" }} — {{ apt.patient.get_full_name|default:apt.patient.username }} ({{ apt.get_appointment_type_display }})
+{% endfor %}
+Agenda completa: https://liddis.com.br/agendamentos/agenda/
+
+Este é um e-mail automático — não responda a esta mensagem.
+LIDDIS

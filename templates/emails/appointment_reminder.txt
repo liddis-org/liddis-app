@@ -1,0 +1,12 @@
+LIDDIS — Lembrete de consulta hoje
+
+Olá, {{ appointment.patient.get_full_name }}!
+
+Você tem uma consulta agendada para hoje às {{ appointment.scheduled_time|time:"H:i" }}.
+{% if appointment.professional %}Profissional: {{ appointment.professional.get_full_name }}{% endif %}
+{% if appointment.location %}Local: {{ appointment.location }}{% endif %}
+
+Acesse seus agendamentos: https://liddis.com.br/agendamentos/
+
+Este é um e-mail automático — não responda a esta mensagem.
+LIDDIS

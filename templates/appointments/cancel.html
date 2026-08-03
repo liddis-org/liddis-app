@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Cancelar Agendamento — LIDDIS{% endblock %}
+{% block nav_appointments %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Cancelar Agendamento</h1>
+</div>
+
+<div class="card" style="max-width:520px;padding:28px">
+  <div style="padding:16px;background:rgba(239,68,68,.08);border-radius:10px;border:1px solid rgba(239,68,68,.2);margin-bottom:24px">
+    <div style="font-weight:600;color:#ef4444;margin-bottom:6px">Confirmar cancelamento</div>
+    <div style="font-size:13px;color:var(--text)">
+      {% if appointment.professional %}{{ appointment.professional.get_full_name }} — {% endif %}
+      {{ appointment.scheduled_date|date:"d/m/Y" }} às {{ appointment.scheduled_time|time:"H:i" }}
+    </div>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+      <label>{{ form.cancellation_reason.label }}</label>
+      {{ form.cancellation_reason }}
+      {% if form.cancellation_reason.errors %}<div class="field-error">{{ form.cancellation_reason.errors.0 }}</div>{% endif %}
+    </div>
+    <div style="display:flex;gap:12px;margin-top:8px">
+      <button type="submit" class="btn btn-primary" style="background:#ef4444;border-color:#ef4444">Confirmar cancelamento</button>
+      <a href="{% url 'appointment_detail' appointment.pk %}" class="btn btn-ghost">Voltar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

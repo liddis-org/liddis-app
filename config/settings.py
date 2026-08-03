@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'users',
     'consultations',
     'lumi',
+    'appointments',
 ]
 
 # ── LUMI — IA Clínica ─────────────────────────────────────────────────────────

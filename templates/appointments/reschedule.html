@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Remarcar Agendamento — LIDDIS{% endblock %}
+{% block nav_appointments %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Remarcar Agendamento</h1>
+</div>
+
+<div class="card" style="max-width:520px;padding:28px">
+  <div style="padding:14px;background:var(--surface-2);border-radius:10px;margin-bottom:24px;font-size:13px;color:var(--text-2)">
+    Agendamento atual:
+    <strong style="color:var(--text)">{{ appointment.scheduled_date|date:"d/m/Y" }} às {{ appointment.scheduled_time|time:"H:i" }}</strong>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="alert alert-error" style="margin-bottom:16px">{{ form.non_field_errors.0 }}</div>
+    {% endif %}
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="form-group">
+        <label>{{ form.scheduled_date.label }}</label>
+        {{ form.scheduled_date }}
+        {% if form.scheduled_date.errors %}<div class="field-error">{{ form.scheduled_date.errors.0 }}</div>{% endif %}
+      </div>
+      <div class="form-group">
+        <label>{{ form.scheduled_time.label }}</label>
+        {{ form.scheduled_time }}
+        {% if form.scheduled_time.errors %}<div class="field-error">{{ form.scheduled_time.errors.0 }}</div>{% endif %}
+      </div>
+    </div>
+    <div class="form-group">
+      <label>{{ form.notes.label }}</label>
+      {{ form.notes }}
+    </div>
+    <div style="display:flex;gap:12px;margin-top:8px">
+      <button type="submit" class="btn btn-primary">Confirmar remarcação</button>
+      <a href="{% url 'appointment_detail' appointment.pk %}" class="btn btn-ghost">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

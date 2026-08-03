@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Agendamento — LIDDIS{% endblock %}
+{% block nav_appointments %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Detalhe do Agendamento</h1>
+    <p class="page-subtitle">{{ appointment.scheduled_date|date:"d/m/Y" }} às {{ appointment.scheduled_time|time:"H:i" }}</p>
+  </div>
+  <div style="display:flex;gap:10px">
+    {% if is_professional %}
+      <a href="{% url 'professional_agenda' %}" class="btn btn-ghost">Voltar à agenda</a>
+    {% else %}
+      <a href="{% url 'appointment_list' %}" class="btn btn-ghost">Voltar</a>
+    {% endif %}
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start" class="detail-grid">
+
+  <!-- Card principal -->
+  <div class="card" style="padding:28px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px">
+      <h2 style="font-size:17px;margin:0">Informações</h2>
+      <span class="badge badge-{{ appointment.status_color }}" style="font-size:13px;padding:5px 14px">
+        {{ appointment.get_status_display }}
+      </span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div>
+        <div style="font-size:11px;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Paciente</div>
+        <div style="font-weight:600;color:var(--text)">{{ appointment.patient.get_full_name|default:appointment.patient.username }}</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Profissional</div>
+        <div style="font-weight:600;color:var(--text)">{% if appointment.professional %}{{ appointment.professional.get_full_name }}{% else %}—{% endif %}</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Data</div>
+        <div style="font-weight:600;color:var(--text)">{{ appointment.scheduled_date|date:"d/m/Y" }}</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Horário</div>
+        <div style="font-weight:600;color:var(--text)">{{ appointment.scheduled_time|time:"H:i" }} ({{ appointment.duration_minutes }} min)</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Tipo</div>
+        <div style="color:var(--text)">{{ appointment.get_appointment_type_display }}</div>
+      </div>
+      {% if appointment.specialty %}
+      <div>
+        <div style="font-size:11px;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Especialidade</div>
+        <div style="color:var(--text)">{{ appointment.get_specialty_display }}</div>
+      </div>
+      {% endif %}
+      {% if appointment.location %}
+      <div style="grid-column:1/-1">
+        <div style="font-size:11px;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Local</div>
+        <div style="color:var(--text)">{{ appointment.location }}</div>
+      </div>
+      {% endif %}
+      {% if appointment.notes %}
+      <div style="grid-column:1/-1">
+        <div style="font-size:11px;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Observações</div>
+        <div style="color:var(--text)">{{ appointment.notes }}</div>
+      </div>
+      {% endif %}
+    </div>
+
+    {% if appointment.cancellation_reason %}
+    <div style="margin-top:20px;padding:14px;background:rgba(239,68,68,.08);border-radius:8px;border:1px solid rgba(239,68,68,.2)">
+      <div style="font-size:12px;font-weight:600;color:#ef4444;margin-bottom:4px">Motivo do cancelamento</div>
+      <div style="font-size:13px;color:var(--text)">{{ appointment.cancellation_reason }}</div>
+      {% if appointment.cancelled_by %}
+        <div style="font-size:11px;color:var(--text-2);margin-top:4px">por {{ appointment.cancelled_by.get_full_name }} em {{ appointment.cancelled_at|date:"d/m/Y H:i" }}</div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Rastreabilidade -->
+    <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--text-2)">{{ appointment.booked_by_label }}</div>
+      {% if appointment.rescheduled_from %}
+        <div style="font-size:11px;color:var(--text-2);margin-top:4px">
+          Remarcado de {{ appointment.rescheduled_from.scheduled_date|date:"d/m/Y" }} às {{ appointment.rescheduled_from.scheduled_time|time:"H:i" }}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Ações + Histórico -->
+  <div style="display:flex;flex-direction:column;gap:16px">
+
+    {% if can_cancel or can_reschedule or is_professional %}
+    <div class="card" style="padding:20px">
+      <h3 style="font-size:14px;margin:0 0 14px">Ações</h3>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        {% if can_cancel %}
+          <a href="{% url 'appointment_cancel' appointment.pk %}" class="btn btn-ghost" style="color:#ef4444;justify-content:flex-start">
+            <i data-lucide="x-circle" style="width:15px;height:15px"></i>
+            Cancelar agendamento
+          </a>
+        {% endif %}
+        {% if can_reschedule %}
+          <a href="{% url 'appointment_reschedule' appointment.pk %}" class="btn btn-ghost" style="justify-content:flex-start">
+            <i data-lucide="refresh-cw" style="width:15px;height:15px"></i>
+            Remarcar
+          </a>
+        {% endif %}
+        {% if is_professional and appointment.status in 'scheduled confirmed' %}
+          <a href="{% url 'iniciar_atendimento_agendamento' appointment.pk %}" class="btn btn-primary" style="justify-content:flex-start">
+            <i data-lucide="play-circle" style="width:15px;height:15px"></i>
+            Iniciar atendimento
+          </a>
+          <form method="post" action="{% url 'appointment_mark_status' appointment.pk 'no_show' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost" style="width:100%;justify-content:flex-start;color:var(--text-2)">
+              <i data-lucide="user-x" style="width:15px;height:15px"></i>
+              Não compareceu
+            </button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Histórico de alterações -->
+    <div class="card" style="padding:20px">
+      <h3 style="font-size:14px;margin:0 0 14px">Histórico</h3>
+      {% if history %}
+        <div style="display:flex;flex-direction:column;gap:10px">
+          {% for entry in history %}
+          <div style="font-size:12px">
+            <div style="font-weight:600;color:var(--text)">{{ entry.get_action_display }}</div>
+            <div style="color:var(--text-2);margin-top:2px">
+              {% if entry.changed_by %}por {{ entry.changed_by.get_full_name|default:entry.changed_by.username }} &bull; {% endif %}
+              {{ entry.created_at|date:"d/m/Y H:i" }}
+            </div>
+            {% if entry.notes %}<div style="color:var(--text-2);margin-top:2px">{{ entry.notes }}</div>{% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p style="color:var(--text-2);font-size:13px;margin:0">Sem histórico.</p>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  @media (max-width: 768px) {
+    .detail-grid { grid-template-columns: 1fr !important; }
+  }
+</style>
+{% endblock %}
