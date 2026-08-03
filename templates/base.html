@@ -624,7 +624,7 @@ body,.sidebar,.card,.stat-card,.topbar,.nav-link,
         <i data-lucide="link" style="width:16px;height:16px;stroke:currentColor;flex-shrink:0"></i>
         Vínculos
       </a>
-      <a class="nav-link {% block nav_appointments %}{% endblock %}" href="{% url 'appointment_list' %}">
+      <a class="nav-link {% block nav_appointments_patient %}{% endblock %}" href="{% url 'appointment_list' %}">
         <i data-lucide="calendar" style="width:16px;height:16px;stroke:currentColor;flex-shrink:0"></i>
         Agendamentos
       </a>
@@ -642,7 +642,7 @@ body,.sidebar,.card,.stat-card,.topbar,.nav-link,
         <i data-lucide="clipboard-list" style="width:16px;height:16px;stroke:currentColor;flex-shrink:0"></i>
         Meus Atendimentos
       </a>
-      <a class="nav-link {% block nav_appointments %}{% endblock %}" href="{% url 'professional_agenda' %}">
+      <a class="nav-link {% block nav_appointments_pro %}{% endblock %}" href="{% url 'professional_agenda' %}">
         <i data-lucide="calendar" style="width:16px;height:16px;stroke:currentColor;flex-shrink:0"></i>
         Agendamentos
       </a>
