@@ -1,3 +1,4 @@
+import hmac
 import json
 import logging
 import functools
@@ -11,13 +12,16 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.core.mail import EmailMultiAlternatives
+from django.db import IntegrityError
 from django.template.loader import render_to_string
 from django.conf import settings
+from django.utils import timezone
 from django.views import View
 from django.http import HttpResponseForbidden
 
 # API views (REST)
 from rest_framework import generics, permissions
+from rest_framework.exceptions import PermissionDenied as APIPermissionDenied
 from .serializers import RegisterSerializer, UserSerializer
 from .models import CustomUser, VerificationCode, PlatformFeedback
 from .forms import RegisterForm, ProfileForm, PlatformFeedbackForm
@@ -234,13 +238,23 @@ class RegisterAPIView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
 
+    def perform_create(self, serializer):
+        user = serializer.save()
+        try:
+            _send_email_code(user)
+        except Exception:
+            logger.warning('Falha ao enviar OTP para usuário API: %s', user.email)
+
 
 class MeView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
-        return self.request.user
+        user = self.request.user
+        if not user.is_email_verified:
+            raise APIPermissionDenied('E-mail não verificado. Confirme sua conta antes de usar a API.')
+        return user
 
 
 # ── Cadastro ───────────────────────────────────────────────────────────────────
@@ -256,7 +270,12 @@ class RegisterWebView(View):
             return redirect('dashboard')
         form = RegisterForm(request.POST)
         if form.is_valid():
-            user = form.save()
+            try:
+                user = form.save()
+            except IntegrityError:
+                # Race condition: outro request registrou o mesmo e-mail entre a validação e o save
+                form.add_error('email', 'Este e-mail já está cadastrado. Tente fazer login.')
+                return render(request, 'users/register.html', {'form': form})
             login(request, user, backend='users.backends.EmailOrUsernameBackend')
             try:
                 _send_email_code(user)
@@ -273,6 +292,10 @@ class RegisterWebView(View):
 
 # ── Verificação de E-mail ──────────────────────────────────────────────────────
 
+_OTP_MAX_ATTEMPTS   = 5
+_OTP_RESEND_COOLDOWN = 120  # segundos
+
+
 @login_required
 def verificar_email(request):
     user = request.user
@@ -280,19 +303,42 @@ def verificar_email(request):
     if user.is_email_verified:
         return redirect('dashboard')
 
+    attempt_key = f'otp_attempts_{user.pk}'
+    resend_key  = f'otp_resend_at_{user.pk}'
+
     if request.method == 'POST':
         action = request.POST.get('action')
 
-        # Reenviar código
+        # ── Reenviar código ────────────────────────────────────────────────────
         if action == 'reenviar':
+            last_sent_iso = request.session.get(resend_key)
+            if last_sent_iso:
+                try:
+                    last_sent = timezone.datetime.fromisoformat(last_sent_iso)
+                    elapsed = (timezone.now() - last_sent).total_seconds()
+                    if elapsed < _OTP_RESEND_COOLDOWN:
+                        wait = int(_OTP_RESEND_COOLDOWN - elapsed)
+                        messages.error(request, f'Aguarde {wait}s antes de solicitar um novo código.')
+                        return redirect('verificar_email')
+                except (ValueError, TypeError):
+                    pass
             try:
                 _send_email_code(user)
+                request.session[resend_key]  = timezone.now().isoformat()
+                request.session[attempt_key] = 0
                 messages.success(request, f'Novo código enviado para {user.email}.')
             except Exception:
                 messages.error(request, 'Não foi possível enviar o e-mail agora. Tente novamente em alguns minutos.')
             return redirect('verificar_email')
 
-        # Confirmar código
+        # ── Confirmar código ───────────────────────────────────────────────────
+        attempts = request.session.get(attempt_key, 0)
+        if attempts >= _OTP_MAX_ATTEMPTS:
+            messages.error(request, 'Muitas tentativas incorretas. Solicite um novo código clicando em "Reenviar".')
+            return render(request, 'users/verificar_email.html', {
+                'email': user.email, 'blocked': True,
+            })
+
         code_input = request.POST.get('code', '').strip()
         vc = (
             VerificationCode.objects
@@ -305,15 +351,23 @@ def verificar_email(request):
             messages.error(request, 'Nenhum código ativo. Clique em "Reenviar".')
         elif vc.is_expired:
             vc.is_used = True
-            vc.save()
+            vc.save(update_fields=['is_used'])
             messages.error(request, 'Código expirado. Clique em "Reenviar".')
-        elif vc.code != code_input:
-            messages.error(request, 'Código incorreto. Tente novamente.')
+        elif not hmac.compare_digest(vc.code, code_input):
+            # Incrementa contador de tentativas erradas
+            request.session[attempt_key] = attempts + 1
+            remaining = _OTP_MAX_ATTEMPTS - (attempts + 1)
+            if remaining > 0:
+                messages.error(request, f'Código incorreto. {remaining} tentativa(s) restante(s).')
+            else:
+                messages.error(request, 'Muitas tentativas incorretas. Solicite um novo código.')
         else:
             vc.is_used = True
-            vc.save()
+            vc.save(update_fields=['is_used'])
             user.is_email_verified = True
             user.save(update_fields=['is_email_verified'])
+            request.session.pop(attempt_key, None)
+            request.session.pop(resend_key, None)
             messages.success(request, 'E-mail verificado! Bem-vindo(a) ao LIDDIS.')
             return redirect('dashboard')
 
