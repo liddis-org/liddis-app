@@ -12,6 +12,7 @@ from django.utils import timezone
 from django.views.generic import DetailView, ListView
 
 from users.permissions import has_permission
+from users.querysets import PROFESSIONAL_ROLES, verified_professionals, is_verified_professional
 from .emails import send_appointment_confirmation, send_daily_agenda_digest
 from .forms import (
     AppointmentCancelForm,
@@ -23,13 +24,6 @@ from .models import Appointment, AppointmentHistory, ProfessionalAvailability
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
-
-PROFESSIONAL_ROLES = {
-    'ADMIN', 'DOCTOR', 'NURSE', 'PHYSIO', 'NUTRITIONIST', 'BIOMEDICO',
-    'SPEECH_THERAPIST', 'PHYSICAL_EDUCATOR', 'PSYCHOLOGIST', 'DENTIST',
-    'OCC_THERAPIST', 'PHARMACIST',
-}
-
 
 def _is_professional(user):
     return user.role != 'PATIENT'
@@ -145,7 +139,7 @@ def _navigate(date, direction, view_type):
 
 @login_required
 def appointment_create(request):
-    professionals_qs = User.objects.filter(role__in=PROFESSIONAL_ROLES, is_active=True).order_by('first_name')
+    professionals_qs = verified_professionals().order_by('first_name')
 
     if request.method == 'POST':
         form = AppointmentCreateForm(request.POST, requester=request.user, professionals_qs=professionals_qs)
@@ -331,7 +325,7 @@ def available_slots(request):
 
     try:
         date = datetime.strptime(date_str, '%Y-%m-%d').date()
-        professional = User.objects.get(pk=professional_id, role__in=PROFESSIONAL_ROLES)
+        professional = verified_professionals().get(pk=professional_id)
     except (ValueError, User.DoesNotExist):
         return JsonResponse({'slots': []})
 

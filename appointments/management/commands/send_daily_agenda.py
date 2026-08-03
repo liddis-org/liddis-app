@@ -6,17 +6,9 @@ Deve ser chamado via Cloud Scheduler às 06:30 America/Sao_Paulo.
 """
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from django.contrib.auth import get_user_model
 from appointments.models import Appointment
 from appointments.emails import send_daily_agenda_digest
-
-User = get_user_model()
-
-PROFESSIONAL_ROLES = {
-    'ADMIN', 'DOCTOR', 'NURSE', 'PHYSIO', 'NUTRITIONIST', 'BIOMEDICO',
-    'SPEECH_THERAPIST', 'PHYSICAL_EDUCATOR', 'PSYCHOLOGIST', 'DENTIST',
-    'OCC_THERAPIST', 'PHARMACIST',
-}
+from users.querysets import verified_professionals
 
 
 class Command(BaseCommand):
@@ -32,9 +24,7 @@ class Command(BaseCommand):
         today   = timezone.localdate()
         dry_run = options['dry_run']
 
-        professionals = User.objects.filter(
-            role__in=PROFESSIONAL_ROLES,
-            is_active=True,
+        professionals = verified_professionals().filter(
             appointments_as_professional__scheduled_date=today,
             appointments_as_professional__status__in=['scheduled', 'confirmed'],
         ).distinct()

@@ -695,6 +695,7 @@ def grant_access(request):
         email  = request.POST.get('professional_email', '').strip().lower()
         reason = request.POST.get('reason', '').strip()[:200]
 
+        from users.querysets import is_verified_professional
         try:
             professional = CustomUser.objects.get(email=email)
         except CustomUser.DoesNotExist:
@@ -703,6 +704,10 @@ def grant_access(request):
 
         if professional.role == 'PATIENT':
             messages.error(request, 'O e-mail informado pertence a um paciente, não a um profissional.')
+            return redirect('my_accesses')
+
+        if not professional.is_email_verified:
+            messages.error(request, 'Este profissional ainda não confirmou o e-mail. Peça que ele conclua o cadastro.')
             return redirect('my_accesses')
 
         obj, created = PatientProfessionalAccess.objects.get_or_create(
