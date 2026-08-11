@@ -53,42 +53,65 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
         Se já existir um usuário com aquele e-mail, vincula a conta social
         à conta existente em vez de criar uma nova.
         """
+        from .models import CustomUser
+        from allauth.socialaccount.models import SocialAccount
+
+        # Caso 1: allauth encontrou a conta via uid — re-login normal
         if sociallogin.is_existing:
-            # Re-login com conta já vinculada: garante e-mail verificado
             user = sociallogin.user
-            if user.pk and not user.is_email_verified:
+            if user and user.pk and not user.is_email_verified:
                 user.is_email_verified = True
                 user.save(update_fields=['is_email_verified'])
             return
 
-        email = getattr(sociallogin.user, 'email', '') or ''
+        # Caso 2: allauth NÃO encontrou pelo uid — tentar vincular por e-mail
+        email = (getattr(sociallogin.user, 'email', None) or '').strip()
         if not email:
-            return
+            return  # sem e-mail: allauth cria usuário normalmente
 
-        from .models import CustomUser
-        from allauth.socialaccount.models import SocialAccount
         try:
-            existing = CustomUser.objects.get(email__iexact=email)
+            existing_user = CustomUser.objects.get(email__iexact=email)
         except CustomUser.DoesNotExist:
-            return  # Usuário novo — será criado normalmente pelo allauth
+            return  # usuário genuinamente novo — allauth cria normalmente
 
-        # Verifica se já existe SocialAccount para evitar duplo-connect
         try:
             existing_sa = SocialAccount.objects.get(
-                user=existing, provider=sociallogin.account.provider
+                user=existing_user,
+                provider=sociallogin.account.provider,
             )
-            # Reutiliza a SocialAccount existente sem tentar criar outra
-            sociallogin.account = existing_sa
-            sociallogin.user = existing
-            logger.info('Re-login Google reutilizando SocialAccount existente: %s', email)
-        except SocialAccount.DoesNotExist:
-            sociallogin.connect(request, existing)
-            logger.info('Conta Google vinculada ao usuário existente: %s', email)
 
-        if not existing.is_email_verified:
-            existing.is_email_verified = True
-            existing.save(update_fields=['is_email_verified'])
-            logger.info('E-mail verificado via Google OAuth: %s', email)
+            # SocialAccount existe mas allauth não encontrou pelo uid
+            # Causa raiz do bug de re-login: uid pode ter divergido.
+            # Sincronizar uid e extra_data para que futuros lookups funcionem.
+            incoming_uid = sociallogin.account.uid
+            needs_save = []
+            if existing_sa.uid != incoming_uid:
+                logger.warning(
+                    'Google OAuth: uid dessincronizado para %s (BD=%s → Google=%s) — corrigindo',
+                    email, existing_sa.uid, incoming_uid,
+                )
+                existing_sa.uid = incoming_uid
+                needs_save.append('uid')
+            if existing_sa.extra_data != sociallogin.account.extra_data:
+                existing_sa.extra_data = sociallogin.account.extra_data
+                needs_save.append('extra_data')
+            if needs_save:
+                existing_sa.save(update_fields=needs_save)
+
+            # Redirecionar sociallogin para a conta existente (is_existing → True)
+            sociallogin.account = existing_sa
+            sociallogin.user = existing_user
+            logger.info('Google re-login: SocialAccount reutilizado e sincronizado para %s', email)
+
+        except SocialAccount.DoesNotExist:
+            # Primeira vinculação Google ↔ conta existente por e-mail
+            sociallogin.connect(request, existing_user)
+            logger.info('Google: conta vinculada ao usuário existente %s', email)
+
+        if not existing_user.is_email_verified:
+            existing_user.is_email_verified = True
+            existing_user.save(update_fields=['is_email_verified'])
+            logger.info('is_email_verified → True via Google OAuth: %s', email)
 
     def save_user(self, request, sociallogin, form=None):
         """
