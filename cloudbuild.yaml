@@ -39,7 +39,7 @@ steps:
       - '--all-tags'
       - 'southamerica-east1-docker.pkg.dev/$PROJECT_ID/liddis/$_SERVICE'
 
-  # ── 3. Migrations do banco de dados ───────────────────────────────────────
+  # ── 3. Migrations do banco de dados + atualização do Site ────────────────
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'migrate'
     waitFor: ['push']
@@ -51,10 +51,10 @@ steps:
       - 'liddis-migrate-$BUILD_ID'
       - '--image=southamerica-east1-docker.pkg.dev/$PROJECT_ID/liddis/$_SERVICE:$BUILD_ID'
       - '--region=$_REGION'
-      - '--command=python'
-      - '--args=manage.py,migrate,--no-input'
+      - '--command=bash'
+      - '--args=-c,python manage.py migrate --no-input && python manage.py setup_site'
       - '--set-secrets=SECRET_KEY=liddis-secret-key:latest,DATABASE_URL=liddis-database-url:latest'
-      - '--set-env-vars=DEBUG=False'
+      - '--set-env-vars=DEBUG=False,SITE_DOMAIN=liddis.com.br,SITE_NAME=LIDDIS'
       - '--max-retries=1'
       - '--execute-now'
       - '--wait'
@@ -80,7 +80,7 @@ steps:
       - '--concurrency=80'
       - '--timeout=60'
       - '--set-secrets=SECRET_KEY=liddis-secret-key:latest,DATABASE_URL=liddis-database-url:latest,GOOGLE_CLIENT_ID=liddis-google-client-id:latest,GOOGLE_SECRET=liddis-google-secret:latest,GMAIL_APP_PASSWORD=liddis-gmail-app-password:latest,OPENAI_API_KEY=liddis-openai-api-key:latest'
-      - '--set-env-vars=DEBUG=False,ALLOWED_HOSTS=liddis-backend-tyi23kxkeq-rj.a.run.app,EMAIL_PROVIDER=gmail,GMAIL_USER=liddis.org@gmail.com,DEFAULT_FROM_EMAIL=liddis.org@gmail.com,SITE_NAME=LIDDIS,CSRF_TRUSTED_ORIGINS=https://liddis-backend-tyi23kxkeq-rj.a.run.app,SITE_DOMAIN=liddis-backend-tyi23kxkeq-rj.a.run.app,GCS_BUCKET_NAME=liddis-media'
+      - '--set-env-vars=DEBUG=False,EMAIL_PROVIDER=gmail,GMAIL_USER=liddis.org@gmail.com,DEFAULT_FROM_EMAIL=liddis.org@gmail.com,SITE_NAME=LIDDIS,SITE_DOMAIN=liddis.com.br,GCS_BUCKET_NAME=liddis-media'
 
 images:
   - 'southamerica-east1-docker.pkg.dev/$PROJECT_ID/liddis/$_SERVICE:$BUILD_ID'
