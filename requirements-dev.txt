@@ -15,9 +15,10 @@ faker>=24.0               # dados falsos realistas (CPF, nomes, etc.)
 ruff>=0.4                 # linter extremamente rápido (substitui flake8 + isort)
 black>=24.0               # formatação automática
 
-# ── Debug ─────────────────────────────────────────────────────────────────────
+# ── Debug e Utilitários de Desenvolvimento ────────────────────────────────────
 django-debug-toolbar>=4.3
 ipython>=8.0              # shell interativo melhorado (python manage.py shell_plus)
+django-extensions>=3.2    # shell_plus, show_urls, graph_models — DEV ONLY
 
 # ── Banco local sem Docker ─────────────────────────────────────────────────────
 # SQLite é suficiente para dev — USE_SQLITE=True no .env.dev

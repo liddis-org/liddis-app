@@ -52,5 +52,6 @@ google-cloud-storage>=2.10
 # ── Documentação automática da API ────────────────────────────────────────────
 # drf-spectacular>=0.27
 
-# ── Utilitários de desenvolvimento (remover em requirements-prod.txt) ─────────
-django-extensions>=3.2
+# ── Nota: dependências exclusivas de desenvolvimento ─────────────────────────
+# django-extensions → movido para requirements-dev.txt (não é necessário em produção)
+# psycopg2-binary   → adequado para Cloud Run; trocar por psycopg2 se compilar libpq localmente
