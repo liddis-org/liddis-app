@@ -68,6 +68,7 @@ OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
 
 # ── Middleware ─────────────────────────────────────────────────────────────────
 MIDDLEWARE = [
+    'config.middleware.CloudflareOnlyMiddleware',    # bloqueia acesso direto ao Cloud Run URL
     'config.middleware.FixCloudRunHostMiddleware',   # *.run.app → liddis.com.br (OAuth fix)
     'django.middleware.security.SecurityMiddleware',
     'config.middleware.RemoveWWWMiddleware',         # www → sem www (301 permanente)
