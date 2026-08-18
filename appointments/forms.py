@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.auth import get_user_model
 from django.utils import timezone
 from .models import Appointment, ProfessionalAvailability, SPECIALTY_CHOICES
 
@@ -8,8 +9,12 @@ class AppointmentCreateForm(forms.ModelForm):
 
     class Meta:
         model  = Appointment
-        fields = ['professional', 'scheduled_date', 'scheduled_time', 'appointment_type', 'specialty', 'location', 'notes']
+        # 'patient' incluído para que profissionais possam selecionar o paciente.
+        # Para não-profissionais, o campo é removido em __init__ e o patient é
+        # definido diretamente na view como request.user.
+        fields = ['patient', 'professional', 'scheduled_date', 'scheduled_time', 'appointment_type', 'specialty', 'location', 'notes']
         widgets = {
+            'patient':        forms.Select(attrs={'class': 'form-control'}),
             'scheduled_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'scheduled_time': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
             'professional':   forms.Select(attrs={'class': 'form-control'}),
@@ -19,6 +24,7 @@ class AppointmentCreateForm(forms.ModelForm):
             'notes':          forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Observações (opcional)'}),
         }
         labels = {
+            'patient':         'Paciente',
             'professional':    'Profissional',
             'scheduled_date':  'Data',
             'scheduled_time':  'Horário',
@@ -31,10 +37,23 @@ class AppointmentCreateForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.requester = kwargs.pop('requester', None)
         professionals_qs = kwargs.pop('professionals_qs', None)
+        is_professional  = kwargs.pop('is_professional', False)
         super().__init__(*args, **kwargs)
 
         if professionals_qs is not None:
             self.fields['professional'].queryset = professionals_qs
+
+        if is_professional:
+            # Profissionais precisam escolher o paciente.
+            User = get_user_model()
+            self.fields['patient'].queryset = (
+                User.objects.filter(role='PATIENT', is_active=True)
+                .order_by('first_name', 'last_name')
+            )
+            self.fields['patient'].empty_label = 'Selecione o paciente…'
+        else:
+            # Pacientes agendam para si mesmos — campo removido do formulário.
+            self.fields.pop('patient')
 
         self.fields['scheduled_date'].widget.attrs['min'] = timezone.localdate().isoformat()
 

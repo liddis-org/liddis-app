@@ -140,17 +140,24 @@ def _navigate(date, direction, view_type):
 @login_required
 def appointment_create(request):
     professionals_qs = verified_professionals().order_by('first_name')
+    prof = _is_professional(request.user)
 
     if request.method == 'POST':
-        form = AppointmentCreateForm(request.POST, requester=request.user, professionals_qs=professionals_qs)
+        form = AppointmentCreateForm(
+            request.POST,
+            requester=request.user,
+            professionals_qs=professionals_qs,
+            is_professional=prof,
+        )
         if form.is_valid():
             apt = form.save(commit=False)
             apt.booked_by      = request.user
             apt.booked_by_role = (
-                Appointment.BookedBy.PATIENT if not _is_professional(request.user)
-                else Appointment.BookedBy.PROFESSIONAL
+                Appointment.BookedBy.PROFESSIONAL if prof
+                else Appointment.BookedBy.PATIENT
             )
-            if not _is_professional(request.user):
+            if not prof:
+                # Paciente agenda para si mesmo — patient não está no formulário.
                 apt.patient = request.user
 
             apt.save()
@@ -162,17 +169,17 @@ def appointment_create(request):
                 logger.exception('Failed to queue confirmation email')
 
             messages.success(request, 'Agendamento criado com sucesso.')
-            if _is_professional(request.user):
-                return redirect('professional_agenda')
-            return redirect('appointment_list')
+            return redirect('professional_agenda' if prof else 'appointment_list')
     else:
-        form = AppointmentCreateForm(requester=request.user, professionals_qs=professionals_qs)
-        if not _is_professional(request.user):
-            form.fields.pop('patient', None)
+        form = AppointmentCreateForm(
+            requester=request.user,
+            professionals_qs=professionals_qs,
+            is_professional=prof,
+        )
 
     return render(request, 'appointments/create.html', {
         'form': form,
-        'is_professional': _is_professional(request.user),
+        'is_professional': prof,
     })
 
 

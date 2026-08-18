@@ -7,18 +7,43 @@
 {% block extra_css %}
 <style>
   .agenda-slot {
-    padding: 12px 16px;
-    border-radius: 10px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
+    padding: 14px 18px;
+    border-radius: var(--radius);
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
     display: flex;
-    gap: 14px;
+    gap: 16px;
     align-items: center;
+    transition: border-color .15s, box-shadow .15s;
   }
-  .agenda-slot:hover { background: var(--surface); border-color: var(--teal-border); }
-  .slot-time { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--teal); font-size: 15px; min-width: 44px; }
-  .slot-patient { font-weight: 600; font-size: 14px; color: var(--text); }
-  .slot-meta { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+  .agenda-slot:hover {
+    border-color: var(--teal-border);
+    box-shadow: 0 2px 12px rgba(0,212,255,.06);
+  }
+  .slot-time {
+    font-variant-numeric: tabular-nums;
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--teal);
+    font-size: 16px;
+    min-width: 46px;
+    flex-shrink: 0;
+  }
+  .slot-patient { font-weight: 700; font-size: 14px; color: var(--text); }
+  .slot-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .agenda-actions { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; }
+
+  /* Spinner para mark-status forms */
+  .mark-form button[data-loading="true"] { opacity: .65; pointer-events: none; }
+  .spinner-sm {
+    width: 11px; height: 11px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    display: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 {% endblock %}
 
@@ -26,60 +51,88 @@
 <div class="page-header">
   <div>
     <h1 class="page-title">Minha Agenda</h1>
-    <p class="page-subtitle">{{ selected_date|date:"d/m/Y" }}</p>
+    <p class="page-subtitle">{{ selected_date|date:"l, d \d\e F \d\e Y" }}</p>
   </div>
   <a href="{% url 'appointment_create' %}" class="btn btn-primary">
-    <i data-lucide="plus" style="width:15px;height:15px"></i>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     Novo Agendamento
   </a>
 </div>
 
-<!-- Navegação de data / view -->
-<div class="card" style="padding:14px 20px;margin-bottom:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-  <a href="?date={{ prev_date }}&view={{ view_type }}" class="btn btn-ghost" style="padding:6px 12px">
-    <i data-lucide="chevron-left" style="width:15px;height:15px"></i>
-  </a>
-  <a href="?date={{ today }}&view=day" class="btn btn-ghost" style="font-size:12px;padding:6px 12px">Hoje</a>
-  <a href="?date={{ next_date }}&view={{ view_type }}" class="btn btn-ghost" style="padding:6px 12px">
-    <i data-lucide="chevron-right" style="width:15px;height:15px"></i>
-  </a>
+<!-- Navegação de data e view -->
+<div class="card" style="padding:12px 18px;margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+  <div style="display:flex;align-items:center;gap:6px">
+    <a href="?date={{ prev_date }}&view={{ view_type }}" class="btn btn-ghost btn-sm" title="Período anterior">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><polyline points="15 18 9 12 15 6"/></svg>
+    </a>
+    <a href="?date={{ today }}&view=day" class="btn btn-ghost btn-sm">Hoje</a>
+    <a href="?date={{ next_date }}&view={{ view_type }}" class="btn btn-ghost btn-sm" title="Próximo período">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+  </div>
 
-  <span style="margin-left:auto;display:flex;gap:6px">
-    {% for vt, label in forloop.parentloop.0|default:'' %}{% endfor %}
-    <a href="?date={{ selected_date|date:"Y-m-d" }}&view=day"   class="btn {% if view_type == 'day' %}btn-primary{% else %}btn-ghost{% endif %}" style="font-size:12px;padding:6px 14px">Dia</a>
-    <a href="?date={{ selected_date|date:"Y-m-d" }}&view=week"  class="btn {% if view_type == 'week' %}btn-primary{% else %}btn-ghost{% endif %}" style="font-size:12px;padding:6px 14px">Semana</a>
-    <a href="?date={{ selected_date|date:"Y-m-d" }}&view=month" class="btn {% if view_type == 'month' %}btn-primary{% else %}btn-ghost{% endif %}" style="font-size:12px;padding:6px 14px">Mês</a>
-  </span>
+  <div style="margin-left:auto;display:flex;gap:4px">
+    <a href="?date={{ selected_date|date:"Y-m-d" }}&view=day"
+       class="btn btn-sm {% if view_type == 'day' %}btn-primary{% else %}btn-ghost{% endif %}">Dia</a>
+    <a href="?date={{ selected_date|date:"Y-m-d" }}&view=week"
+       class="btn btn-sm {% if view_type == 'week' %}btn-primary{% else %}btn-ghost{% endif %}">Semana</a>
+    <a href="?date={{ selected_date|date:"Y-m-d" }}&view=month"
+       class="btn btn-sm {% if view_type == 'month' %}btn-primary{% else %}btn-ghost{% endif %}">Mês</a>
+  </div>
 </div>
 
 <!-- Lista de agendamentos -->
 {% if appointments %}
-  <div style="display:flex;flex-direction:column;gap:10px">
+  <div style="display:flex;flex-direction:column;gap:8px">
     {% for apt in appointments %}
     <div class="agenda-slot">
+
+      <!-- Horário -->
       <div class="slot-time">{{ apt.scheduled_time|time:"H:i" }}</div>
+
+      {% if view_type != 'day' %}
+      <!-- Separador de data para semana/mês -->
+      <div style="width:1px;height:32px;background:var(--border-soft);flex-shrink:0"></div>
+      <div style="font-size:11px;color:var(--muted);text-align:center;min-width:32px;flex-shrink:0;font-weight:700;font-variant-numeric:tabular-nums">
+        {{ apt.scheduled_date|date:"d/M" }}
+      </div>
+      {% endif %}
+
+      <!-- Info do paciente -->
       <div style="flex:1;min-width:0">
         <div class="slot-patient">{{ apt.patient.get_full_name|default:apt.patient.username }}</div>
         <div class="slot-meta">
           {{ apt.get_appointment_type_display }}
+          {% if apt.specialty %} &bull; {{ apt.get_specialty_display }}{% endif %}
           {% if apt.location %} &bull; {{ apt.location }}{% endif %}
-          {% if view_type != 'day' %} &bull; {{ apt.scheduled_date|date:"d/m" }}{% endif %}
         </div>
       </div>
+
+      <!-- Status -->
       <span class="badge badge-{{ apt.status_color }}">{{ apt.get_status_display }}</span>
-      <div style="display:flex;gap:8px">
-        <a href="{% url 'appointment_detail' apt.pk %}" class="btn btn-ghost" style="font-size:12px;padding:5px 12px">Ver</a>
+
+      <!-- Ações -->
+      <div class="agenda-actions">
+        <a href="{% url 'appointment_detail' apt.pk %}" class="btn btn-ghost btn-sm">Ver</a>
+
         {% if apt.is_cancellable %}
-          <a href="{% url 'appointment_reschedule' apt.pk %}" class="btn btn-ghost" style="font-size:12px;padding:5px 12px">Remarcar</a>
+          <a href="{% url 'appointment_reschedule' apt.pk %}" class="btn btn-ghost btn-sm">Remarcar</a>
         {% endif %}
-        {% if apt.status in 'scheduled confirmed' %}
-          <form method="post" action="{% url 'appointment_mark_status' apt.pk 'completed' %}" style="display:inline">
+
+        {% if apt.status == 'scheduled' or apt.status == 'confirmed' %}
+          <form method="post" action="{% url 'appointment_mark_status' apt.pk 'completed' %}" class="mark-form" style="display:inline">
             {% csrf_token %}
-            <button type="submit" class="btn btn-ghost" style="font-size:12px;padding:5px 12px;color:var(--teal)">Realizado</button>
+            <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--teal)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
+              Realizado
+            </button>
           </form>
-          <form method="post" action="{% url 'appointment_mark_status' apt.pk 'no_show' %}" style="display:inline">
+          <form method="post" action="{% url 'appointment_mark_status' apt.pk 'no_show' %}" class="mark-form" style="display:inline">
             {% csrf_token %}
-            <button type="submit" class="btn btn-ghost" style="font-size:12px;padding:5px 12px;color:var(--text-2)">Faltou</button>
+            <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--muted)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="8" x2="23" y2="14"/><line x1="23" y1="8" x2="17" y2="14"/></svg>
+              Faltou
+            </button>
           </form>
         {% endif %}
       </div>
@@ -87,17 +140,20 @@
     {% endfor %}
   </div>
 {% else %}
-  <div class="card" style="padding:48px;text-align:center">
-    <i data-lucide="calendar-check" style="width:40px;height:40px;color:var(--text-2);margin-bottom:12px"></i>
-    <p style="color:var(--text-2);margin:0 0 16px">Nenhum agendamento para este período.</p>
-    <a href="{% url 'appointment_create' %}" class="btn btn-primary">Criar agendamento</a>
+  <div class="card" style="padding:56px 24px;text-align:center">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="empty-icon" style="color:var(--muted)"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 16l2 2 4-4"/></svg>
+    <p class="empty-state" style="margin-bottom:20px">Nenhum agendamento para este período.</p>
+    <a href="{% url 'appointment_create' %}" class="btn btn-primary">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Criar agendamento
+    </a>
   </div>
 {% endif %}
 
 <!-- Link disponibilidade -->
-<div style="margin-top:24px;text-align:right">
-  <a href="{% url 'manage_availability' %}" class="btn btn-ghost" style="font-size:13px">
-    <i data-lucide="settings" style="width:14px;height:14px"></i>
+<div style="margin-top:20px;text-align:right">
+  <a href="{% url 'manage_availability' %}" class="btn btn-ghost btn-sm">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
     Gerenciar disponibilidade
   </a>
 </div>

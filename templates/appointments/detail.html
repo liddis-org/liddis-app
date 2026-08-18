@@ -112,7 +112,7 @@
             Remarcar
           </a>
         {% endif %}
-        {% if is_professional and appointment.status in 'scheduled confirmed' %}
+        {% if is_professional and appointment.status == 'scheduled' or is_professional and appointment.status == 'confirmed' %}
           <a href="{% url 'iniciar_atendimento_agendamento' appointment.pk %}" class="btn btn-primary" style="justify-content:flex-start">
             <i data-lucide="play-circle" style="width:15px;height:15px"></i>
             Iniciar atendimento

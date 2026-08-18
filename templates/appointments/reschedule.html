@@ -2,43 +2,212 @@
 {% block title %}Remarcar Agendamento — LIDDIS{% endblock %}
 {% block nav_appointments_pro %}active{% endblock %}
 
+{% block extra_css %}
+<style>
+  #slots-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .slot-btn {
+    padding: 7px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-soft);
+    background: var(--surface-2);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    transition: background .12s, border-color .12s, color .12s, box-shadow .12s;
+  }
+  .slot-btn:hover {
+    background: var(--teal-glow);
+    border-color: var(--teal-border);
+    color: var(--teal);
+  }
+  .slot-btn.selected {
+    background: var(--teal-glow);
+    border-color: var(--teal);
+    color: var(--teal);
+    box-shadow: 0 0 0 2px var(--teal-glow);
+  }
+  #slots-loading {
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid var(--border-soft);
+    border-top-color: var(--teal);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #no-slots {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-soft);
+  }
+  .btn-spinner {
+    width: 13px; height: 13px;
+    border: 2px solid rgba(7,14,26,.4);
+    border-top-color: #070e1a;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    display: none;
+  }
+  .btn[data-loading="true"] { opacity: .65; pointer-events: none; }
+  .btn[data-loading="true"] .btn-spinner { display: inline-block; }
+  .btn[data-loading="true"] .btn-text { display: none; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="page-header">
-  <h1 class="page-title">Remarcar Agendamento</h1>
+  <div>
+    <h1 class="page-title">Remarcar Agendamento</h1>
+    <p class="page-subtitle">Escolha nova data e horário para a consulta</p>
+  </div>
+  <a href="{% url 'appointment_detail' appointment.pk %}" class="btn btn-ghost">Voltar</a>
 </div>
 
-<div class="card" style="max-width:520px;padding:28px">
-  <div style="padding:14px;background:var(--surface-2);border-radius:10px;margin-bottom:24px;font-size:13px;color:var(--text-2)">
-    Agendamento atual:
-    <strong style="color:var(--text)">{{ appointment.scheduled_date|date:"d/m/Y" }} às {{ appointment.scheduled_time|time:"H:i" }}</strong>
+<div class="card" style="max-width:520px;padding:32px">
+  <!-- Agendamento atual -->
+  <div style="padding:14px 16px;background:var(--surface-2);border-radius:var(--radius-sm);border:1px solid var(--border-soft);margin-bottom:24px;display:flex;gap:14px;align-items:center">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;color:var(--muted)"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    <div>
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Data atual</div>
+      <div style="font-weight:600;color:var(--text);font-size:14px">
+        {{ appointment.scheduled_date|date:"d/m/Y" }} às {{ appointment.scheduled_time|time:"H:i" }}
+      </div>
+    </div>
   </div>
 
-  <form method="post">
-    {% csrf_token %}
-    {% if form.non_field_errors %}
-      <div class="alert alert-error" style="margin-bottom:16px">{{ form.non_field_errors.0 }}</div>
-    {% endif %}
+  {% if form.non_field_errors %}
+    <div class="alert alert-error" style="margin-bottom:16px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span>{{ form.non_field_errors.0 }}</span>
+    </div>
+  {% endif %}
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-      <div class="form-group">
-        <label>{{ form.scheduled_date.label }}</label>
-        {{ form.scheduled_date }}
-        {% if form.scheduled_date.errors %}<div class="field-error">{{ form.scheduled_date.errors.0 }}</div>{% endif %}
+  <form method="post" id="reschedule-form" novalidate>
+    {% csrf_token %}
+
+    <div class="form-group">
+      <label for="{{ form.scheduled_date.id_for_label }}">{{ form.scheduled_date.label }}</label>
+      {{ form.scheduled_date }}
+      {% if form.scheduled_date.errors %}<div class="field-error">{{ form.scheduled_date.errors.0 }}</div>{% endif %}
+    </div>
+
+    <div class="form-group">
+      <label>Horário disponível</label>
+      <div id="slots-loading" style="display:none">
+        <span class="spinner"></span>
+        Carregando horários…
       </div>
-      <div class="form-group">
-        <label>{{ form.scheduled_time.label }}</label>
+      <div id="slots-container"></div>
+      <div id="no-slots" style="display:none">
+        Nenhum slot disponível nesta data. Insira o horário manualmente abaixo.
+      </div>
+      <div style="margin-top:10px">
+        <label style="font-size:11px;color:var(--muted-2);font-weight:600">Ou insira manualmente:</label>
         {{ form.scheduled_time }}
         {% if form.scheduled_time.errors %}<div class="field-error">{{ form.scheduled_time.errors.0 }}</div>{% endif %}
       </div>
     </div>
+
     <div class="form-group">
-      <label>{{ form.notes.label }}</label>
+      <label for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>
       {{ form.notes }}
     </div>
-    <div style="display:flex;gap:12px;margin-top:8px">
-      <button type="submit" class="btn btn-primary">Confirmar remarcação</button>
+
+    <div style="display:flex;gap:12px;margin-top:8px;padding-top:16px;border-top:1px solid var(--border-soft)">
+      <button type="submit" class="btn btn-primary" id="submit-btn">
+        <span class="spinner btn-spinner"></span>
+        <span class="btn-text">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+          Confirmar remarcação
+        </span>
+      </button>
       <a href="{% url 'appointment_detail' appointment.pk %}" class="btn btn-ghost">Cancelar</a>
     </div>
   </form>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  var professionalId = '{{ appointment.professional.pk|default:"" }}';
+  var dateInput      = document.getElementById('id_scheduled_date');
+  var timeInput      = document.getElementById('id_scheduled_time');
+  var container      = document.getElementById('slots-container');
+  var noSlots        = document.getElementById('no-slots');
+  var loading        = document.getElementById('slots-loading');
+  var form           = document.getElementById('reschedule-form');
+  var submitBtn      = document.getElementById('submit-btn');
+
+  function loadSlots() {
+    var date = dateInput ? dateInput.value : '';
+    if (!professionalId || !date) {
+      container.innerHTML    = '';
+      noSlots.style.display  = 'none';
+      loading.style.display  = 'none';
+      return;
+    }
+
+    container.innerHTML   = '';
+    noSlots.style.display  = 'none';
+    loading.style.display  = 'flex';
+
+    fetch('/agendamentos/api/slots/?professional_id=' + encodeURIComponent(professionalId) + '&date=' + encodeURIComponent(date))
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        loading.style.display = 'none';
+        if (!data.slots || data.slots.length === 0) {
+          noSlots.style.display = 'block';
+          return;
+        }
+        data.slots.forEach(function (slot) {
+          var btn = document.createElement('button');
+          btn.type        = 'button';
+          btn.className   = 'slot-btn';
+          btn.textContent = slot;
+          if (timeInput.value && timeInput.value.slice(0, 5) === slot) btn.classList.add('selected');
+          btn.addEventListener('click', function () {
+            timeInput.value = slot + ':00';
+            container.querySelectorAll('.slot-btn').forEach(function (b) {
+              b.classList.remove('selected');
+            });
+            btn.classList.add('selected');
+          });
+          container.appendChild(btn);
+        });
+      })
+      .catch(function () {
+        loading.style.display = 'none';
+      });
+  }
+
+  if (dateInput) dateInput.addEventListener('change', loadSlots);
+  if (dateInput && dateInput.value) loadSlots();
+
+  if (form && submitBtn) {
+    form.addEventListener('submit', function () {
+      submitBtn.setAttribute('data-loading', 'true');
+    });
+  }
+})();
+</script>
 {% endblock %}

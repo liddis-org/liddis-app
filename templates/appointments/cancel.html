@@ -3,31 +3,96 @@
 {% block nav_appointments_patient %}active{% endblock %}
 {% block nav_appointments_pro %}active{% endblock %}
 
+{% block extra_css %}
+<style>
+  .spinner {
+    width: 13px; height: 13px;
+    border: 2px solid rgba(255,255,255,.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    display: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .btn[data-loading="true"] { opacity: .65; pointer-events: none; }
+  .btn[data-loading="true"] .spinner { display: inline-block; }
+  .btn[data-loading="true"] .btn-text { display: none; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="page-header">
-  <h1 class="page-title">Cancelar Agendamento</h1>
+  <div>
+    <h1 class="page-title">Cancelar Agendamento</h1>
+    <p class="page-subtitle">Esta ação não pode ser desfeita</p>
+  </div>
+  <a href="{% url 'appointment_detail' appointment.pk %}" class="btn btn-ghost">Voltar</a>
 </div>
 
-<div class="card" style="max-width:520px;padding:28px">
-  <div style="padding:16px;background:rgba(239,68,68,.08);border-radius:10px;border:1px solid rgba(239,68,68,.2);margin-bottom:24px">
-    <div style="font-weight:600;color:#ef4444;margin-bottom:6px">Confirmar cancelamento</div>
-    <div style="font-size:13px;color:var(--text)">
-      {% if appointment.professional %}{{ appointment.professional.get_full_name }} — {% endif %}
-      {{ appointment.scheduled_date|date:"d/m/Y" }} às {{ appointment.scheduled_time|time:"H:i" }}
+<div class="card" style="max-width:520px;padding:32px">
+
+  <!-- Aviso e dados do agendamento -->
+  <div style="padding:16px 20px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.25);border-radius:var(--radius);margin-bottom:24px">
+    <div style="display:flex;gap:12px;align-items:flex-start">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;flex-shrink:0;margin-top:1px">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      <div>
+        <div style="font-weight:700;color:var(--danger);margin-bottom:6px;font-size:13px">Confirmar cancelamento</div>
+        <div style="font-size:14px;color:var(--text)">
+          {% if appointment.professional %}
+            <strong>{{ appointment.professional.get_full_name }}</strong> —
+          {% endif %}
+          {{ appointment.scheduled_date|date:"d/m/Y" }} às {{ appointment.scheduled_time|time:"H:i" }}
+        </div>
+        {% if appointment.patient %}
+          <div style="font-size:12px;color:var(--muted);margin-top:4px">
+            Paciente: {{ appointment.patient.get_full_name|default:appointment.patient.username }}
+          </div>
+        {% endif %}
+      </div>
     </div>
   </div>
 
-  <form method="post">
+  <form method="post" id="cancel-form" novalidate>
     {% csrf_token %}
+
     <div class="form-group">
-      <label>{{ form.cancellation_reason.label }}</label>
+      <label for="{{ form.cancellation_reason.id_for_label }}">{{ form.cancellation_reason.label }}</label>
       {{ form.cancellation_reason }}
-      {% if form.cancellation_reason.errors %}<div class="field-error">{{ form.cancellation_reason.errors.0 }}</div>{% endif %}
+      {% if form.cancellation_reason.errors %}
+        <div class="field-error">{{ form.cancellation_reason.errors.0 }}</div>
+      {% endif %}
+      <div class="form-help">Informe o motivo para registrar no histórico do agendamento.</div>
     </div>
-    <div style="display:flex;gap:12px;margin-top:8px">
-      <button type="submit" class="btn btn-primary" style="background:#ef4444;border-color:#ef4444">Confirmar cancelamento</button>
-      <a href="{% url 'appointment_detail' appointment.pk %}" class="btn btn-ghost">Voltar</a>
+
+    <div style="display:flex;gap:12px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border-soft)">
+      <button type="submit" class="btn" id="confirm-btn"
+              style="background:#ef4444;color:#fff;border:none">
+        <span class="spinner"></span>
+        <span class="btn-text">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          Confirmar cancelamento
+        </span>
+      </button>
+      <a href="{% url 'appointment_detail' appointment.pk %}" class="btn btn-ghost">Manter agendamento</a>
     </div>
   </form>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  var form = document.getElementById('cancel-form');
+  var btn  = document.getElementById('confirm-btn');
+  if (form && btn) {
+    form.addEventListener('submit', function () {
+      btn.setAttribute('data-loading', 'true');
+    });
+  }
+})();
+</script>
 {% endblock %}
