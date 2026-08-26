@@ -12,6 +12,7 @@ from django.views.generic import ListView, CreateView, UpdateView, DeleteView, D
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
+from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
@@ -851,56 +852,56 @@ def atendimento_consulta(request, token):
         evolution_form     = ExpectedEvolutionForm(request.POST, prefix='evolucao')
 
         if form.is_valid():
-            consultation = form.save(commit=False)
-            consultation.patient = patient
-            consultation.professional_name = request.user.get_full_name() or request.user.username
-            consultation.profession = request.user.profession
-            consultation.specialty = request.user.professional_specialty or 'outro'
-            consultation.created_by = request.user
-            consultation.save()
-            _save_sub_forms(request, consultation, anamnese_form, exames_form)
-            _handle_image_uploads(request, consultation)
+            with transaction.atomic():
+                consultation = form.save(commit=False)
+                consultation.patient = patient
+                consultation.professional_name = request.user.get_full_name() or request.user.username
+                consultation.profession = request.user.profession
+                consultation.specialty = request.user.professional_specialty or 'outro'
+                consultation.created_by = request.user
+                consultation.save()
+                _save_sub_forms(request, consultation, anamnese_form, exames_form)
+                _handle_image_uploads(request, consultation)
 
-            # Salva intervenção clínica se algum campo foi preenchido
-            if intervention_form.is_valid():
-                icd = intervention_form.cleaned_data
-                if any(v for v in icd.values() if v):
-                    interv = intervention_form.save(commit=False)
-                    interv.consultation = consultation
-                    interv.professional = request.user
-                    interv.save()
+                # Salva intervenção clínica se algum campo foi preenchido
+                if intervention_form.is_valid():
+                    icd = intervention_form.cleaned_data
+                    if any(v for v in icd.values() if v):
+                        interv = intervention_form.save(commit=False)
+                        interv.consultation = consultation
+                        interv.professional = request.user
+                        interv.save()
 
-            # Salva evolução esperada se algum campo foi preenchido
-            if evolution_form.is_valid():
-                ecd = evolution_form.cleaned_data
-                if any(v for v in ecd.values() if v):
-                    ev = evolution_form.save(commit=False)
-                    ev.consultation = consultation
-                    ev.professional = request.user
-                    ev.save()
+                # Salva evolução esperada se algum campo foi preenchido
+                if evolution_form.is_valid():
+                    ecd = evolution_form.cleaned_data
+                    if any(v for v in ecd.values() if v):
+                        ev = evolution_form.save(commit=False)
+                        ev.consultation = consultation
+                        ev.professional = request.user
+                        ev.save()
 
-            # Salva sinais vitais apenas se ao menos um campo clínico foi preenchido
-            if vitals_form.is_valid():
-                cd = vitals_form.cleaned_data
-                has_any_vital = any(
-                    v is not None and v != '' and v is not False
-                    for v in cd.values()
-                )
-                if has_any_vital:
-                    vital = vitals_form.save(commit=False)
-                    vital.patient = patient
-                    vital.consultation = consultation
-                    vital.recorded_by = request.user
-                    vital.date = timezone.now().date()
-                    vital.save()
+                # Salva sinais vitais apenas se ao menos um campo clínico foi preenchido
+                if vitals_form.is_valid():
+                    cd = vitals_form.cleaned_data
+                    has_any_vital = any(
+                        v is not None and v != '' and v is not False
+                        for v in cd.values()
+                    )
+                    if has_any_vital:
+                        vital = vitals_form.save(commit=False)
+                        vital.patient = patient
+                        vital.consultation = consultation
+                        vital.recorded_by = request.user
+                        vital.date = timezone.now().date()
+                        vital.save()
 
-            session.consultation = consultation
-            session.status = 'closed'
-            session.closed_at = timezone.now()
-            session.save()
+                session.consultation = consultation
+                session.status = 'closed'
+                session.closed_at = timezone.now()
+                session.save()
 
-            # Cria vínculo clínico para RBAC
-            try:
+                # Cria vínculo clínico para RBAC
                 from users.models import PatientProfessionalAccess
                 ppa, _ = PatientProfessionalAccess.objects.get_or_create(
                     patient=patient,
@@ -915,9 +916,6 @@ def atendimento_consulta(request, token):
                     ppa.is_active = True
                     ppa.revoked_at = None
                     ppa.save(update_fields=['is_active', 'revoked_at'])
-            except Exception as exc:
-                _log.error('Falha ao criar vínculo clínico: professional=%s patient=%s erro=%s',
-                           request.user.pk, patient.pk, exc)
 
             log_access(request, 'create', 'consultation', resource_id=consultation.pk, patient=patient)
             messages.success(request, f'Consulta de {patient.display_name} registrada com sucesso!')
@@ -930,6 +928,9 @@ def atendimento_consulta(request, token):
         intervention_form  = ClinicalInterventionForm(prefix='interv')
         evolution_form     = ExpectedEvolutionForm(prefix='evolucao')
 
+    # Se o formulário foi submetido com erros, volta para aba "geral" onde ficam os campos obrigatórios
+    active_tab = request.POST.get('active_tab', 'geral') if not form.errors else 'geral'
+
     return render(request, 'atendimento/consulta.html', {
         'session':            session,
         'patient':            patient,
@@ -940,7 +941,7 @@ def atendimento_consulta(request, token):
         'intervention_form':  intervention_form,
         'evolution_form':     evolution_form,
         'tab_choices':        ConsultationImage.TAB_CHOICES,
-        'active_tab':         request.POST.get('active_tab', 'geral'),
+        'active_tab':         active_tab,
         'professional':      request.user,
         'evaluation_label':  _evaluation_label(request.user),
         'diagnosis_label':   _diagnosis_label(request.user),

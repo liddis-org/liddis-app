@@ -1,4 +1,5 @@
 from django import forms
+from django.core.validators import MinValueValidator, MaxValueValidator
 from .models import (
     Consultation, VitalSign, Anamnese, ExameLaboratorial,
     Evolution, Prescription, DiagnosisCID, PhysicalExam, LabRequest,
@@ -87,6 +88,19 @@ class ExameLaboratorialForm(forms.ModelForm):
 
 class VitalSignForm(forms.ModelForm):
     """Formulário de sinais vitais para o próprio paciente."""
+    height = forms.DecimalField(
+        required=False,
+        max_digits=4,
+        decimal_places=1,
+        validators=[MinValueValidator(50), MaxValueValidator(250)],
+        widget=forms.NumberInput(attrs={**_I, 'placeholder': '170', 'step': '0.1', 'min': '50', 'max': '250'}),
+        label='Altura (cm)',
+        error_messages={
+            'min_value': 'Informe a altura em centímetros (ex: 170). Valor mínimo: 50 cm.',
+            'max_value': 'Altura máxima aceita: 250 cm. Verifique se não digitou em metros.',
+        },
+    )
+
     class Meta:
         model = VitalSign
         fields = ['date', 'blood_pressure', 'heart_rate', 'weight', 'height', 'temperature', 'oxygen_saturation', 'glucose', 'notes']
@@ -95,7 +109,6 @@ class VitalSignForm(forms.ModelForm):
             'blood_pressure':    forms.TextInput(attrs={**_I, 'placeholder': '120/80 mmHg'}),
             'heart_rate':        forms.NumberInput(attrs={**_I, 'placeholder': '72 bpm'}),
             'weight':            forms.NumberInput(attrs={**_I, 'placeholder': '70.5', 'step': '0.1'}),
-            'height':            forms.NumberInput(attrs={**_I, 'placeholder': '170', 'step': '0.1'}),
             'temperature':       forms.NumberInput(attrs={**_I, 'placeholder': '36.5', 'step': '0.1'}),
             'oxygen_saturation': forms.NumberInput(attrs={**_I, 'placeholder': '98'}),
             'glucose':           forms.NumberInput(attrs={**_I, 'placeholder': '100', 'step': '0.1'}),
@@ -105,6 +118,19 @@ class VitalSignForm(forms.ModelForm):
 
 class VitalSignProfessionalForm(forms.ModelForm):
     """Formulário de sinais vitais preenchido pelo profissional durante a consulta."""
+    height = forms.DecimalField(
+        required=False,
+        max_digits=4,
+        decimal_places=1,
+        validators=[MinValueValidator(50), MaxValueValidator(250)],
+        widget=forms.NumberInput(attrs={**_I, 'placeholder': 'cm', 'step': '0.1', 'min': '50', 'max': '250'}),
+        label='Altura (cm)',
+        error_messages={
+            'min_value': 'Informe a altura em centímetros (ex: 170). Valor mínimo: 50 cm.',
+            'max_value': 'Altura máxima aceita: 250 cm. Verifique se não digitou em metros.',
+        },
+    )
+
     class Meta:
         model = VitalSign
         fields = [
@@ -117,7 +143,6 @@ class VitalSignProfessionalForm(forms.ModelForm):
             'heart_rate':        forms.NumberInput(attrs={**_I, 'placeholder': 'bpm'}),
             'respiratory_rate':  forms.NumberInput(attrs={**_I, 'placeholder': 'irpm'}),
             'weight':            forms.NumberInput(attrs={**_I, 'placeholder': 'kg', 'step': '0.1'}),
-            'height':            forms.NumberInput(attrs={**_I, 'placeholder': 'cm', 'step': '0.1'}),
             'temperature':       forms.NumberInput(attrs={**_I, 'placeholder': '°C', 'step': '0.1'}),
             'oxygen_saturation': forms.NumberInput(attrs={**_I, 'placeholder': '%'}),
             'glucose':           forms.NumberInput(attrs={**_I, 'placeholder': 'mg/dL', 'step': '0.1'}),
@@ -129,7 +154,6 @@ class VitalSignProfessionalForm(forms.ModelForm):
             'heart_rate':        'Freq. Cardíaca (FC)',
             'respiratory_rate':  'Freq. Respiratória (FR)',
             'weight':            'Peso (kg)',
-            'height':            'Altura (cm)',
             'temperature':       'Temperatura (°C)',
             'oxygen_saturation': 'Saturação O₂ (%)',
             'glucose':           'Glicemia (mg/dL)',
