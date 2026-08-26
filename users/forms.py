@@ -61,6 +61,10 @@ class RegisterForm(UserCreationForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Remove ADMIN do cadastro público — contas admin só via Django admin / superusuário.
+        self.fields['role'].choices = [
+            (k, v) for k, v in CustomUser.Role.choices if k != 'ADMIN'
+        ]
         self.fields['password1'].widget = forms.PasswordInput(attrs={
             **_INPUT, 'placeholder': 'Mínimo 8 caracteres', 'autocomplete': 'new-password',
         })

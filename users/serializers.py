@@ -8,7 +8,9 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ('username', 'email', 'password', 'role', 'phone')
+        # 'role' deliberadamente ausente: novos usuários são sempre PATIENT.
+        # Admins são criados apenas via Django admin por superusuário.
+        fields = ('username', 'email', 'password', 'phone')
 
     def create(self, validated_data):
         user = CustomUser.objects.create_user(**validated_data)
@@ -18,5 +20,6 @@ class RegisterSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ('id', 'username', 'email', 'role', 'phone', 'first_name', 'last_name')
-        read_only_fields = ('id',)
+        # 'uid' é UUID público seguro; 'id' (PK sequencial) nunca exposto na API.
+        fields = ('uid', 'username', 'email', 'role', 'phone', 'first_name', 'last_name')
+        read_only_fields = ('uid', 'role')

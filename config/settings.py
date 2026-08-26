@@ -165,10 +165,18 @@ AUTHENTICATION_BACKENDS = [
 if TEST_MODE:
     AUTHENTICATION_BACKENDS.insert(1, 'users.backends.TestModeBackend')
 
+# Argon2 (memory-hard) como hasher primário; PBKDF2 como fallback para hashes antigos.
+# Requer: pip install argon2-cffi (já no requirements.txt)
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.Argon2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+]
+
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
      'OPTIONS': {'min_length': 8}},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 

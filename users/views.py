@@ -387,6 +387,9 @@ def verificar_celular(request):
         messages.warning(request, 'Cadastre seu celular no perfil primeiro.')
         return redirect('profile')
 
+    sms_attempt_key = f'sms_otp_attempts_{user.pk}'
+    sms_resend_key  = f'sms_otp_resend_at_{user.pk}'
+
     if request.method == 'POST':
         action = request.POST.get('action')
 
@@ -394,9 +397,29 @@ def verificar_celular(request):
             if not settings.SMS_ENABLED:
                 messages.error(request, 'Envio de SMS não configurado ainda.')
                 return redirect('verificar_celular')
+            last_sent_iso = request.session.get(sms_resend_key)
+            if last_sent_iso:
+                try:
+                    last_sent = timezone.datetime.fromisoformat(last_sent_iso)
+                    elapsed = (timezone.now() - last_sent).total_seconds()
+                    if elapsed < _OTP_RESEND_COOLDOWN:
+                        wait = int(_OTP_RESEND_COOLDOWN - elapsed)
+                        messages.error(request, f'Aguarde {wait}s antes de solicitar um novo código.')
+                        return redirect('verificar_celular')
+                except (ValueError, TypeError):
+                    pass
             _send_sms_code(user)
+            request.session[sms_resend_key]  = timezone.now().isoformat()
+            request.session[sms_attempt_key] = 0
             messages.success(request, f'Novo código enviado para {user.phone}.')
             return redirect('verificar_celular')
+
+        attempts = request.session.get(sms_attempt_key, 0)
+        if attempts >= _OTP_MAX_ATTEMPTS:
+            messages.error(request, 'Muitas tentativas incorretas. Solicite um novo código clicando em "Reenviar".')
+            return render(request, 'users/verificar_celular.html', {
+                'phone': user.phone, 'sms_enabled': settings.SMS_ENABLED, 'blocked': True,
+            })
 
         code_input = request.POST.get('code', '').strip()
         vc = (
@@ -410,15 +433,22 @@ def verificar_celular(request):
             messages.error(request, 'Nenhum código ativo. Clique em "Reenviar".')
         elif vc.is_expired:
             vc.is_used = True
-            vc.save()
+            vc.save(update_fields=['is_used'])
             messages.error(request, 'Código expirado. Clique em "Reenviar".')
-        elif vc.code != code_input:
-            messages.error(request, 'Código incorreto. Tente novamente.')
+        elif not hmac.compare_digest(vc.code, code_input):
+            request.session[sms_attempt_key] = attempts + 1
+            remaining = _OTP_MAX_ATTEMPTS - (attempts + 1)
+            if remaining > 0:
+                messages.error(request, f'Código incorreto. {remaining} tentativa(s) restante(s).')
+            else:
+                messages.error(request, 'Muitas tentativas incorretas. Solicite um novo código.')
         else:
             vc.is_used = True
-            vc.save()
+            vc.save(update_fields=['is_used'])
             user.is_phone_verified = True
             user.save(update_fields=['is_phone_verified'])
+            request.session.pop(sms_attempt_key, None)
+            request.session.pop(sms_resend_key, None)
             messages.success(request, 'Celular verificado com sucesso!')
             return redirect('profile')
 
