@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block title %}Atendimento Externo — LIDDIS{% endblock %}
+{% block topbar_title %}Novo Atendimento — Paciente sem conta LIDDIS{% endblock %}
+{% block nav_meus_atendimentos %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2>Atendimento Externo</h2>
+    <p>Registre uma consulta para um paciente que não possui conta na plataforma LIDDIS.</p>
+  </div>
+  <a href="{% url 'meus_atendimentos' %}" class="btn btn-secondary">← Voltar</a>
+</div>
+
+<div class="card" style="margin-bottom:6px;padding:14px 20px;background:var(--surface-2);border-left:3px solid var(--teal)">
+  <p style="margin:0;font-size:13px;color:var(--muted)">
+    <strong>Paciente externo:</strong> os dados preenchidos aqui são armazenados exclusivamente para fins clínicos.
+    O paciente não recebe credenciais nem acesso à plataforma. Caso ele se cadastre futuramente, os registros poderão ser vinculados.
+  </p>
+</div>
+
+<form method="post" novalidate>
+  {% csrf_token %}
+
+  <!-- ── Dados do Paciente ── -->
+  <div class="card" style="margin-top:20px">
+    <h3 style="margin-top:0;margin-bottom:20px;font-size:15px;color:var(--teal);text-transform:uppercase;letter-spacing:.5px">
+      Dados do Paciente
+    </h3>
+
+    {% if patient_form.non_field_errors %}
+    <div class="alert alert-error" style="margin-bottom:16px">{{ patient_form.non_field_errors }}</div>
+    {% endif %}
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="form-group" style="grid-column:1/-1">
+        <label>{{ patient_form.name.label }} <span style="color:var(--danger)">*</span></label>
+        {{ patient_form.name }}
+        {% if patient_form.name.errors %}<p class="field-error">{{ patient_form.name.errors.0 }}</p>{% endif %}
+      </div>
+      <div class="form-group">
+        <label>{{ patient_form.cpf.label }}</label>
+        {{ patient_form.cpf }}
+        {% if patient_form.cpf.errors %}<p class="field-error">{{ patient_form.cpf.errors.0 }}</p>{% endif %}
+      </div>
+      <div class="form-group">
+        <label>{{ patient_form.birth_date.label }}</label>
+        {{ patient_form.birth_date }}
+        {% if patient_form.birth_date.errors %}<p class="field-error">{{ patient_form.birth_date.errors.0 }}</p>{% endif %}
+      </div>
+      <div class="form-group">
+        <label>{{ patient_form.sex.label }}</label>
+        {{ patient_form.sex }}
+        {% if patient_form.sex.errors %}<p class="field-error">{{ patient_form.sex.errors.0 }}</p>{% endif %}
+      </div>
+      <div class="form-group">
+        <label>{{ patient_form.phone.label }}</label>
+        {{ patient_form.phone }}
+        {% if patient_form.phone.errors %}<p class="field-error">{{ patient_form.phone.errors.0 }}</p>{% endif %}
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>{{ patient_form.email.label }}</label>
+        {{ patient_form.email }}
+        {% if patient_form.email.errors %}<p class="field-error">{{ patient_form.email.errors.0 }}</p>{% endif %}
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>{{ patient_form.notes.label }}</label>
+        {{ patient_form.notes }}
+        {% if patient_form.notes.errors %}<p class="field-error">{{ patient_form.notes.errors.0 }}</p>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Dados da Consulta ── -->
+  <div class="card" style="margin-top:16px">
+    <h3 style="margin-top:0;margin-bottom:20px;font-size:15px;color:var(--teal);text-transform:uppercase;letter-spacing:.5px">
+      Dados da Consulta
+    </h3>
+
+    {% if consultation_form.non_field_errors %}
+    <div class="alert alert-error" style="margin-bottom:16px">{{ consultation_form.non_field_errors }}</div>
+    {% endif %}
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="form-group">
+        <label>Data da consulta <span style="color:var(--danger)">*</span></label>
+        {{ consultation_form.date }}
+        {% if consultation_form.date.errors %}<p class="field-error">{{ consultation_form.date.errors.0 }}</p>{% endif %}
+      </div>
+      <div class="form-group">
+        <label>{{ consultation_form.clinic_name.label }} <span style="color:var(--danger)">*</span></label>
+        {{ consultation_form.clinic_name }}
+        {% if consultation_form.clinic_name.errors %}<p class="field-error">{{ consultation_form.clinic_name.errors.0 }}</p>{% endif %}
+      </div>
+      <div class="form-group">
+        <label>{{ consultation_form.clinic_neighborhood.label }} <span style="color:var(--danger)">*</span></label>
+        {{ consultation_form.clinic_neighborhood }}
+        {% if consultation_form.clinic_neighborhood.errors %}<p class="field-error">{{ consultation_form.clinic_neighborhood.errors.0 }}</p>{% endif %}
+      </div>
+      <div class="form-group">
+        <label>{{ consultation_form.clinic_city.label }} <span style="color:var(--danger)">*</span></label>
+        {{ consultation_form.clinic_city }}
+        {% if consultation_form.clinic_city.errors %}<p class="field-error">{{ consultation_form.clinic_city.errors.0 }}</p>{% endif %}
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>{{ consultation_form.clinic_address.label }}</label>
+        {{ consultation_form.clinic_address }}
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Diagnóstico / Hipótese</label>
+        {{ consultation_form.diagnosis }}
+        {% if consultation_form.diagnosis.errors %}<p class="field-error">{{ consultation_form.diagnosis.errors.0 }}</p>{% endif %}
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Anotações / Evolução clínica</label>
+        {{ consultation_form.notes }}
+        {% if consultation_form.notes.errors %}<p class="field-error">{{ consultation_form.notes.errors.0 }}</p>{% endif %}
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Prescrição / Medicamentos</label>
+        {{ consultation_form.prescription }}
+        {% if consultation_form.prescription.errors %}<p class="field-error">{{ consultation_form.prescription.errors.0 }}</p>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px">
+    <a href="{% url 'meus_atendimentos' %}" class="btn btn-secondary">Cancelar</a>
+    <button type="submit" class="btn btn-primary">Registrar Consulta</button>
+  </div>
+</form>
+{% endblock %}

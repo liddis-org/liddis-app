@@ -4,6 +4,7 @@ from .models import (
     ConsultationSession, Evolution, Prescription, DiagnosisCID, PhysicalExam, LabRequest,
     PatientClinicalSummary, ClinicalIntervention, ExpectedEvolution,
 )
+from users.models import ExternalPatient
 
 
 @admin.register(Consultation)
@@ -119,4 +120,14 @@ class LabRequestAdmin(admin.ModelAdmin):
     search_fields  = ('exam_type', 'requesting_professional__email', 'result')
     readonly_fields = ('id', 'created_at', 'updated_at')
     raw_id_fields  = ('consultation', 'requesting_professional', 'result_registered_by')
+    date_hierarchy = 'created_at'
+
+
+@admin.register(ExternalPatient)
+class ExternalPatientAdmin(admin.ModelAdmin):
+    list_display   = ('name', 'cpf', 'birth_date', 'sex', 'phone', 'email', 'created_by', 'linked_user', 'created_at')
+    list_filter    = ('sex',)
+    search_fields  = ('name', 'cpf', 'email', 'phone', 'created_by__email')
+    readonly_fields = ('id', 'created_at', 'updated_at')
+    raw_id_fields  = ('created_by', 'linked_user')
     date_hierarchy = 'created_at'

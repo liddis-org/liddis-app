@@ -41,14 +41,23 @@ class Consultation(models.Model):
     class RecordOrigin(models.TextChoices):
         PLATFORM       = 'platform',        'Consulta realizada na plataforma'
         PATIENT_MANUAL = 'patient_manual',  'Consulta cadastrada pelo paciente'
+        EXTERNAL       = 'external',        'Paciente sem conta LIDDIS'
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     patient = models.ForeignKey(
         settings.AUTH_USER_MODEL,
+        null=True, blank=True,
         on_delete=models.CASCADE,
         related_name='consultations',
         verbose_name='Paciente',
+    )
+    external_patient = models.ForeignKey(
+        'users.ExternalPatient',
+        null=True, blank=True,
+        on_delete=models.PROTECT,
+        related_name='consultations',
+        verbose_name='Paciente externo',
     )
     organization = models.ForeignKey(
         'users.Organization',
@@ -129,6 +138,26 @@ class Consultation(models.Model):
     def is_patient_record(self):
         return self.record_origin == self.RecordOrigin.PATIENT_MANUAL
 
+    @property
+    def is_external_patient(self):
+        return self.external_patient_id is not None
+
+    @property
+    def patient_display_name(self):
+        if self.patient_id:
+            return self.patient.display_name
+        if self.external_patient_id:
+            return self.external_patient.name
+        return '—'
+
+    @property
+    def patient_email_display(self):
+        if self.patient_id:
+            return self.patient.email
+        if self.external_patient_id:
+            return self.external_patient.email or '—'
+        return '—'
+
 
 class Anamnese(models.Model):
     """Anamnese vinculada a uma consulta (relação 1-para-1)."""
@@ -185,7 +214,8 @@ class ExameLaboratorial(models.Model):
 def consultation_image_path(instance, filename):
     ext = os.path.splitext(filename)[1].lower()
     new_name = f'{uuid.uuid4().hex}{ext}'
-    return f'consultations/{instance.consultation.patient_id}/{instance.consultation_id}/{instance.tab}/{new_name}'
+    owner = instance.consultation.patient_id or f'ext_{instance.consultation.external_patient_id or "unknown"}'
+    return f'consultations/{owner}/{instance.consultation_id}/{instance.tab}/{new_name}'
 
 
 class ConsultationImage(models.Model):
@@ -233,8 +263,16 @@ class ConsultationImage(models.Model):
 class VitalSign(models.Model):
     patient = models.ForeignKey(
         settings.AUTH_USER_MODEL,
+        null=True, blank=True,
         on_delete=models.CASCADE,
         related_name='vitals'
+    )
+    external_patient = models.ForeignKey(
+        'users.ExternalPatient',
+        null=True, blank=True,
+        on_delete=models.PROTECT,
+        related_name='vitals',
+        verbose_name='Paciente externo',
     )
     # Vínculo opcional com consulta — preenchido quando profissional registra durante atendimento
     consultation = models.ForeignKey(
@@ -282,7 +320,8 @@ class VitalSign(models.Model):
         return None
 
     def __str__(self):
-        return f'{self.date} — {self.patient.username}'
+        who = self.patient.username if self.patient_id else (self.external_patient.name if self.external_patient_id else '?')
+        return f'{self.date} — {who}'
 
 
 class Evolution(models.Model):

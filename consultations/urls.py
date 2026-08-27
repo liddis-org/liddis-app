@@ -11,6 +11,7 @@ urlpatterns = [
 
     # Meus Atendimentos (profissional)
     path('meus-atendimentos/', views.meus_atendimentos, name='meus_atendimentos'),
+    path('meus-atendimentos/externo/novo/', views.external_consultation_create, name='external_consultation_create'),
 
     # Perfil clínico do paciente (editado pelo profissional)
     path('<uuid:consultation_pk>/perfil-clinico/', views.patient_clinical_summary, name='patient_clinical_summary'),

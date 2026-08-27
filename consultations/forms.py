@@ -5,6 +5,7 @@ from .models import (
     Evolution, Prescription, DiagnosisCID, PhysicalExam, LabRequest,
     PatientClinicalSummary, ClinicalIntervention, ExpectedEvolution,
 )
+from users.models import ExternalPatient
 
 _I = {'class': 'input'}
 _TA = lambda rows=3: {'class': 'input', 'rows': rows}
@@ -418,4 +419,70 @@ class LabResultForm(forms.ModelForm):
             'result_date':      'Data do resultado',
             'reference_values': 'Valores de referência',
             'status':           'Status',
+        }
+
+
+class ExternalPatientForm(forms.ModelForm):
+    """Dados do paciente sem conta LIDDIS — preenchido pelo profissional."""
+
+    class Meta:
+        model  = ExternalPatient
+        fields = ['name', 'cpf', 'birth_date', 'sex', 'phone', 'email', 'notes']
+        widgets = {
+            'name':       forms.TextInput(attrs={**_I, 'placeholder': 'Nome completo do paciente'}),
+            'cpf':        forms.TextInput(attrs={**_I, 'placeholder': '000.000.000-00', 'inputmode': 'numeric'}),
+            'birth_date': forms.DateInput(attrs={'type': 'date', **_I}),
+            'sex':        forms.Select(attrs=_I),
+            'phone':      forms.TextInput(attrs={**_I, 'placeholder': '(11) 99999-9999', 'inputmode': 'tel'}),
+            'email':      forms.EmailInput(attrs={**_I, 'placeholder': 'email@exemplo.com (opcional)'}),
+            'notes':      forms.Textarea(attrs={**_TA(3), 'placeholder': 'Alergias, condições relevantes, observações...'}),
+        }
+        labels = {
+            'name':       'Nome completo',
+            'cpf':        'CPF',
+            'birth_date': 'Data de nascimento',
+            'sex':        'Sexo',
+            'phone':      'Telefone',
+            'email':      'E-mail',
+            'notes':      'Observações clínicas',
+        }
+
+    def clean_name(self):
+        name = self.cleaned_data.get('name', '').strip()
+        if len(name) < 3:
+            raise forms.ValidationError('Informe o nome completo do paciente (mínimo 3 caracteres).')
+        return name
+
+
+class ExternalConsultationForm(forms.ModelForm):
+    """Consulta para paciente externo — campos de identidade são auto-preenchidos na view."""
+
+    clinic_name = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={**_I, 'placeholder': 'Ex: Clínica São Lucas, Consultório...'}),
+        label='Nome do Local',
+        error_messages={'required': 'Informe o nome do local do atendimento.'},
+    )
+    clinic_neighborhood = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={**_I, 'placeholder': 'Ex: Centro, Vila Mariana...'}),
+        label='Bairro',
+        error_messages={'required': 'Informe o bairro do local.'},
+    )
+    clinic_city = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={**_I, 'placeholder': 'Ex: São Paulo, Belo Horizonte...'}),
+        label='Cidade',
+        error_messages={'required': 'Informe a cidade do local.'},
+    )
+
+    class Meta:
+        model  = Consultation
+        fields = ['date', 'clinic_name', 'clinic_neighborhood', 'clinic_city', 'clinic_address', 'diagnosis', 'notes', 'prescription']
+        widgets = {
+            'date':           forms.DateInput(attrs={'type': 'date', **_I}),
+            'clinic_address': forms.TextInput(attrs={**_I, 'placeholder': 'Rua, número (opcional)'}),
+            'diagnosis':      forms.Textarea(attrs={**_TA(3), 'placeholder': 'Diagnóstico / hipótese diagnóstica'}),
+            'notes':          forms.Textarea(attrs={**_TA(4), 'placeholder': 'Anotações, evolução clínica, observações...'}),
+            'prescription':   forms.Textarea(attrs={**_TA(4), 'placeholder': 'Medicamentos prescritos, dosagem e frequência...'}),
         }

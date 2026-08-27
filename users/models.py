@@ -453,6 +453,69 @@ class PlatformFeedback(models.Model):
 
 # ── Plano de Usuário (controle de acesso LUMI) ────────────────────────────────
 
+# ── Paciente Externo (sem conta LIDDIS) ───────────────────────────────────────
+
+class ExternalPatient(models.Model):
+    """Paciente cadastrado pelo profissional sem conta na plataforma LIDDIS."""
+
+    class Sex(models.TextChoices):
+        MALE   = 'M', 'Masculino'
+        FEMALE = 'F', 'Feminino'
+        OTHER  = 'O', 'Outro'
+
+    id         = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name       = models.CharField(max_length=200, verbose_name='Nome completo')
+    cpf        = models.CharField(max_length=14, blank=True, verbose_name='CPF')
+    birth_date = models.DateField(null=True, blank=True, verbose_name='Data de nascimento')
+    sex        = models.CharField(max_length=1, choices=Sex.choices, blank=True, verbose_name='Sexo')
+    phone      = models.CharField(max_length=20, blank=True, verbose_name='Telefone')
+    email      = models.EmailField(blank=True, verbose_name='E-mail')
+    notes      = models.TextField(blank=True, verbose_name='Observações clínicas')
+
+    # Vinculação futura a uma conta LIDDIS (quando o paciente se cadastrar)
+    linked_user = models.OneToOneField(
+        'CustomUser',
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='external_patient_profile',
+        verbose_name='Conta LIDDIS vinculada',
+    )
+
+    created_by = models.ForeignKey(
+        'CustomUser',
+        on_delete=models.PROTECT,
+        related_name='external_patients_created',
+        verbose_name='Cadastrado por',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table            = 'external_patients'
+        verbose_name        = 'Paciente Externo'
+        verbose_name_plural = 'Pacientes Externos'
+        ordering            = ['name']
+        indexes = [
+            models.Index(fields=['created_by']),
+            models.Index(fields=['cpf']),
+        ]
+
+    def __str__(self):
+        return f'{self.name} (externo)'
+
+    @property
+    def display_name(self):
+        return self.name
+
+    @property
+    def age(self):
+        if not self.birth_date:
+            return None
+        today = date.today()
+        dob = self.birth_date
+        return today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+
+
 class UserPlan(models.Model):
     class Plan(models.TextChoices):
         FREE       = 'free',       'Grátis'

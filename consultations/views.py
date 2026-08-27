@@ -31,6 +31,7 @@ from .forms import (
     EvolutionForm, PrescriptionForm, DiagnosisCIDForm, PhysicalExamForm,
     LabRequestForm, LabResultForm, VitalSignProfessionalForm, PatientClinicalSummaryForm,
     ClinicalInterventionForm, ExpectedEvolutionForm,
+    ExternalPatientForm, ExternalConsultationForm,
 )
 from users.permissions import (
     has_permission, can_access_patient,
@@ -177,7 +178,7 @@ def _accessible_consultations(user):
     Retorna queryset de Consultation acessível ao usuário:
     - Pacientes: consultas onde são o paciente.
     - Superusuário / ADMIN: todas as consultas do sistema.
-    - Profissionais: consultas que realizaram via sessão ou com pacientes vinculados.
+    - Profissionais: consultas que realizaram via sessão, com pacientes vinculados, ou pacientes externos cadastrados por eles.
     """
     if _is_professional(user):
         if user.is_superuser or user.role == 'ADMIN':
@@ -187,7 +188,9 @@ def _accessible_consultations(user):
             professional=user, is_active=True
         ).values_list('patient_id', flat=True)
         return Consultation.objects.filter(
-            Q(session__professional=user) | Q(patient__in=linked_patients)
+            Q(session__professional=user)
+            | Q(patient__in=linked_patients)
+            | Q(record_origin=Consultation.RecordOrigin.EXTERNAL, created_by=user)
         )
     return Consultation.objects.filter(patient=user)
 
@@ -354,21 +357,26 @@ class ConsultationDetailView(LoginRequiredMixin, DetailView):
         ctx['block2_label']     = _block2_label(user)
         ctx['block3_label']     = _block3_label(user)
 
-        # Perfil clínico permanente do paciente (Descrição do Paciente)
-        # get_or_create garante que o registro exista para qualquer paciente,
-        # permitindo que profissionais preencham os dados a partir do detalhe da consulta.
-        if _is_professional(user):
+        consultation = self.object
+        is_external = consultation.is_external_patient
+
+        # Perfil clínico permanente — disponível apenas para pacientes LIDDIS
+        if _is_professional(user) and not is_external:
             ctx['clinical_summary'], _ = PatientClinicalSummary.objects.get_or_create(patient=patient)
-        else:
+        elif not is_external:
             try:
-                ctx['clinical_summary'] = patient.clinical_summary
+                ctx['clinical_summary'] = patient.clinical_summary if patient else None
             except PatientClinicalSummary.DoesNotExist:
                 ctx['clinical_summary'] = None
-        ctx['can_edit_clinical_summary'] = _is_professional(user)
+        else:
+            ctx['clinical_summary'] = None
+        ctx['can_edit_clinical_summary'] = _is_professional(user) and not is_external
+        ctx['is_external_patient'] = is_external
+        ctx['external_patient'] = consultation.external_patient
 
-        # Dados demográficos do paciente (carregados automaticamente do banco)
+        # Dados demográficos do paciente — só disponíveis para pacientes LIDDIS
         try:
-            ctx['patient_profile'] = patient.patient_profile
+            ctx['patient_profile'] = patient.patient_profile if patient else None
         except Exception:
             ctx['patient_profile'] = None
 
@@ -382,13 +390,17 @@ class ConsultationDetailView(LoginRequiredMixin, DetailView):
             consultation=self.object
         ).select_related('professional').first()
 
-        # Sinais vitais recentes do paciente
-        ctx['vitals_recentes'] = VitalSign.objects.filter(
-            patient=patient
-        ).order_by('-date', '-created_at')[:5]
+        # Sinais vitais recentes — filtra por tipo de paciente
+        if is_external:
+            ctx['vitals_recentes'] = VitalSign.objects.filter(
+                external_patient=consultation.external_patient
+            ).order_by('-date', '-created_at')[:5]
+        else:
+            ctx['vitals_recentes'] = VitalSign.objects.filter(
+                patient=patient
+            ).order_by('-date', '-created_at')[:5]
 
         # Paciente que criou a consulta manualmente pode gerir seus próprios anexos
-        consultation = self.object
         is_owner_patient = (
             not _is_professional(user)
             and consultation.patient_id == user.pk
@@ -1251,14 +1263,15 @@ def lab_request_create(request, consultation_pk):
 def meus_atendimentos(request):
     """
     Tela exclusiva do profissional — lista todas as consultas realizadas por ele,
-    com filtro por paciente, data e especialidade.
+    incluindo pacientes LIDDIS (via sessão) e pacientes externos, com filtros.
     """
     if not _is_professional(request.user):
         return redirect('consultation_list')
 
     qs = Consultation.objects.filter(
-        session__professional=request.user
-    ).select_related('patient', 'session').order_by('-date')
+        Q(session__professional=request.user)
+        | Q(record_origin=Consultation.RecordOrigin.EXTERNAL, created_by=request.user)
+    ).select_related('patient', 'external_patient', 'session').order_by('-date')
 
     q = request.GET.get('q', '').strip()
     if q:
@@ -1267,10 +1280,21 @@ def meus_atendimentos(request):
             Q(patient__last_name__icontains=q) |
             Q(patient__username__icontains=q) |
             Q(patient__email__icontains=q) |
+            Q(external_patient__name__icontains=q) |
+            Q(external_patient__cpf__icontains=q) |
             Q(specialty__icontains=q) |
             Q(specialty_other__icontains=q) |
             Q(diagnosis__icontains=q)
         )
+
+    patient_type = request.GET.get('patient_type', '').strip()
+    if patient_type == 'liddis':
+        qs = qs.filter(record_origin__in=[
+            Consultation.RecordOrigin.PLATFORM,
+            Consultation.RecordOrigin.PATIENT_MANUAL,
+        ])
+    elif patient_type == 'external':
+        qs = qs.filter(record_origin=Consultation.RecordOrigin.EXTERNAL)
 
     specialty = request.GET.get('specialty', '').strip()
     if specialty:
@@ -1285,13 +1309,56 @@ def meus_atendimentos(request):
 
     from .models import SPECIALTY_CHOICES
     return render(request, 'consultations/meus_atendimentos.html', {
-        'consultations':   qs,
-        'q':               q,
-        'specialty':       specialty,
-        'date_from':       date_from,
-        'date_to':         date_to,
+        'consultations':     qs,
+        'q':                 q,
+        'patient_type':      patient_type,
+        'specialty':         specialty,
+        'date_from':         date_from,
+        'date_to':           date_to,
         'specialty_choices': SPECIALTY_CHOICES,
-        'total':           qs.count(),
+        'total':             qs.count(),
+    })
+
+
+@login_required
+def external_consultation_create(request):
+    """
+    Cria uma consulta para um paciente sem conta LIDDIS.
+    O profissional preenche os dados do paciente e da consulta em um único formulário.
+    """
+    if not _is_professional(request.user):
+        messages.error(request, 'Apenas profissionais podem registrar atendimentos externos.')
+        return redirect('consultation_list')
+
+    if request.method == 'POST':
+        patient_form = ExternalPatientForm(request.POST)
+        consultation_form = ExternalConsultationForm(request.POST)
+
+        if patient_form.is_valid() and consultation_form.is_valid():
+            with transaction.atomic():
+                external_patient = patient_form.save(commit=False)
+                external_patient.created_by = request.user
+                external_patient.save()
+
+                consultation = consultation_form.save(commit=False)
+                consultation.external_patient = external_patient
+                consultation.professional_name = request.user.get_full_name() or request.user.username
+                consultation.profession = request.user.profession
+                consultation.specialty = request.user.professional_specialty or 'outro'
+                consultation.created_by = request.user
+                consultation.record_origin = Consultation.RecordOrigin.EXTERNAL
+                consultation.save()
+
+            log_access(request, 'create', 'consultation', resource_id=consultation.pk)
+            messages.success(request, f'Consulta de {external_patient.name} registrada com sucesso.')
+            return redirect('consultation_detail', pk=consultation.pk)
+    else:
+        patient_form = ExternalPatientForm()
+        consultation_form = ExternalConsultationForm(initial={'date': timezone.now().date()})
+
+    return render(request, 'consultations/external_consultation_form.html', {
+        'patient_form':      patient_form,
+        'consultation_form': consultation_form,
     })
 
 
@@ -1303,8 +1370,12 @@ def patient_clinical_summary(request, consultation_pk):
         return redirect('consultation_list')
 
     consultation = _get_accessible_consultation(request.user, consultation_pk)
-    patient = consultation.patient
 
+    if consultation.is_external_patient:
+        messages.info(request, 'O perfil clínico permanente está disponível apenas para pacientes com conta LIDDIS.')
+        return redirect('consultation_detail', pk=consultation_pk)
+
+    patient = consultation.patient
     summary, _ = PatientClinicalSummary.objects.get_or_create(patient=patient)
 
     if request.method == 'POST':
