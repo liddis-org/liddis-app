@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HDI — Fluxo Operacional</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --bg: #070e1a;
+      --bg2: #0f1c2e;
+      --bg3: #1a2d44;
+      --teal: #00d4ff;
+      --green: #4ade80;
+      --purple: #a855f7;
+      --amber: #f59e0b;
+      --red: #f87171;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --border: #1e3a5f;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 40px 24px 80px;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+    .header .badge {
+      display: inline-block;
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid var(--teal);
+      color: var(--teal);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+    }
+    .header h1 {
+      font-size: clamp(28px, 5vw, 48px);
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #fff 0%, var(--teal) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+    }
+    .header p {
+      color: var(--muted);
+      font-size: 16px;
+      max-width: 560px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* ── SECTIONS ── */
+    .section {
+      max-width: 1100px;
+      margin: 0 auto 60px;
+    }
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .section-title .num {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--teal), var(--green));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 14px;
+      color: #000;
+      flex-shrink: 0;
+    }
+    .section-title h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .section-title p {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* ── FLOWCHART WRAPPER ── */
+    .diagram-box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px 24px;
+      overflow-x: auto;
+    }
+    .mermaid {
+      display: flex;
+      justify-content: center;
+    }
+
+    /* ── JOURNEY MAP TABLE ── */
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    thead tr {
+      background: linear-gradient(135deg, #0f2a44, #0f1c2e);
+    }
+    thead th {
+      padding: 14px 18px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--teal);
+      white-space: nowrap;
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(0, 212, 255, 0.04); }
+    tbody td {
+      padding: 14px 18px;
+      color: var(--text);
+      line-height: 1.5;
+      vertical-align: top;
+    }
+    tbody td:first-child {
+      font-weight: 700;
+      color: var(--teal);
+      white-space: nowrap;
+      width: 140px;
+    }
+    tbody td:nth-child(2) {
+      color: var(--green);
+      font-weight: 600;
+      white-space: nowrap;
+      width: 120px;
+    }
+    .backstage {
+      color: var(--muted) !important;
+      font-size: 13px !important;
+    }
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-right: 4px;
+      margin-bottom: 2px;
+      vertical-align: middle;
+    }
+    .tag-teal  { background: rgba(0,212,255,.15);  color: var(--teal); }
+    .tag-green { background: rgba(74,222,128,.15); color: var(--green); }
+    .tag-purple{ background: rgba(168,85,247,.15); color: var(--purple); }
+    .tag-amber { background: rgba(245,158,11,.15); color: var(--amber); }
+    .tag-red   { background: rgba(248,113,113,.15);color: var(--red); }
+
+    /* ── SIMPLIFIED FLOW ── */
+    .simple-flow {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .col-header {
+      padding: 16px 20px;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: center;
+    }
+    .col-patient  .col-header { background: rgba(0,212,255,.15); color: var(--teal); }
+    .col-platform .col-header { background: rgba(74,222,128,.1); color: var(--green); }
+    .col-pro      .col-header { background: rgba(168,85,247,.12); color: var(--purple); }
+
+    .col-patient  { border-right: 1px solid var(--border); }
+    .col-platform { border-right: 1px solid var(--border); }
+
+    .flow-step {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      line-height: 1.5;
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      color: var(--text);
+    }
+    .flow-step.highlight-teal   { background: rgba(0,212,255,.06); }
+    .flow-step.highlight-green  { background: rgba(74,222,128,.06); }
+    .flow-step.highlight-purple { background: rgba(168,85,247,.08); color: var(--purple); font-weight: 600; }
+    .flow-step.highlight-amber  { background: rgba(245,158,11,.06); color: var(--amber); font-size: 12px; }
+    .flow-step .arrow { color: var(--teal); font-weight: 700; margin-right: 6px; }
+    .flow-step.empty { opacity: 0; }
+
+    /* ── LEGEND ── */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+      margin-top: 32px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      margin-top: 60px;
+      color: var(--muted);
+      font-size: 12px;
+      border-top: 1px solid var(--border);
+      padding-top: 32px;
+      max-width: 1100px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    @media (max-width: 700px) {
+      .simple-flow { grid-template-columns: 1fr; }
+      .col-patient, .col-platform { border-right: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="badge">Evidência Operacional</div>
+    <h1>HDI — Fluxo Operacional</h1>
+    <p>Visão completa da jornada do usuário e dos processos internos da plataforma, do primeiro acesso ao relatório de inteligência artificial.</p>
+  </div>
+
+  <!-- SEÇÃO 1 — FLUXOGRAMA -->
+  <div class="section">
+    <div class="section-title">
+      <div class="num">1</div>
+      <div>
+        <h2>Fluxograma da Operação</h2>
+        <p>Diagrama completo de todas as etapas — paciente, profissional e plataforma</p>
+      </div>
+    </div>
+
+    <div class="diagram-box">
+      <div class="mermaid">
+flowchart TD
+    A([🌐 Usuário acessa o site]) --> B{Tem conta?}
+
+    B -- Não --> C[📝 Cadastro\nNome · E-mail · Perfil]
+    B -- Sim --> D[🔑 Login\nE-mail · Senha · Google]
+
+    C --> E[✉️ Verificação de E-mail\nCódigo OTP · 6 dígitos · 10 min]
+    D --> F{E-mail verificado?}
+    F -- Não --> E
+    F -- Sim --> G
+
+    E --> G([🏠 Dashboard])
+
+    G --> H{Qual é o perfil?}
+
+    H -- Paciente --> I[📋 Registrar Consulta\nData · Médico · Diagnóstico · Anexos]
+    H -- Profissional --> J[🏥 Iniciar Atendimento\nGera token único]
+
+    I --> K[❤️ Sinais Vitais\nPA · FC · Peso · Glicemia]
+    K --> L[🔗 Conceder Acesso\nGera token para profissional]
+    L --> J
+
+    J --> M[🔐 Profissional insere token\nSessão aberta · 24h de validade]
+    M --> N[📂 Acessa histórico do paciente]
+
+    N --> O[🩺 Preenche a Consulta]
+    O --> P1[Anamnese]
+    O --> P2[Exame Físico]
+    O --> P3[CID-10]
+    O --> P4[Prescrição]
+    O --> P5[Exames Lab]
+    O --> P6[Evoluções]
+
+    P1 & P2 & P3 & P4 & P5 & P6 --> Q[✅ Consulta Salva]
+
+    Q --> R([🤖 LUMI — IA Clínica])
+    I --> R
+
+    R --> S{Para quem?}
+    S -- Paciente --> T[💬 Resumo em linguagem simples]
+    S -- Profissional --> U[📊 Resumo clínico estruturado]
+
+    Q --> V[(🗄️ Banco de Dados\nSeguro · LGPD)]
+    I --> V
+    T --> V
+    U --> V
+
+    V --> W[🔍 Log de Auditoria\nData · Hora · Usuário · Ação]
+
+    style A fill:#00d4ff,color:#000,stroke:none
+    style G fill:#4ade80,color:#000,stroke:none
+    style R fill:#a855f7,color:#fff,stroke:none
+    style V fill:#1e293b,color:#94a3b8,stroke:#1e3a5f
+    style W fill:#f59e0b,color:#000,stroke:none
+    style Q fill:#22c55e,color:#000,stroke:none
+      </div>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 2 — MAPA DE JORNADA -->
+  <div class="section">
+    <div class="section-title">
+      <div class="num">2</div>
+      <div>
+        <h2>Mapa de Jornada · Frontstage × Backstage</h2>
+        <p>Para cada ação visível ao usuário, o que acontece internamente</p>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Etapa</th>
+            <th>Ator</th>
+            <th>Ação visível</th>
+            <th>Backstage — O que acontece internamente</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1. Acesso</td>
+            <td>Visitante</td>
+            <td>Entra no site</td>
+            <td class="backstage">Sistema verifica sessão ativa · Se logado, redireciona direto para o painel</td>
+          </tr>
+          <tr>
+            <td>2. Cadastro</td>
+            <td>Ambos</td>
+            <td>Preenche nome, e-mail e perfil</td>
+            <td class="backstage">
+              <span class="tag tag-teal">Conta criada</span>
+              <span class="tag tag-green">Perfil define permissões</span>
+              <span class="tag tag-amber">OTP disparado por e-mail</span>
+            </td>
+          </tr>
+          <tr>
+            <td>3. Verificação</td>
+            <td>Ambos</td>
+            <td>Digita código de 6 dígitos</td>
+            <td class="backstage">Código validado · Conta liberada · Código descartado e inutilizável · Ação registrada no log</td>
+          </tr>
+          <tr>
+            <td>4. Login</td>
+            <td>Ambos</td>
+            <td>E-mail + senha ou Google</td>
+            <td class="backstage">Sessão segura criada · Redirecionado pelo perfil · Tentativas inválidas bloqueadas automaticamente</td>
+          </tr>
+          <tr>
+            <td>5. Registra consulta</td>
+            <td>Paciente</td>
+            <td>Preenche dados de consulta passada</td>
+            <td class="backstage">
+              <span class="tag tag-teal">Dados salvos</span>
+              <span class="tag tag-green">Origem marcada: "pelo paciente"</span>
+              <span class="tag tag-purple">Anexos enviados à nuvem</span>
+            </td>
+          </tr>
+          <tr>
+            <td>6. Sinais vitais</td>
+            <td>Paciente</td>
+            <td>Registra pressão, peso, glicemia</td>
+            <td class="backstage">Dados vinculados ao paciente · Histórico atualizado · Disponível para IA e profissional</td>
+          </tr>
+          <tr>
+            <td>7. Gera token</td>
+            <td>Paciente</td>
+            <td>Clica em "Conceder acesso"</td>
+            <td class="backstage">
+              <span class="tag tag-amber">Token único gerado</span>
+              <span class="tag tag-red">Expira em 24h</span>
+              Vinculado ao profissional autorizado
+            </td>
+          </tr>
+          <tr>
+            <td>8. Entra com token</td>
+            <td>Profissional</td>
+            <td>Insere o código recebido</td>
+            <td class="backstage">Token validado · Sessão de atendimento aberta · Histórico do paciente liberado</td>
+          </tr>
+          <tr>
+            <td>9. Conduz consulta</td>
+            <td>Profissional</td>
+            <td>Preenche anamnese, diagnóstico, prescrição</td>
+            <td class="backstage">Cada campo salvo em tempo real · Vinculado ao paciente, profissional e data · Suporte multiprofissional ativo</td>
+          </tr>
+          <tr>
+            <td>10. Encerra atendimento</td>
+            <td>Profissional</td>
+            <td>Finaliza sessão</td>
+            <td class="backstage">Consulta marcada como concluída · Token expirado · Sessão encerrada e registrada</td>
+          </tr>
+          <tr>
+            <td>11. Relatório IA</td>
+            <td>Ambos</td>
+            <td>Clica em "Gerar relatório — LUMI"</td>
+            <td class="backstage">
+              <span class="tag tag-purple">IA lê histórico completo</span>
+              Processa dados · Tom simples para paciente · Tom clínico para profissional
+            </td>
+          </tr>
+          <tr>
+            <td>12. Auditoria</td>
+            <td>Sistema</td>
+            <td>—</td>
+            <td class="backstage">
+              <span class="tag tag-amber">Log automático</span>
+              Toda ação registrada: hora · IP · usuário · operação — Conformidade LGPD
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 3 — VISÃO SIMPLIFICADA -->
+  <div class="section">
+    <div class="section-title">
+      <div class="num">3</div>
+      <div>
+        <h2>Visão Simplificada — Três Pilares</h2>
+        <p>O que cada ator faz em cada momento do fluxo</p>
+      </div>
+    </div>
+
+    <div class="simple-flow">
+
+      <!-- PACIENTE -->
+      <div class="col-patient">
+        <div class="col-header">Paciente</div>
+        <div class="flow-step highlight-teal"><span class="arrow">→</span> Acessa o site</div>
+        <div class="flow-step highlight-teal"><span class="arrow">→</span> Cria conta</div>
+        <div class="flow-step highlight-teal"><span class="arrow">→</span> Verifica e-mail</div>
+        <div class="flow-step highlight-teal"><span class="arrow">→</span> Registra consultas passadas</div>
+        <div class="flow-step highlight-teal"><span class="arrow">→</span> Registra sinais vitais</div>
+        <div class="flow-step highlight-teal"><span class="arrow">→</span> Gera token de acesso</div>
+        <div class="flow-step empty">—</div>
+        <div class="flow-step empty">—</div>
+        <div class="flow-step highlight-teal"><span class="arrow">→</span> Acompanha pelo dashboard</div>
+        <div class="flow-step highlight-purple"><span class="arrow">→</span> Recebe resumo em linguagem simples</div>
+        <div class="flow-step highlight-amber"><span class="arrow">→</span> Avalia a plataforma</div>
+      </div>
+
+      <!-- PLATAFORMA -->
+      <div class="col-platform">
+        <div class="col-header">Plataforma (Backstage)</div>
+        <div class="flow-step highlight-green"><span class="arrow">⚙</span> Verifica sessão ativa</div>
+        <div class="flow-step highlight-green"><span class="arrow">⚙</span> Cria conta · Define permissões</div>
+        <div class="flow-step highlight-green"><span class="arrow">⚙</span> Valida OTP · Libera acesso</div>
+        <div class="flow-step highlight-green"><span class="arrow">⚙</span> Salva dados · Armazena anexos</div>
+        <div class="flow-step highlight-green"><span class="arrow">⚙</span> Atualiza histórico clínico</div>
+        <div class="flow-step highlight-green"><span class="arrow">⚙</span> Gera token único com validade 24h</div>
+        <div class="flow-step highlight-green"><span class="arrow">⚙</span> Valida token · Abre sessão</div>
+        <div class="flow-step highlight-green"><span class="arrow">⚙</span> Salva consulta em tempo real</div>
+        <div class="flow-step highlight-green"><span class="arrow">⚙</span> Encerra sessão · Expira token</div>
+        <div class="flow-step highlight-purple"><span class="arrow">⚙</span> IA processa histórico completo</div>
+        <div class="flow-step highlight-amber"><span class="arrow">⚙</span> Registra log · Conformidade LGPD</div>
+      </div>
+
+      <!-- PROFISSIONAL -->
+      <div class="col-pro">
+        <div class="col-header">Profissional</div>
+        <div class="flow-step empty">—</div>
+        <div class="flow-step highlight-purple"><span class="arrow">→</span> Cria conta profissional</div>
+        <div class="flow-step highlight-purple"><span class="arrow">→</span> Verifica e-mail</div>
+        <div class="flow-step empty">—</div>
+        <div class="flow-step empty">—</div>
+        <div class="flow-step empty">—</div>
+        <div class="flow-step highlight-purple"><span class="arrow">→</span> Insere token do paciente</div>
+        <div class="flow-step highlight-purple"><span class="arrow">→</span> Preenche anamnese · diagnóstico · prescrição · exames</div>
+        <div class="flow-step highlight-purple"><span class="arrow">→</span> Finaliza atendimento</div>
+        <div class="flow-step highlight-purple"><span class="arrow">→</span> Recebe resumo clínico estruturado</div>
+        <div class="flow-step empty">—</div>
+      </div>
+
+    </div>
+
+    <!-- LEGENDA -->
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--teal)"></div>
+        Ações do Paciente
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--green)"></div>
+        Plataforma (Backstage)
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--purple)"></div>
+        Ações do Profissional / IA
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--amber)"></div>
+        Auditoria · Segurança · LGPD
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <p><strong style="color:var(--teal)">HDI — Health Data Integration</strong> &nbsp;·&nbsp; Evidência do Fluxo Operacional</p>
+    <p style="margin-top:8px">Documento gerado para avaliação da plataforma &nbsp;·&nbsp; Todos os dados são fictícios e representativos</p>
+  </footer>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        primaryColor: '#0f2a44',
+        primaryTextColor: '#e2e8f0',
+        primaryBorderColor: '#1e3a5f',
+        lineColor: '#00d4ff',
+        secondaryColor: '#1a2d44',
+        tertiaryColor: '#070e1a',
+        background: '#070e1a',
+        mainBkg: '#0f1c2e',
+        nodeBorder: '#1e3a5f',
+        clusterBkg: '#0f1c2e',
+        titleColor: '#e2e8f0',
+        edgeLabelBackground: '#0f1c2e',
+        fontFamily: 'Segoe UI, system-ui, sans-serif',
+      },
+      flowchart: {
+        curve: 'basis',
+        padding: 20,
+      }
+    });
+  </script>
+
+</body>
+</html>
