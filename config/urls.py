@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.contrib.auth import views as auth_views
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from users.views import home
+from .health import health
 
 # Estilos e templates compartilhados para views de autenticação
 _PASS_RESET_KWARGS = {
@@ -37,6 +38,9 @@ def api_root(request):
 urlpatterns = [
     # Raiz → Landing page
     path('', home, name='landing'),
+
+    # Health check das dependências (banco, storage, configuração OAuth)
+    path('health/', health, name='health'),
 
     # API info
     path('api/', api_root, name='api_root'),
