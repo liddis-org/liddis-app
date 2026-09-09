@@ -1,10 +1,15 @@
+import logging
 import os
 import uuid
 from django.db import models
 from django.conf import settings
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 from django.utils import timezone
 from datetime import timedelta
 from django.core.validators import FileExtensionValidator
+
+_log = logging.getLogger('liddis')
 
 ALLOWED_ATTACHMENT_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'pdf']
 
@@ -258,6 +263,31 @@ class ConsultationImage(models.Model):
     @property
     def filename(self):
         return os.path.basename(self.image.name) if self.image.name else 'arquivo'
+
+
+@receiver(post_delete, sender=ConsultationImage)
+def _remover_arquivo_do_storage(sender, instance, **kwargs):
+    """
+    Apaga o arquivo do storage quando o registro do anexo é removido.
+
+    Sem isto, excluir uma consulta remove as linhas por CASCADE mas deixa os
+    arquivos no bucket para sempre — vazamento de storage e, por serem
+    documentos clínicos, exposição indevida sob a LGPD, já que o titular
+    pediu a exclusão mas o conteúdo permanece armazenado.
+
+    Nunca propaga exceção: falha de storage não pode impedir a exclusão do
+    registro no banco.
+    """
+    if not instance.image:
+        return
+    nome = instance.image.name
+    try:
+        instance.image.delete(save=False)
+    except Exception as exc:
+        _log.error(
+            'anexo_arquivo_nao_removido | anexo=%s | arquivo=%s | erro=%s',
+            instance.pk, nome, exc,
+        )
 
 
 class VitalSign(models.Model):
@@ -765,7 +795,7 @@ class ConsultationSession(models.Model):
         verbose_name_plural = 'Sessões de Atendimento'
 
     def save(self, *args, **kwargs):
-        if not self.pk:
+        if not self.pk and not self.expires_at:
             self.expires_at = timezone.now() + timedelta(hours=24)
         super().save(*args, **kwargs)
 

@@ -9,3 +9,7 @@ venv/
 .claude/
 staticfiles/
 media/
+
+# Relatórios operacionais com dados pessoais de usuários (LGPD)
+relatorio_limpeza.json
+relatorio_*.json

@@ -10,6 +10,15 @@ from django.test import Client
 # O arquivo pytest.ini (na raiz) define: django_settings_module = config.settings
 
 
+@pytest.fixture(autouse=True)
+def test_security_settings(settings):
+    """Desativa middlewares de produção (Cloudflare, SSL redirect) em testes."""
+    settings.DEBUG = True
+    settings.SECURE_SSL_REDIRECT = False
+    settings.SESSION_COOKIE_SECURE = False
+    settings.CSRF_COOKIE_SECURE = False
+
+
 # ── Fixtures de Usuários ──────────────────────────────────────────────────────
 
 @pytest.fixture

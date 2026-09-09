@@ -16,7 +16,6 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
-_ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'webp', 'gif', 'pdf'}
 _MAX_UPLOAD_BYTES   = 20 * 1024 * 1024  # 20 MB
 
 _log = logging.getLogger('liddis')
@@ -25,7 +24,12 @@ from .models import (
     Consultation, VitalSign, ConsultationSession, Anamnese, ExameLaboratorial,
     ConsultationImage, Evolution, Prescription, DiagnosisCID, PhysicalExam, LabRequest,
     PatientClinicalSummary, ClinicalIntervention, ExpectedEvolution,
+    ALLOWED_ATTACHMENT_EXTENSIONS,
 )
+
+# Fonte única de verdade: mesma lista usada pelo FileExtensionValidator do model,
+# evitando que a validação da view e a do banco divirjam.
+_ALLOWED_EXTENSIONS = frozenset(ALLOWED_ATTACHMENT_EXTENSIONS)
 from .forms import (
     ConsultationForm, VitalSignForm, AnamneseForm, ExameLaboratorialForm, AtendimentoForm,
     EvolutionForm, PrescriptionForm, DiagnosisCIDForm, PhysicalExamForm,
@@ -226,15 +230,38 @@ def _get_or_init_sub_models(consultation):
     return anamnese, exames
 
 
+def _submitted_with_prefix(request, prefix) -> bool:
+    """Indica se o usuário preencheu algum campo do sub-formulário informado."""
+    return any(
+        v for k, v in request.POST.items()
+        if k.startswith(f'{prefix}-') and str(v).strip()
+    )
+
+
 def _save_sub_forms(request, consultation, anamnese_form, exames_form):
-    if anamnese_form.is_valid():
-        a = anamnese_form.save(commit=False)
-        a.consultation = consultation
-        a.save()
-    if exames_form.is_valid():
-        e = exames_form.save(commit=False)
-        e.consultation = consultation
-        e.save()
+    """
+    Grava anamnese e exames. Quando um sub-formulário é inválido mas o usuário
+    preencheu campos, avisa em vez de descartar em silêncio — dado clínico que
+    some sem mensagem é lido como "a consulta não salvou".
+    """
+    for form, prefix, rotulo in (
+        (anamnese_form, 'anamnese', 'Anamnese'),
+        (exames_form,   'exames',   'Exames laboratoriais'),
+    ):
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.consultation = consultation
+            obj.save()
+        elif _submitted_with_prefix(request, prefix):
+            _log.warning(
+                'sub_form_invalido | consulta=%s | bloco=%s | erros=%s',
+                consultation.pk, prefix, form.errors.as_json(),
+            )
+            messages.warning(
+                request,
+                f'{rotulo}: os dados não foram salvos porque há campos inválidos. '
+                'Reabra a consulta, revise o bloco e salve novamente.'
+            )
 
 
 def _valid_attachment(f) -> bool:
@@ -605,8 +632,7 @@ def delete_image(request, pk, img_pk):
         return redirect(f'/consultas/{pk}/')
     image = get_object_or_404(ConsultationImage, pk=img_pk, consultation=consultation)
     tab = image.tab
-    image.image.delete(save=False)
-    image.delete()
+    image.delete()   # signal post_delete remove o arquivo do storage
     messages.success(request, 'Anexo removido.')
     return redirect(f'/consultas/{pk}/?tab={tab}')
 
@@ -873,7 +899,6 @@ def atendimento_consulta(request, token):
                 consultation.created_by = request.user
                 consultation.save()
                 _save_sub_forms(request, consultation, anamnese_form, exames_form)
-                _handle_image_uploads(request, consultation)
 
                 # Salva intervenção clínica se algum campo foi preenchido
                 if intervention_form.is_valid():
@@ -907,6 +932,17 @@ def atendimento_consulta(request, token):
                         vital.recorded_by = request.user
                         vital.date = timezone.now().date()
                         vital.save()
+                else:
+                    vitais_submitted = any(
+                        v for k, v in request.POST.items()
+                        if k.startswith('vitais-') and v.strip()
+                    )
+                    if vitais_submitted:
+                        messages.warning(
+                            request,
+                            'Sinais vitais não foram salvos: verifique os valores informados '
+                            '(altura em cm, ex: 170; peso em kg, ex: 70).'
+                        )
 
                 session.consultation = consultation
                 session.status = 'closed'
@@ -928,6 +964,12 @@ def atendimento_consulta(request, token):
                     ppa.is_active = True
                     ppa.revoked_at = None
                     ppa.save(update_fields=['is_active', 'revoked_at'])
+
+            # Anexos são gravados FORA da transação clínica: uma falha de storage
+            # não pode desfazer a consulta, a anamnese e os sinais vitais já salvos.
+            # Em PostgreSQL, um erro de BD dentro do bloco atômico deixaria a
+            # transação abortada e derrubaria todo o atendimento.
+            _handle_image_uploads(request, consultation)
 
             log_access(request, 'create', 'consultation', resource_id=consultation.pk, patient=patient)
             messages.success(request, f'Consulta de {patient.display_name} registrada com sucesso!')

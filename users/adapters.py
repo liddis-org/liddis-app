@@ -105,8 +105,18 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
 
         except SocialAccount.DoesNotExist:
             # Primeira vinculação Google ↔ conta existente por e-mail
-            sociallogin.connect(request, existing_user)
-            logger.info('Google: conta vinculada ao usuário existente %s', email)
+            try:
+                sociallogin.connect(request, existing_user)
+                logger.info('Google: conta vinculada ao usuário existente %s', email)
+            except Exception as exc:
+                # connect() pode falhar ao enviar e-mail de notificação;
+                # garantimos que o usuário está definido para o login continuar.
+                logger.warning(
+                    'Google OAuth: connect() falhou com %s (%s) — '
+                    'verificar configuração de e-mail; login continuará.',
+                    type(exc).__name__, exc,
+                )
+                sociallogin.user = existing_user
 
         if not existing_user.is_email_verified:
             existing_user.is_email_verified = True

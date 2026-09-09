@@ -17,10 +17,11 @@ class TestHasPermission:
         from users.permissions import has_permission
         assert has_permission(doctor_user, 'consultation', 'create') is True
 
-    def test_paciente_nao_pode_criar_consulta_via_rbac(self, patient_user):
+    def test_paciente_pode_criar_consulta_via_rbac(self, patient_user):
         from users.permissions import has_permission
-        # Paciente só pode VIEW de consultation (conforme matrix)
-        assert has_permission(patient_user, 'consultation', 'create') is False
+        # PATIENT tem _ALL em consultation; restrições de edit/delete a registros
+        # manuais são aplicadas no nível da view (record_origin='patient_manual').
+        assert has_permission(patient_user, 'consultation', 'create') is True
 
     def test_admin_tem_todas_permissoes(self, admin_user):
         from users.permissions import has_permission

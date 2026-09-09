@@ -32,7 +32,9 @@ Variáveis esperadas: tab_key, tab_label, imgs (lista), consultation
          target="_blank" rel="noopener">
         <img src="{% url 'consultation_attachment' consultation.pk img.pk %}"
              alt="{{ img.caption|default:'imagem' }}"
-             loading="lazy">
+             loading="lazy"
+             data-fname="{{ img.filename }}"
+             onerror="anexoIndisponivel(this)">
       </a>
       {% endif %}
       <div class="img-meta">
@@ -107,6 +109,37 @@ Variáveis esperadas: tab_key, tab_label, imgs (lista), consultation
   </form>
   {% endif %}
 </div>
+
+<script>
+// Anexo cujo arquivo não pôde ser carregado (removido do storage, formato que o
+// navegador não renderiza como HEIC, ou falha de rede). Sem isto o usuário vê
+// apenas um ícone quebrado e conclui que a consulta perdeu os dados.
+if (!window.anexoIndisponivel) {
+  window.anexoIndisponivel = function(img) {
+    if (img.dataset.falhou) return;   // evita laço se o fallback também falhar
+    img.dataset.falhou = '1';
+
+    var nome = img.dataset.fname || 'arquivo';
+    var box  = document.createElement('div');
+    box.setAttribute('role', 'note');
+    box.title = nome + ' — não foi possível carregar este anexo';
+    box.style.cssText =
+      'display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+      'gap:6px;height:100px;padding:8px;border-radius:8px;text-align:center;' +
+      'background:rgba(234,179,8,.08);border:1px dashed rgba(234,179,8,.45)';
+    box.innerHTML =
+      '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#eab308" ' +
+      'stroke-width="1.5" stroke-linecap="round" aria-hidden="true">' +
+      '<path d="M12 9v4"/><path d="M12 17h.01"/>' +
+      '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>' +
+      '<span style="font-size:10px;font-weight:600;color:#eab308;line-height:1.3">' +
+      'Anexo indisponível</span>';
+
+    var alvo = img.parentNode && img.parentNode.tagName === 'A' ? img.parentNode : img;
+    alvo.parentNode.replaceChild(box, alvo);
+  };
+}
+</script>
 
 <script>
 (function() {

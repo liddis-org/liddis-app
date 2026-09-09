@@ -13,7 +13,7 @@ from django.urls import reverse
 class TestRegistro:
 
     def test_registro_valido(self, client):
-        url = reverse('users:register')
+        url = reverse('register')
         dados = {
             'first_name': 'Carlos',
             'last_name': 'Pereira',
@@ -31,7 +31,7 @@ class TestRegistro:
         assert CustomUser.objects.filter(email='carlos@teste.com').exists()
 
     def test_registro_email_duplicado(self, client, patient_user):
-        url = reverse('users:register')
+        url = reverse('register')
         dados = {
             'first_name': 'Outro',
             'last_name': 'Usuário',
@@ -46,7 +46,7 @@ class TestRegistro:
         assert b'e-mail' in response.content.lower() or b'email' in response.content.lower()
 
     def test_registro_senha_fraca(self, client):
-        url = reverse('users:register')
+        url = reverse('register')
         dados = {
             'first_name': 'Teste',
             'last_name': 'Usuario',
@@ -60,7 +60,7 @@ class TestRegistro:
         assert response.status_code == 200  # form rejeitado
 
     def test_registro_senha_divergente(self, client):
-        url = reverse('users:register')
+        url = reverse('register')
         dados = {
             'first_name': 'Teste',
             'last_name': 'Usuario',

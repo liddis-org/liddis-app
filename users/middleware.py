@@ -10,6 +10,7 @@ import re
 
 from django.conf import settings
 from django.contrib import messages
+from django.http import Http404
 from django.shortcuts import redirect
 
 _log = logging.getLogger('liddis')
@@ -124,12 +125,7 @@ class RBACPatientAccessMiddleware:
                 patient = self._get_consultation_patient(pk)
                 if patient and not self._has_binding(user, patient):
                     self._log_denied(user, request.path, patient)
-                    messages.error(
-                        request,
-                        'Você não tem vínculo ativo com este paciente. '
-                        'Solicite ao paciente que conceda acesso ao seu perfil.'
-                    )
-                    return redirect('dashboard')
+                    raise Http404
 
             # Para rota de atendimento via token, a view já faz a verificação;
             # nenhuma ação adicional necessária aqui.
