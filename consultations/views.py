@@ -1391,6 +1391,10 @@ def external_consultation_create(request):
                 consultation.record_origin = Consultation.RecordOrigin.EXTERNAL
                 consultation.save()
 
+            # Fora do bloco atômico: falha de storage não pode desfazer o
+            # cadastro do paciente nem a consulta já gravados.
+            _handle_image_uploads(request, consultation)
+
             log_access(request, 'create', 'consultation', resource_id=consultation.pk)
             messages.success(request, f'Consulta de {external_patient.name} registrada com sucesso.')
             return redirect('consultation_detail', pk=consultation.pk)
@@ -1401,6 +1405,7 @@ def external_consultation_create(request):
     return render(request, 'consultations/external_consultation_form.html', {
         'patient_form':      patient_form,
         'consultation_form': consultation_form,
+        'tab_choices':       ConsultationImage.TAB_CHOICES,
     })
 
 

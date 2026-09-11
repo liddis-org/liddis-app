@@ -217,6 +217,15 @@ class ExameLaboratorial(models.Model):
 
 
 def consultation_image_path(instance, filename):
+    """
+    Caminho do anexo no storage: consultations/<dono>/<consulta>/<aba>/<arquivo>.
+
+    O segmento do dono é o id do paciente LIDDIS (poucos dígitos) ou, quando não
+    há conta, `ext_` mais o UUID do paciente externo — 40 caracteres. Essa
+    diferença levava o caminho de ~96 para ~135 caracteres e estourava o
+    `max_length` padrão de 100 do FileField, fazendo todo anexo de paciente sem
+    conta falhar na gravação. Daí o `max_length=255` declarado no campo.
+    """
     ext = os.path.splitext(filename)[1].lower()
     new_name = f'{uuid.uuid4().hex}{ext}'
     owner = instance.consultation.patient_id or f'ext_{instance.consultation.external_patient_id or "unknown"}'
@@ -240,6 +249,7 @@ class ConsultationImage(models.Model):
     tab = models.CharField(max_length=20, choices=TAB_CHOICES, verbose_name='Aba')
     image = models.FileField(
         upload_to=consultation_image_path,
+        max_length=255,
         verbose_name='Arquivo',
         validators=[FileExtensionValidator(ALLOWED_ATTACHMENT_EXTENSIONS)],
     )

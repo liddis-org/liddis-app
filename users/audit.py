@@ -36,7 +36,11 @@ def log_access(
         from users.models import AuditLog
 
         if actor is None:
-            actor = request.user if request.user.is_authenticated else None
+            # O signal user_logged_in entrega requests que ainda não passaram
+            # pelo AuthenticationMiddleware e por isso não têm .user — sem o
+            # getattr, toda essa auditoria de login se perdia no except abaixo.
+            usuario = getattr(request, 'user', None)
+            actor = usuario if usuario is not None and usuario.is_authenticated else None
 
         AuditLog.objects.create(
             actor=actor,

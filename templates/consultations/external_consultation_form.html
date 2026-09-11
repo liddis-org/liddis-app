@@ -19,7 +19,7 @@
   </p>
 </div>
 
-<form method="post" novalidate>
+<form method="post" enctype="multipart/form-data" novalidate>
   {% csrf_token %}
 
   <!-- ── Dados do Paciente ── -->
@@ -121,6 +121,37 @@
         {{ consultation_form.prescription }}
         {% if consultation_form.prescription.errors %}<p class="field-error">{{ consultation_form.prescription.errors.0 }}</p>{% endif %}
       </div>
+    </div>
+  </div>
+
+  {# ── Anexos ──────────────────────────────────────────────────────────────
+     Mesmas quatro categorias da consulta comum. Os nomes dos campos seguem
+     images_<aba> e caption_<aba> porque é o que _handle_image_uploads lê —
+     o mesmo caminho usado no atendimento por token, sem lógica paralela. #}
+  <div class="card" style="margin-top:20px">
+    <h2 class="card-title">Anexos</h2>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:16px">
+      Exames, laudos, imagens e documentos clínicos.
+      JPG, PNG, WEBP ou PDF · até 20 MB por arquivo · vários por categoria.
+    </p>
+
+    <div class="form-grid">
+      {% for tab_key, tab_label in tab_choices %}
+      <div class="form-group" style="grid-column:1/-1">
+        <label for="ext_img_{{ tab_key }}">{{ tab_label }}</label>
+        <input class="input"
+               type="file"
+               name="images_{{ tab_key }}"
+               id="ext_img_{{ tab_key }}"
+               accept="image/*,.pdf,application/pdf"
+               multiple>
+        <input class="input"
+               type="text"
+               name="caption_{{ tab_key }}"
+               placeholder="Legenda para os arquivos de {{ tab_label|lower }} (opcional)"
+               style="margin-top:8px">
+      </div>
+      {% endfor %}
     </div>
   </div>
 
