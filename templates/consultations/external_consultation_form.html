@@ -124,35 +124,48 @@
     </div>
   </div>
 
-  {# ── Anexos ──────────────────────────────────────────────────────────────
-     Mesmas quatro categorias da consulta comum. Os nomes dos campos seguem
-     images_<aba> e caption_<aba> porque é o que _handle_image_uploads lê —
-     o mesmo caminho usado no atendimento por token, sem lógica paralela. #}
   <div class="card" style="margin-top:20px">
-    <h2 class="card-title">Anexos</h2>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:16px">
+    <h3 style="margin-top:0;margin-bottom:6px;font-size:15px;color:var(--teal);text-transform:uppercase;letter-spacing:.5px">
+      Anexos
+    </h3>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 20px">
       Exames, laudos, imagens e documentos clínicos.
-      JPG, PNG, WEBP ou PDF · até 20 MB por arquivo · vários por categoria.
+      JPG, PNG, WEBP ou PDF · até 20 MB por arquivo.
     </p>
 
-    <div class="form-grid">
-      {% for tab_key, tab_label in tab_choices %}
-      <div class="form-group" style="grid-column:1/-1">
-        <label for="ext_img_{{ tab_key }}">{{ tab_label }}</label>
-        <input class="input"
-               type="file"
-               name="images_{{ tab_key }}"
-               id="ext_img_{{ tab_key }}"
-               accept="image/*,.pdf,application/pdf"
-               multiple>
-        <input class="input"
-               type="text"
-               name="caption_{{ tab_key }}"
-               placeholder="Legenda para os arquivos de {{ tab_label|lower }} (opcional)"
-               style="margin-top:8px">
+    {% for tab_key, tab_label in tab_choices %}
+    <div class="anexo-bloco" data-tab="{{ tab_key }}">
+      <div class="anexo-titulo">{{ tab_label }}</div>
+
+      <input type="file"
+             name="images_{{ tab_key }}"
+             id="arquivo_{{ tab_key }}"
+             accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
+             multiple
+             hidden>
+
+      <div class="anexo-zona" id="zona_{{ tab_key }}" tabindex="0" role="button"
+           aria-label="Adicionar arquivos de {{ tab_label|lower }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        <div class="anexo-zona-texto">
+          <strong>Clique para escolher</strong> ou arraste os arquivos aqui
+        </div>
       </div>
-      {% endfor %}
+
+      <p class="anexo-erro" id="erro_{{ tab_key }}" role="alert" hidden></p>
+      <ul class="anexo-lista" id="lista_{{ tab_key }}"></ul>
+
+      <input class="input anexo-legenda"
+             type="text"
+             name="caption_{{ tab_key }}"
+             placeholder="Legenda para os arquivos de {{ tab_label|lower }} (opcional)">
     </div>
+    {% endfor %}
   </div>
 
   <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px">
@@ -160,4 +173,220 @@
     <button type="submit" class="btn btn-primary">Registrar Consulta</button>
   </div>
 </form>
+
+<style>
+.anexo-bloco + .anexo-bloco { margin-top: 22px; padding-top: 22px; border-top: 1px solid var(--border); }
+
+.anexo-titulo {
+  font-size: 11px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 10px;
+}
+
+.anexo-zona {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 18px; border-radius: var(--radius-lg, 12px);
+  border: 1px dashed var(--teal-border, var(--border));
+  background: var(--surface-2);
+  cursor: pointer; transition: border-color .15s, background .15s;
+}
+.anexo-zona:hover,
+.anexo-zona:focus-visible { border-color: var(--teal); background: var(--teal-glow, var(--surface-2)); }
+.anexo-zona:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+.anexo-zona.arrastando { border-color: var(--teal); border-style: solid; background: var(--teal-glow, var(--surface-2)); }
+
+.anexo-zona svg { width: 22px; height: 22px; color: var(--teal); flex-shrink: 0; }
+.anexo-zona-texto { font-size: 13px; color: var(--muted); line-height: 1.4; }
+.anexo-zona-texto strong { color: var(--text, inherit); font-weight: 600; }
+
+.anexo-lista { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+
+.anexo-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: 9px;
+  background: var(--surface-2); border: 1px solid var(--border);
+}
+.anexo-item svg { width: 17px; height: 17px; flex-shrink: 0; }
+.anexo-item .ic-pdf { color: var(--danger); }
+.anexo-item .ic-img { color: var(--green); }
+
+.anexo-nome {
+  flex: 1; min-width: 0; font-size: 13px; color: var(--text, inherit);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.anexo-tamanho { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+
+.anexo-remover {
+  background: none; border: none; cursor: pointer; padding: 4px;
+  color: var(--muted); line-height: 0; border-radius: 6px; flex-shrink: 0;
+  transition: color .15s, background .15s;
+}
+.anexo-remover:hover { color: var(--danger); background: var(--danger-bg, transparent); }
+.anexo-remover:focus-visible { outline: 2px solid var(--danger); outline-offset: 1px; }
+.anexo-remover svg { width: 15px; height: 15px; }
+
+.anexo-erro {
+  margin: 10px 0 0; padding: 9px 12px; border-radius: 8px;
+  font-size: 12.5px; color: var(--danger);
+  background: var(--danger-bg, transparent); border: 1px solid var(--danger);
+}
+
+.anexo-legenda { margin-top: 10px; }
+</style>
+
+<script>
+(function () {
+  'use strict';
+
+  var EXTENSOES = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
+  var LIMITE_BYTES = 20 * 1024 * 1024;
+
+  var ICONE_PDF =
+    '<svg class="ic-pdf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>' +
+    '<polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/>' +
+    '<line x1="9" y1="17" x2="15" y2="17"/></svg>';
+
+  var ICONE_IMG =
+    '<svg class="ic-img" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>' +
+    '<polyline points="21 15 16 10 5 21"/></svg>';
+
+  var ICONE_X =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+    'stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/>' +
+    '<line x1="6" y1="6" x2="18" y2="18"/></svg>';
+
+  function extensao(nome) {
+    var p = nome.lastIndexOf('.');
+    return p === -1 ? '' : nome.slice(p + 1).toLowerCase();
+  }
+
+  function tamanhoLegivel(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+    return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+  }
+
+  function recusa(arquivo) {
+    if (EXTENSOES.indexOf(extensao(arquivo.name)) === -1) {
+      return '"' + arquivo.name + '" não é um formato aceito. Use JPG, PNG, WEBP ou PDF.';
+    }
+    if (arquivo.size > LIMITE_BYTES) {
+      return '"' + arquivo.name + '" tem ' + tamanhoLegivel(arquivo.size) +
+             ' e o limite é 20 MB por arquivo.';
+    }
+    return null;
+  }
+
+  function iniciar(bloco) {
+    var tab    = bloco.getAttribute('data-tab');
+    var input  = document.getElementById('arquivo_' + tab);
+    var zona   = document.getElementById('zona_' + tab);
+    var lista  = document.getElementById('lista_' + tab);
+    var erro   = document.getElementById('erro_' + tab);
+    if (!input || !zona || !lista || !erro) return;
+
+    // Fonte de verdade dos arquivos escolhidos. O input nativo é reescrito a
+    // partir daqui, porque FileList é imutável e remover um item exige
+    // reconstruir a lista inteira.
+    var escolhidos = [];
+
+    function mostrarErro(msg) {
+      erro.textContent = msg;
+      erro.hidden = !msg;
+    }
+
+    function sincronizarInput() {
+      var dt = new DataTransfer();
+      escolhidos.forEach(function (f) { dt.items.add(f); });
+      input.files = dt.files;
+    }
+
+    function desenhar() {
+      lista.textContent = '';
+      escolhidos.forEach(function (arquivo, indice) {
+        var item = document.createElement('li');
+        item.className = 'anexo-item';
+
+        var icone = document.createElement('span');
+        icone.style.lineHeight = '0';
+        icone.innerHTML = extensao(arquivo.name) === 'pdf' ? ICONE_PDF : ICONE_IMG;
+
+        var nome = document.createElement('span');
+        nome.className = 'anexo-nome';
+        nome.textContent = arquivo.name;      // textContent: nome de arquivo não é markup
+        nome.title = arquivo.name;
+
+        var tamanho = document.createElement('span');
+        tamanho.className = 'anexo-tamanho';
+        tamanho.textContent = tamanhoLegivel(arquivo.size);
+
+        var remover = document.createElement('button');
+        remover.type = 'button';
+        remover.className = 'anexo-remover';
+        remover.innerHTML = ICONE_X;
+        remover.setAttribute('aria-label', 'Remover ' + arquivo.name);
+        remover.addEventListener('click', function () {
+          escolhidos.splice(indice, 1);
+          sincronizarInput();
+          desenhar();
+          mostrarErro('');
+        });
+
+        item.appendChild(icone);
+        item.appendChild(nome);
+        item.appendChild(tamanho);
+        item.appendChild(remover);
+        lista.appendChild(item);
+      });
+    }
+
+    function adicionar(arquivos) {
+      var recusados = [];
+      Array.prototype.forEach.call(arquivos, function (arquivo) {
+        var motivo = recusa(arquivo);
+        if (motivo) { recusados.push(motivo); return; }
+        var repetido = escolhidos.some(function (f) {
+          return f.name === arquivo.name && f.size === arquivo.size;
+        });
+        if (!repetido) escolhidos.push(arquivo);
+      });
+      mostrarErro(recusados.length ? recusados[0] : '');
+      sincronizarInput();
+      desenhar();
+    }
+
+    zona.addEventListener('click', function () { input.click(); });
+    zona.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); }
+    });
+
+    // O change traz o que o seletor devolveu; acumulamos para não descartar
+    // escolhas anteriores quando a pessoa abre o seletor uma segunda vez.
+    input.addEventListener('change', function () {
+      if (input.files && input.files.length) adicionar(input.files);
+    });
+
+    ['dragenter', 'dragover'].forEach(function (evt) {
+      zona.addEventListener(evt, function (e) {
+        e.preventDefault();
+        zona.classList.add('arrastando');
+      });
+    });
+    ['dragleave', 'drop'].forEach(function (evt) {
+      zona.addEventListener(evt, function (e) {
+        e.preventDefault();
+        zona.classList.remove('arrastando');
+      });
+    });
+    zona.addEventListener('drop', function (e) {
+      if (e.dataTransfer && e.dataTransfer.files.length) adicionar(e.dataTransfer.files);
+    });
+  }
+
+  document.querySelectorAll('.anexo-bloco').forEach(iniciar);
+})();
+</script>
 {% endblock %}
