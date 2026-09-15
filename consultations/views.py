@@ -602,25 +602,62 @@ def upload_image(request, pk):
         return redirect(f'/consultas/{pk}/')
     tab = request.POST.get('tab', 'anamnese')
     if request.method == 'POST':
-        file = request.FILES.get('image')
         valid_tabs = [t for t, _ in ConsultationImage.TAB_CHOICES]
-        if file and tab in valid_tabs and _valid_attachment(file):
+        if tab not in valid_tabs:
+            messages.error(request, 'Categoria de anexo inválida.')
+            return redirect(f'/consultas/{pk}/')
+
+        # getlist: a tela envia vários arquivos de uma vez. Cada um é tratado
+        # isoladamente — a recusa de um não pode custar os demais da mesma leva.
+        arquivos = request.FILES.getlist('image')
+        if not arquivos:
+            messages.error(request, 'Nenhum arquivo selecionado.')
+            return redirect(f'/consultas/{pk}/?tab={tab}')
+
+        caption = request.POST.get('caption', '')
+        gravados, recusados, falhos = 0, [], []
+
+        for arquivo in arquivos:
+            if not _valid_attachment(arquivo):
+                recusados.append(arquivo.name)
+                _log.warning(
+                    'upload_image recusado | consulta=%s | tab=%s | arquivo=%s | tamanho=%s',
+                    pk, tab, arquivo.name, arquivo.size,
+                )
+                continue
             try:
                 ConsultationImage.objects.create(
                     consultation=consultation,
                     tab=tab,
-                    image=file,
-                    caption=request.POST.get('caption', ''),
+                    image=arquivo,
+                    caption=caption,
                 )
-                messages.success(request, 'Arquivo anexado com sucesso!')
+                gravados += 1
             except Exception as exc:
+                falhos.append(arquivo.name)
                 _log.error(
                     'upload_image falhou | consulta=%s | tab=%s | arquivo=%s | erro=%s',
-                    pk, tab, file.name, exc,
+                    pk, tab, arquivo.name, exc,
                 )
-                messages.error(request, 'Falha ao armazenar o arquivo. Verifique o storage e tente novamente.')
-        else:
-            messages.error(request, 'Arquivo inválido. Use JPG, PNG, WEBP ou PDF (máx. 20 MB).')
+
+        if gravados:
+            messages.success(
+                request,
+                'Arquivo anexado com sucesso!' if gravados == 1
+                else f'{gravados} arquivos anexados com sucesso!'
+            )
+        if recusados:
+            messages.error(
+                request,
+                f'Não aceitos ({", ".join(recusados[:3])}): use JPG, PNG, WEBP ou PDF '
+                f'com até 20 MB.'
+            )
+        if falhos:
+            messages.error(
+                request,
+                f'Falha ao armazenar ({", ".join(falhos[:3])}). Tente novamente; '
+                f'os demais arquivos foram salvos.'
+            )
     return redirect(f'/consultas/{pk}/?tab={tab}')
 
 
