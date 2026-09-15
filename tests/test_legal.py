@@ -130,6 +130,71 @@ class TestVersionamento:
     def test_documento_escolhido_segue_o_papel(self):
         assert TermsDocument.para_papel('DOCTOR').tipo == TermsDocument.Tipo.PROFISSIONAL
         assert TermsDocument.para_papel('NURSE').tipo == TermsDocument.Tipo.PROFISSIONAL
+        assert TermsDocument.para_papel('PATIENT').tipo == TermsDocument.Tipo.PACIENTE
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 3b. Documento do paciente
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@pytest.mark.django_db
+class TestDocumentoDoPaciente:
+
+    def test_versao_1_0_publicada(self):
+        doc = TermsDocument.vigente(TermsDocument.Tipo.PACIENTE)
+        assert doc is not None, 'Termos do paciente não publicados'
+        assert doc.versao == '1.0'
+
+    def test_acessivel_sem_login(self, client):
+        assert client.get(reverse('termos_paciente')).status_code == 200
+
+    def test_visitante_anonimo_recebe_o_documento_do_paciente(self, client):
+        html = client.get(reverse('termos')).content.decode('utf-8')
+        assert 'Usuário' in html and 'SAMU' in html, \
+            'Rota genérica deveria levar o visitante ao documento do paciente'
+
+    def test_paciente_logado_ve_o_proprio_documento(self, client, paciente):
+        client.force_login(paciente)
+        html = client.get(reverse('termos')).content.decode('utf-8')
+        assert 'SAMU' in html
+
+    def test_nenhum_placeholder_do_modelo_sobrou(self, client):
+        html = client.get(reverse('termos_paciente')).content.decode('utf-8')
+        restantes = [p for p in _PLACEHOLDERS if p in html]
+        assert not restantes, f'Campos do modelo não preenchidos: {restantes}'
+
+    def test_clausulas_proprias_do_paciente(self, client):
+        """
+        Amostra do que distingue este documento do profissional: emergência,
+        menor de idade, direitos do titular e o que a LIDDIS nunca faz.
+        """
+        html = client.get(reverse('termos_paciente')).content.decode('utf-8')
+        for trecho in (
+            '192',                              # emergência
+            'Lei nº 15.211/2025',               # ECA Digital
+            'não presta serviços médicos',
+            'Código de Atendimento',
+            'seleção de riscos',                # vedação a planos/seguradoras
+            'gov.br/anpd',
+            'foro do domicílio do Usuário',
+            'Registro Auto-relatado',
+        ):
+            assert trecho in html, f'Cláusula ausente do documento: {trecho!r}'
+
+    def test_nao_impoe_ao_paciente_obrigacao_do_profissional(self, client):
+        """
+        A guarda de 20 anos é do Profissional. No documento do paciente ela só
+        aparece para explicar por que a exclusão da conta não apaga o prontuário.
+        """
+        html = client.get(reverse('termos_paciente')).content.decode('utf-8')
+        assert 'sob responsabilidade do Profissional' in html
+        assert 'Acordo de Tratamento de Dados' not in html, \
+            'DPA é documento do profissional e não deve constar do termo do paciente'
+
+    def test_aponta_para_o_documento_do_profissional(self, client):
+        html = client.get(reverse('termos_paciente')).content.decode('utf-8')
+        assert reverse('termos_profissional') in html, \
+            'Cláusula 1.3 deveria linkar o documento do profissional'
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
