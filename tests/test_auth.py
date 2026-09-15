@@ -22,6 +22,7 @@ class TestRegistro:
             'role': 'PATIENT',
             'password1': 'SenhaSegura@2025',
             'password2': 'SenhaSegura@2025',
+            'aceite_termos': 'on',
         }
         response = client.post(url, dados)
         # Deve redirecionar após registro bem-sucedido
@@ -40,6 +41,7 @@ class TestRegistro:
             'role': 'PATIENT',
             'password1': 'SenhaSegura@2025',
             'password2': 'SenhaSegura@2025',
+            'aceite_termos': 'on',
         }
         response = client.post(url, dados)
         assert response.status_code == 200  # volta ao form com erros
@@ -55,6 +57,7 @@ class TestRegistro:
             'role': 'PATIENT',
             'password1': 'senha',        # senha fraca
             'password2': 'senha',
+            'aceite_termos': 'on',
         }
         response = client.post(url, dados)
         assert response.status_code == 200  # form rejeitado
@@ -69,6 +72,7 @@ class TestRegistro:
             'role': 'PATIENT',
             'password1': 'SenhaSegura@2025',
             'password2': 'SenhaSegura@2026',  # diferente
+            'aceite_termos': 'on',
         }
         response = client.post(url, dados)
         assert response.status_code == 200

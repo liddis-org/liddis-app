@@ -36,6 +36,22 @@ class RegisterForm(UserCreationForm):
         error_messages={'required': 'O e-mail é obrigatório.', 'invalid': 'Informe um e-mail válido.'},
     )
 
+    # ── Consentimentos ────────────────────────────────────────────────────────
+    # Nunca vêm marcados: o aceite precisa ser ato do titular, e um checkbox
+    # pré-marcado não constitui consentimento válido sob a LGPD.
+    aceite_termos = forms.BooleanField(
+        required=True, initial=False, label='Li e aceito os Termos de Uso e a Política de Privacidade',
+        error_messages={'required': 'É necessário aceitar os Termos de Uso e a Política de Privacidade.'},
+    )
+    declaro_habilitacao = forms.BooleanField(
+        required=False, initial=False,
+        label='Declaro ser profissional de saúde legalmente habilitado',
+    )
+    aceite_marketing = forms.BooleanField(
+        required=False, initial=False,
+        label='Desejo receber comunicações sobre novidades da LIDDIS',
+    )
+
     class Meta:
         model  = CustomUser
         fields = ('first_name', 'last_name', 'username', 'email', 'role', 'password1', 'password2')
@@ -153,6 +169,15 @@ class RegisterForm(UserCreationForm):
             pass
         if username and password and username in password.lower():
             self.add_error('password1', 'A senha não deve conter seu nome de usuário.')
+
+        # A declaração de habilitação só é exigível de quem se cadastra como
+        # profissional — pedi-la ao paciente seria atribuir-lhe obrigação alheia.
+        if cleaned.get('role') and cleaned['role'] != 'PATIENT' \
+                and not cleaned.get('declaro_habilitacao'):
+            self.add_error(
+                'declaro_habilitacao',
+                'Profissionais precisam declarar habilitação legal para se cadastrar.',
+            )
         return cleaned
 
 

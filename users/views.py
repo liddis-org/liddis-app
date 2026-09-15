@@ -259,6 +259,32 @@ class MeView(generics.RetrieveUpdateAPIView):
 
 # ── Cadastro ───────────────────────────────────────────────────────────────────
 
+def _registrar_aceite_de_termos(request, user, form):
+    """
+    Grava o aceite logo após a criação da conta.
+
+    Falha aqui não pode impedir o cadastro — a pessoa já preencheu tudo e
+    clicou; derrubar o fluxo por causa do registro probatório seria pior que
+    registrá-lo com atraso. O erro fica no log para reconciliação.
+    """
+    try:
+        from legal.models import TermsAcceptance, TermsDocument
+
+        documento = TermsDocument.para_papel(user.role)
+        if documento is None:
+            logger.warning('aceite_sem_documento | usuario=%s | papel=%s', user.pk, user.role)
+            return
+
+        TermsAcceptance.registrar(
+            user, documento, request=request,
+            origem=TermsAcceptance.Origem.CADASTRO,
+            declarou_habilitacao=bool(form.cleaned_data.get('declaro_habilitacao')),
+            aceitou_marketing=bool(form.cleaned_data.get('aceite_marketing')),
+        )
+    except Exception as exc:
+        logger.error('aceite_nao_registrado | usuario=%s | erro=%s', user.pk, exc)
+
+
 class RegisterWebView(View):
     def get(self, request):
         if request.user.is_authenticated:
@@ -276,6 +302,7 @@ class RegisterWebView(View):
                 # Race condition: outro request registrou o mesmo e-mail entre a validação e o save
                 form.add_error('email', 'Este e-mail já está cadastrado. Tente fazer login.')
                 return render(request, 'users/register.html', {'form': form})
+            _registrar_aceite_de_termos(request, user, form)
             login(request, user, backend='users.backends.EmailOrUsernameBackend')
             try:
                 _send_email_code(user)

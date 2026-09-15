@@ -221,6 +221,26 @@ select.input option{background:#112038;color:#e8f4ff}
   .form-row{grid-template-columns:1fr}
   .role-cards{grid-template-columns:1fr}
 }
+
+/* ── Consentimentos ─────────────────────────────────────────────────────── */
+.consentimentos { display:flex; flex-direction:column; gap:10px; margin:20px 0 18px; }
+.consent-item {
+  display:flex; align-items:flex-start; gap:10px; cursor:pointer;
+  font-size:12.5px; line-height:1.5; color:#b7c7db;
+  padding:10px 12px; border-radius:9px;
+  background:rgba(255,255,255,.02); border:1px solid rgba(0,212,255,.10);
+  transition:border-color .15s, background .15s;
+}
+.consent-item:hover { border-color:rgba(0,212,255,.26); }
+.consent-item input[type="checkbox"] {
+  width:16px; height:16px; margin:2px 0 0; flex-shrink:0;
+  accent-color:#00d4ff; cursor:pointer;
+}
+.consent-item a { color:#00d4ff; text-decoration:underline; }
+.consent-item em { color:#6b8caa; font-style:normal; }
+.consent-opcional { opacity:.88; }
+.consent-erro { border-color:rgba(248,113,113,.55); background:rgba(248,113,113,.06); }
+.consent-msg { margin:-4px 0 0; padding:0 12px; font-size:11.5px; color:#f87171; }
 </style>
 </head>
 <body>
@@ -530,6 +550,46 @@ select.input option{background:#112038;color:#e8f4ff}
         {% endif %}
       </div>
 
+      <div class="consentimentos">
+        <label class="consent-item{% if form.aceite_termos.errors %} consent-erro{% endif %}">
+          <input type="checkbox"
+                 name="{{ form.aceite_termos.html_name }}"
+                 id="{{ form.aceite_termos.id_for_label }}"
+                 {% if form.aceite_termos.value %}checked{% endif %}
+                 required>
+          <span>
+            Li e aceito os
+            <a href="{% url 'termos' %}" target="_blank" rel="noopener">Termos de Uso</a>
+            e a
+            <a href="{% url 'privacidade' %}" target="_blank" rel="noopener">Política de Privacidade</a>
+            da LIDDIS.
+          </span>
+        </label>
+        {% if form.aceite_termos.errors %}
+        <p class="consent-msg">{{ form.aceite_termos.errors.0 }}</p>
+        {% endif %}
+
+        <label class="consent-item consent-pro{% if form.declaro_habilitacao.errors %} consent-erro{% endif %}"
+               id="consent-habilitacao" hidden>
+          <input type="checkbox"
+                 name="{{ form.declaro_habilitacao.html_name }}"
+                 id="{{ form.declaro_habilitacao.id_for_label }}"
+                 {% if form.declaro_habilitacao.value %}checked{% endif %}>
+          <span>Declaro ser profissional de saúde legalmente habilitado, com registro ativo no conselho informado.</span>
+        </label>
+        {% if form.declaro_habilitacao.errors %}
+        <p class="consent-msg">{{ form.declaro_habilitacao.errors.0 }}</p>
+        {% endif %}
+
+        <label class="consent-item consent-opcional">
+          <input type="checkbox"
+                 name="{{ form.aceite_marketing.html_name }}"
+                 id="{{ form.aceite_marketing.id_for_label }}"
+                 {% if form.aceite_marketing.value %}checked{% endif %}>
+          <span>Desejo receber comunicações sobre novidades da LIDDIS. <em>(opcional)</em></span>
+        </label>
+      </div>
+
       <button class="btn" type="submit" id="submit-btn" aria-busy="false">
         <span class="btn-spinner" aria-hidden="true"></span>
         <span class="btn-text">Criar Conta</span>
@@ -554,9 +614,23 @@ select.input option{background:#112038;color:#e8f4ff}
   const proWrap = document.getElementById('pro-type-wrap');
   const proSelect = document.getElementById('pro-type-select');
 
+  /* A declaração de habilitação só se aplica a profissional; exibi-la ao
+     paciente pediria uma declaração que não lhe cabe. */
+  function alternarHabilitacao(isPro) {
+    const bloco = document.getElementById('consent-habilitacao');
+    if (!bloco) return;
+    bloco.hidden = !isPro;
+    const campo = bloco.querySelector('input[type="checkbox"]');
+    if (campo) {
+      campo.required = isPro;
+      if (!isPro) campo.checked = false;
+    }
+  }
+
   window.onRoleChange = function (radio) {
     const isPro = radio.value !== 'PATIENT';
     proWrap.classList.toggle('visible', isPro);
+    alternarHabilitacao(isPro);
     if (isPro) {
       /* sync to current dropdown value */
       const existing = document.querySelector('input[name="role"][value="DOCTOR"]');
@@ -564,6 +638,12 @@ select.input option{background:#112038;color:#e8f4ff}
       radio.value = proSelect.value;
     }
   };
+
+  /* Reexibe o bloco quando o formulário volta com erro e o papel era profissional */
+  (function estadoInicial() {
+    const marcado = document.querySelector('input[name="role"]:checked');
+    if (marcado) alternarHabilitacao(marcado.value !== 'PATIENT');
+  })();
 
   window.syncProRole = function (sel) {
     const proRadio = document.getElementById('role_professional');

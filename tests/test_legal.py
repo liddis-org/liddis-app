@@ -272,3 +272,118 @@ class TestAceite:
         TermsAcceptance.registrar(profissional, doc)
         with pytest.raises(ProtectedError):
             doc.delete()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 5. Aceite no cadastro
+# ═══════════════════════════════════════════════════════════════════════════════
+
+_BASE = {
+    'first_name': 'Joana',
+    'last_name':  'Martins',
+    'username':   'joana_martins',
+    'email':      'joana@teste.com',
+    'password1':  'SenhaSegura@2026',
+    'password2':  'SenhaSegura@2026',
+}
+
+
+@pytest.mark.django_db
+class TestAceiteNoCadastro:
+
+    def test_cadastro_sem_aceite_e_recusado(self, client):
+        from users.models import CustomUser
+        resp = client.post(reverse('register'), dict(_BASE, role='PATIENT'))
+        assert resp.status_code == 200, 'Deveria voltar ao formulário'
+        assert not CustomUser.objects.filter(email=_BASE['email']).exists(), \
+            'Conta criada sem aceite dos termos'
+
+    def test_paciente_com_aceite_e_registrado(self, client):
+        from users.models import CustomUser
+        client.post(reverse('register'), dict(_BASE, role='PATIENT', aceite_termos='on'))
+
+        user = CustomUser.objects.filter(email=_BASE['email']).first()
+        assert user is not None, 'Conta não foi criada'
+
+        aceite = TermsAcceptance.objects.filter(usuario=user).first()
+        assert aceite is not None, 'Aceite não foi registrado'
+        assert aceite.tipo_documento == 'patient'
+        assert aceite.versao == '1.0'
+        assert aceite.papel == 'PATIENT'
+        assert aceite.origem == TermsAcceptance.Origem.CADASTRO
+        assert aceite.aceito_em is not None
+        assert aceite.aceitou_marketing is False
+
+    def test_profissional_sem_declarar_habilitacao_e_recusado(self, client):
+        from users.models import CustomUser
+        resp = client.post(reverse('register'),
+                           dict(_BASE, role='DOCTOR', aceite_termos='on'))
+        assert resp.status_code == 200
+        assert not CustomUser.objects.filter(email=_BASE['email']).exists(), \
+            'Profissional cadastrado sem declarar habilitação'
+
+    def test_profissional_completo_registra_os_dois_aceites(self, client):
+        from users.models import CustomUser
+        client.post(reverse('register'), dict(
+            _BASE, role='DOCTOR', aceite_termos='on', declaro_habilitacao='on',
+        ))
+        user = CustomUser.objects.filter(email=_BASE['email']).first()
+        assert user is not None
+
+        aceite = TermsAcceptance.objects.get(usuario=user)
+        assert aceite.tipo_documento == 'professional'
+        assert aceite.declarou_habilitacao is True
+
+    def test_marketing_e_opcional_e_registrado_a_parte(self, client):
+        from users.models import CustomUser
+        client.post(reverse('register'), dict(
+            _BASE, role='PATIENT', aceite_termos='on', aceite_marketing='on',
+        ))
+        user = CustomUser.objects.get(email=_BASE['email'])
+        assert TermsAcceptance.objects.get(usuario=user).aceitou_marketing is True
+
+    def test_paciente_nao_precisa_declarar_habilitacao(self, client):
+        """Obrigação do profissional não pode ser exigida do paciente."""
+        from users.models import CustomUser
+        client.post(reverse('register'), dict(_BASE, role='PATIENT', aceite_termos='on'))
+        assert CustomUser.objects.filter(email=_BASE['email']).exists()
+
+    def test_formulario_traz_os_tres_checkboxes_desmarcados(self, client):
+        """
+        Consentimento pré-marcado não é consentimento: a LGPD exige ato do
+        titular. Verifica a tag de cada campo, não o HTML inteiro — a palavra
+        'checked' também aparece no script que controla a exibição.
+        """
+        html = client.get(reverse('register')).content.decode('utf-8')
+        for campo in ('aceite_termos', 'declaro_habilitacao', 'aceite_marketing'):
+            tags = re.findall(rf'<input[^>]*name="{campo}"[^>]*>', html)
+            assert tags, f'Checkbox {campo} ausente do formulário'
+            for tag in tags:
+                assert 'checked' not in tag, f'{campo} veio pré-marcado: {tag}'
+
+    def test_formulario_linka_os_documentos(self, client):
+        html = client.get(reverse('register')).content.decode('utf-8')
+        assert reverse('termos') in html
+        assert reverse('privacidade') in html
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 6. Landing page
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@pytest.mark.django_db
+class TestLandingPage:
+
+    def test_rodape_linka_os_documentos(self, client):
+        html = client.get(reverse('landing')).content.decode('utf-8')
+        for rota in ('termos_paciente', 'termos_profissional', 'privacidade'):
+            assert reverse(rota) in html, f'Rodapé sem link para {rota}'
+
+    def test_rodape_identifica_a_empresa(self, client):
+        html = client.get(reverse('landing')).content.decode('utf-8')
+        assert settings.EMPRESA['cnpj'] in html, 'CNPJ ausente do rodapé'
+
+    def test_visitante_chega_aos_termos_a_partir_da_landing(self, client):
+        """Percurso do visitante: landing → termos, sem autenticação."""
+        assert client.get(reverse('landing')).status_code == 200
+        assert client.get(reverse('termos_paciente')).status_code == 200
