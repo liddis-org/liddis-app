@@ -61,7 +61,22 @@ INSTALLED_APPS = [
     'consultations',
     'lumi',
     'appointments',
+    'legal',
 ]
+
+# ── Dados oficiais da empresa (usados nos documentos jurídicos) ───────────────
+EMPRESA = {
+    'razao_social': 'LIDDIS LTDA',
+    'nome_fantasia': 'LIDDIS',
+    'cnpj': '68.548.491/0001-43',
+    'endereco': ('Av. Fernando Ferrari, nº 1080, Edif. América Centro Empresarial, '
+                 'Apto. 603, Mata da Praia, Vitória/ES, CEP 29066-920'),
+    'email_privacidade': 'liddis.org@gmail.com',
+    'email_suporte': 'liddis.org@gmail.com',
+    'comarca': 'Vitória, Estado do Espírito Santo',
+    # Pendente de definição jurídica — exibido apenas quando preenchido.
+    'dpo_nome': '',
+}
 
 # ── LUMI — IA Clínica ─────────────────────────────────────────────────────────
 OPENAI_API_KEY = config('OPENAI_API_KEY', default='')

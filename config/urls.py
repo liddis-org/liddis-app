@@ -45,6 +45,9 @@ urlpatterns = [
     # API info
     path('api/', api_root, name='api_root'),
 
+    # Documentos jurídicos — públicos, sem exigir login
+    path('', include('legal.urls')),
+
     # Admin
     path('admin/', admin.site.urls),
 

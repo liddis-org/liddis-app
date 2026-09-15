@@ -28,6 +28,8 @@ _EXEMPT = (
     '/accounts/',   # allauth / Google OAuth
     '/senha/',      # recuperação de senha
     '/health/',     # monitoramento — precisa responder sem depender de sessão
+    '/termos/',     # documentos jurídicos: leitura antes e independente do cadastro
+    '/privacidade/',
 )
 
 # ── URLs que exigem vínculo paciente-profissional ─────────────────────────────

@@ -1,0 +1,357 @@
+{% comment %}
+Termos de Uso e Política de Privacidade do Profissional — versão 1.0.
+
+Texto jurídico. Alterações de cláusula exigem nova versão em TermsDocument,
+não edição deste arquivo: quem aceitou a 1.0 aceitou exatamente isto.
+{% endcomment %}
+
+<div class="destaque">
+  <p>
+    <strong>Contratada:</strong> {{ empresa.razao_social }}, inscrita no CNPJ sob nº
+    {{ empresa.cnpj }}, com sede em {{ empresa.endereco }} (&ldquo;LIDDIS&rdquo;).
+  </p>
+  <p>
+    <strong>Encarregado pelo Tratamento de Dados Pessoais (DPO):</strong>
+    {% if empresa.dpo_nome %}{{ empresa.dpo_nome }} · {% endif %}
+    <a href="mailto:{{ empresa.email_privacidade }}">{{ empresa.email_privacidade }}</a>
+  </p>
+  <p>
+    <strong>Canal comercial e suporte:</strong>
+    <a href="mailto:{{ empresa.email_suporte }}">{{ empresa.email_suporte }}</a> ·
+    WhatsApp oficial divulgado em liddis.com.br
+  </p>
+</div>
+
+<h2>Resumo em linguagem simples</h2>
+<div class="tabela-wrap">
+<table>
+  <thead><tr><th>Tema</th><th>O que você precisa saber</th></tr></thead>
+  <tbody>
+    <tr><td><strong>O que a LIDDIS oferece</strong></td><td>Software de gestão clínica: agenda, prontuário eletrônico, acesso ao histórico do paciente por código autorizado e a LUMI, assistente de IA de apoio.</td></tr>
+    <tr><td><strong>Quem responde pelo atendimento</strong></td><td>Você. A LIDDIS fornece tecnologia; decisões clínicas, prescrições e condutas são de sua exclusiva responsabilidade.</td></tr>
+    <tr><td><strong>Quem controla os dados dos pacientes</strong></td><td>Você (ou a sua clínica) é o <strong>Controlador</strong> do prontuário. A LIDDIS é <strong>Operadora</strong> e trata esses dados apenas conforme suas instruções e este documento (Parte III).</td></tr>
+    <tr><td><strong>Acesso a pacientes</strong></td><td>Somente com Código de Atendimento gerado pelo paciente, agendamento ou cadastro de paciente externo com base legal adequada. Todo acesso é auditado.</td></tr>
+    <tr><td><strong>LUMI</strong></td><td>Ferramenta de apoio. Não diagnostica, não prescreve. Você deve revisar criticamente o conteúdo e registrar o uso no prontuário.</td></tr>
+    <tr><td><strong>Planos</strong></td><td>Sem fidelidade, sem multa, sem taxa de setup. Após cancelamento, você tem 90 dias para exportar seus dados.</td></tr>
+    <tr><td><strong>Guarda do prontuário</strong></td><td>A obrigação legal de guarda por 20 anos é sua. A LIDDIS oferece exportação completa para que você a cumpra.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>Parte I — Termos de Uso</h2>
+
+<h3>1. Aceitação e partes</h3>
+<p>1.1. Estes Termos regulam o uso da plataforma LIDDIS por profissionais de saúde e por clínicas, consultórios e demais organizações de saúde (&ldquo;Profissional&rdquo; ou &ldquo;você&rdquo;).</p>
+<p>1.2. Ao criar conta profissional e marcar a opção de aceite, você declara ter lido e concordado com estes Termos, com a Política de Privacidade (Parte II) e com o Acordo de Tratamento de Dados (Parte III). O aceite é registrado com data, hora, versão do documento e endereço IP.</p>
+<p>1.3. Quando a conta for criada em nome de uma organização (clínica ou rede), a pessoa que realiza o cadastro declara possuir poderes para vinculá-la. A organização passa a ser a Contratante e Controladora dos dados de seus pacientes; os profissionais convidados atuam como seus membros.</p>
+
+<h3>2. Definições</h3>
+<ul>
+  <li><strong>Profissional:</strong> pessoa legalmente habilitada em profissão da saúde, com registro ativo no conselho de classe (CRM, COREN, CRN, CREFITO, CREFONO, CREF, CRP, CRO, CRF, CRBM, entre outros).</li>
+  <li><strong>Organização:</strong> pessoa jurídica ou consultório cadastrado na Plataforma, com seus membros e papéis (proprietário, administrador, membro e visualizador).</li>
+  <li><strong>Paciente com conta:</strong> pessoa que possui conta LIDDIS e gere o próprio Histórico de Saúde.</li>
+  <li><strong>Paciente externo:</strong> pessoa cadastrada pelo Profissional sem conta LIDDIS.</li>
+  <li><strong>Código de Atendimento:</strong> código único e temporário gerado pelo paciente que autoriza o Profissional a acessar seu histórico e registrar o atendimento.</li>
+  <li><strong>Vínculo:</strong> autorização ativa entre paciente e Profissional, revogável pelo paciente.</li>
+  <li><strong>Prontuário:</strong> conjunto de registros clínicos produzidos pelo Profissional na Plataforma.</li>
+  <li><strong>LUMI:</strong> assistente de inteligência artificial de apoio clínico da LIDDIS.</li>
+</ul>
+
+<h3>3. Natureza do serviço</h3>
+<p>3.1. A LIDDIS é um <strong>software como serviço (SaaS)</strong> de gestão clínica. A LIDDIS não presta serviços de saúde, não integra a relação Profissional–paciente e não interfere na autonomia técnica do Profissional.</p>
+<p>3.2. A LIDDIS não é intermediadora de pagamentos entre Profissional e paciente e não responde por honorários, cobranças, reembolsos de consultas ou faltas.</p>
+
+<h3>4. Cadastro e habilitação profissional</h3>
+<p>4.1. Você deve informar dados verdadeiros, incluindo profissão, especialidade, <strong>conselho de classe, número e UF do registro profissional</strong>.</p>
+<p>4.2. A LIDDIS pode verificar a regularidade do registro em bases públicas dos conselhos e suspender contas com registro inexistente, suspenso, cancelado ou divergente.</p>
+<p>4.3. É proibido utilizar a Plataforma em atividade para a qual você não esteja legalmente habilitado ou cujo exercício esteja suspenso.</p>
+<p>4.4. A conta é pessoal e intransferível. Em Organizações, cada profissional deve ter conta própria; o compartilhamento de credenciais é proibido e compromete a rastreabilidade exigida por lei.</p>
+
+<h3>5. Funcionalidades</h3>
+<p>5.1. <strong>Agenda:</strong> disponibilidade por dia, bloqueios, tipos de atendimento e duração, confirmação e lembrete automáticos por e-mail, cancelamento e reagendamento com notificação, e envio diário da agenda.</p>
+<p>5.2. <strong>Prontuário eletrônico:</strong> anamnese, exame físico, sinais vitais, diagnósticos com CID-10, prescrições, solicitações e resultados de exames, evoluções multiprofissionais, intervenções clínicas, evolução esperada e anexos (imagens e PDFs).</p>
+<p>5.3. <strong>Atendimento por Código:</strong> ao receber o Código de Atendimento, você acessa o histórico do paciente e registra o atendimento. O código expira em 24 horas e é de uso único. O Vínculo pode ser revogado pelo paciente a qualquer momento; após a revogação, você mantém acesso apenas aos registros que produziu.</p>
+<p>5.4. <strong>Pacientes externos:</strong> você pode cadastrar pacientes sem conta LIDDIS. Nesse caso, você é integralmente responsável por possuir base legal, informar o paciente sobre o uso de software de prontuário eletrônico e atender aos direitos desse titular. Se o paciente criar conta LIDDIS posteriormente, os registros podem ser vinculados a ela mediante confirmação.</p>
+<p>5.5. <strong>LUMI:</strong> nos planos em que estiver disponível, a LUMI analisa exames, extrai texto de PDFs, sugere CIDs para apoio à triagem e gera resumos clínicos do histórico.</p>
+<p>5.6. <strong>Relatórios:</strong> relatórios de agenda e de atendimento, conforme o plano contratado.</p>
+
+<h3>6. Uso da LUMI e de inteligência artificial</h3>
+<p>6.1. A LUMI é <strong>ferramenta de apoio</strong>. Ela não realiza diagnóstico, não prescreve, não define condutas e pode apresentar erros, omissões, vieses ou interpretações incompletas.</p>
+<p>6.2. Ao utilizar a LUMI, você se obriga a:</p>
+<ol>
+  <li>empregá-la exclusivamente como apoio, mantendo-se como responsável final pelas decisões clínicas, diagnósticas, terapêuticas e prognósticas;</li>
+  <li>exercer julgamento crítico sobre toda sugestão, validando-a com o quadro clínico e as evidências científicas;</li>
+  <li><strong>registrar no prontuário</strong> o uso da ferramenta, sua finalidade e a sua revisão sobre o conteúdo gerado;</li>
+  <li>informar o paciente sobre o uso de IA como apoio ao atendimento e respeitar eventual recusa;</li>
+  <li><strong>não delegar à IA</strong> a comunicação de diagnósticos, prognósticos ou decisões terapêuticas ao paciente;</li>
+  <li>acionar a LUMI apenas para pacientes com Vínculo ativo ou sob sua responsabilidade assistencial;</li>
+  <li>não inserir no campo de análise dados desnecessários à finalidade clínica.</li>
+</ol>
+<p>6.3. Para profissionais médicos, as obrigações acima refletem a <strong>Resolução CFM nº 2.454/2026</strong>. Profissionais de outras categorias observam, adicionalmente, as normas éticas de seus conselhos.</p>
+<p>6.4. As sugestões de CID-10 geradas pela LUMI só passam a integrar o prontuário após confirmação expressa do Profissional.</p>
+
+<h3>7. Atendimento a distância</h3>
+<p>Caso utilize a Plataforma para registrar atendimentos realizados a distância, você se obriga a observar a Lei nº 8.080/1990 com as alterações da Lei nº 14.510/2022, as normas do seu conselho (para médicos, a Resolução CFM nº 2.314/2022), a obtenção de consentimento do paciente para essa modalidade e o registro no prontuário da forma de atendimento.</p>
+
+<h3>8. Obrigações do Profissional</h3>
+<p>Você se obriga a:</p>
+<ol>
+  <li>manter sigilo profissional sobre todas as informações acessadas;</li>
+  <li>acessar dados de pacientes somente com finalidade assistencial legítima e na medida necessária (princípio da necessidade);</li>
+  <li>manter o prontuário completo, legível, fidedigno e atualizado;</li>
+  <li>cumprir a <strong>guarda do prontuário pelo prazo mínimo de 20 anos</strong> a partir do último registro (Lei nº 13.787/2018), exportando os dados antes do encerramento da conta;</li>
+  <li>atender aos direitos dos titulares em relação aos dados sob seu controle, contando com o apoio da LIDDIS (seção 27);</li>
+  <li>garantir que membros da sua Organização tenham papéis compatíveis com suas funções e remover acessos de pessoas desligadas imediatamente;</li>
+  <li>manter dispositivos de acesso protegidos por senha, atualizados e livres de software malicioso;</li>
+  <li>não fazer capturas de tela, downloads ou cópias de dados de pacientes para meios não seguros;</li>
+  <li>comunicar à LIDDIS, em até 24 horas, qualquer suspeita de acesso indevido à sua conta;</li>
+  <li>respeitar as normas de publicidade do seu conselho ao divulgar seus serviços.</li>
+</ol>
+
+<h3>9. Condutas proibidas</h3>
+<p>É vedado:</p>
+<ul>
+  <li>acessar ou tentar acessar dados de pacientes sem Vínculo, agendamento ou relação assistencial;</li>
+  <li>utilizar dados de pacientes para marketing, prospecção, pesquisa ou qualquer finalidade não assistencial sem base legal própria;</li>
+  <li>comercializar, ceder ou compartilhar dados obtidos na Plataforma;</li>
+  <li>inserir informações falsas ou alterar registros para ocultar fatos;</li>
+  <li>realizar engenharia reversa, extração automatizada de dados, testes de invasão não autorizados ou sobrecarga intencional;</li>
+  <li>revender, sublicenciar ou disponibilizar a Plataforma a terceiros fora da sua Organização.</li>
+</ul>
+
+<h3>10. Planos, preços e pagamento</h3>
+<p>10.1. Os planos, limites e preços vigentes são publicados em liddis.com.br/#planos:</p>
+<div class="tabela-wrap">
+<table>
+  <thead><tr><th>Plano</th><th>Profissionais</th><th>Agendamentos</th><th>LUMI</th></tr></thead>
+  <tbody>
+    <tr><td>Free</td><td>1</td><td>Até 20 por mês</td><td>Não incluso</td></tr>
+    <tr><td>Premium</td><td>1</td><td>Ilimitados</td><td>Análise básica</td></tr>
+    <tr><td>Professional</td><td>Até 5</td><td>Ilimitados</td><td>Uso ampliado</td></tr>
+    <tr><td>Enterprise</td><td>Ilimitados</td><td>Ilimitados</td><td>Acesso total, com SLA e suporte dedicado</td></tr>
+  </tbody>
+</table>
+</div>
+<p>10.2. O plano Free não tem prazo de validade. Planos pagos são cobrados mensalmente e antecipadamente, sem fidelidade, sem taxa de setup e sem multa de cancelamento.</p>
+<p>10.3. Reajustes de preço são comunicados com antecedência mínima de 30 dias, com possibilidade de cancelamento sem ônus antes da vigência.</p>
+<p>10.4. O plano Enterprise é regido por proposta comercial específica, que prevalece sobre estes Termos no que dispuser de forma diversa, exceto quanto à Parte III, cujas garantias são mínimas.</p>
+<p>10.5. Os limites de uso da LUMI por plano seguem política de uso razoável publicada na Plataforma.</p>
+
+<h3>11. Upgrade, downgrade e cancelamento</h3>
+<p>11.1. Você pode alterar ou cancelar o plano a qualquer momento pelo painel. O cancelamento produz efeito ao final do período já pago, sem reembolso proporcional, salvo exercício do direito de arrependimento em até 7 dias da primeira contratação, quando aplicável o Código de Defesa do Consumidor.</p>
+<p>11.2. No downgrade, dados existentes são preservados; funcionalidades e limites passam a seguir o novo plano.</p>
+<p>11.3. <strong>Após o cancelamento da conta, os dados permanecem disponíveis para exportação por 90 dias.</strong> Encerrado esse prazo, são eliminados conforme a seção 26.</p>
+
+<h3>12. Disponibilidade e suporte</h3>
+<p>12.1. A LIDDIS emprega esforços razoáveis para disponibilidade contínua da Plataforma. Manutenções programadas são comunicadas com antecedência e realizadas preferencialmente fora do horário comercial.</p>
+<p>12.2. Níveis de serviço (SLA) com metas de disponibilidade e tempos de resposta garantidos aplicam-se ao plano Enterprise, conforme proposta comercial. Nos demais planos, o suporte é prestado pelos canais oficiais em dias úteis, com prioridade para o plano Professional.</p>
+<p>12.3. Recomenda-se manter plano de contingência para atendimento em caso de indisponibilidade, como agenda do dia exportada.</p>
+
+<h3>13. Propriedade intelectual</h3>
+<p>13.1. O software, a marca LIDDIS, a LUMI, os modelos de prontuário, a interface e a documentação pertencem à LIDDIS. É concedida a você licença de uso não exclusiva, intransferível e revogável, limitada à vigência da contratação.</p>
+<p>13.2. Os dados clínicos inseridos pertencem aos respectivos titulares e permanecem sob o seu controle como Controlador. A LIDDIS não adquire nenhum direito sobre esses dados além do necessário para prestar o serviço.</p>
+<p>13.3. Sugestões de melhoria enviadas por você podem ser incorporadas à Plataforma sem obrigação de remuneração.</p>
+
+<h3>14. Responsabilidades e limitações</h3>
+<p>14.1. A LIDDIS responde pela segurança, integridade e disponibilidade da infraestrutura tecnológica, nos termos da LGPD e destes Termos.</p>
+<p>14.2. A LIDDIS não responde por:</p>
+<ul>
+  <li>diagnósticos, prescrições, condutas, orientações e demais atos profissionais;</li>
+  <li>decisões tomadas com base em sugestões da LUMI sem a revisão crítica exigida na seção 6;</li>
+  <li>informações inseridas incorretamente pelo Profissional, seus membros ou pacientes;</li>
+  <li>descumprimento, pelo Profissional, das normas éticas do seu conselho ou da guarda legal do prontuário;</li>
+  <li>incidentes decorrentes de compartilhamento de credenciais ou falhas de segurança nos dispositivos do Profissional.</li>
+</ul>
+<p>14.3. Salvo nos casos de dolo, culpa grave ou violação da legislação de proteção de dados, a responsabilidade total da LIDDIS perante o Profissional fica limitada ao valor pago pelo Profissional nos 12 meses anteriores ao evento.</p>
+<p>14.4. Você indenizará a LIDDIS por danos e despesas decorrentes de violação destes Termos, das normas do seu conselho ou da legislação de proteção de dados em relação aos dados sob seu controle.</p>
+
+<h3>15. Suspensão e encerramento pela LIDDIS</h3>
+<p>A LIDDIS pode suspender ou encerrar a conta, mediante notificação, em caso de: registro profissional irregular; violação destes Termos; uso que coloque em risco a segurança de pacientes, da Plataforma ou de terceiros; inadimplência superior a 15 dias; ou determinação legal. Em suspensões por risco iminente, a notificação pode ser posterior à medida. O prazo de exportação da seção 11.3 é preservado, exceto quando houver ordem judicial em contrário.</p>
+
+<h2>Parte II — Política de Privacidade (dados do Profissional)</h2>
+<p>Esta Parte trata dos <strong>seus dados como titular</strong> — profissional, membro ou representante de Organização. Os dados de pacientes que você trata na Plataforma são regidos pela Parte III.</p>
+
+<h3>16. Papel da LIDDIS</h3>
+<p>A LIDDIS é <strong>Controladora</strong> dos seus dados cadastrais, profissionais, de faturamento, de uso e de segurança.</p>
+
+<h3>17. Dados, finalidades e bases legais</h3>
+<div class="tabela-wrap">
+<table>
+  <thead><tr><th>Dados</th><th>Finalidade</th><th>Base legal (LGPD)</th></tr></thead>
+  <tbody>
+    <tr><td>Nome, nome de usuário, e-mail, telefone, senha (Argon2), data de nascimento</td><td>Criar e manter a conta, autenticar, comunicar-se</td><td>Execução de contrato (art. 7º, V)</td></tr>
+    <tr><td>Profissão, especialidade, conselho, número e UF do registro, biografia</td><td>Habilitação profissional, exibição na agenda pública e verificação de regularidade</td><td>Execução de contrato (art. 7º, V) e cumprimento de obrigação legal (art. 7º, II)</td></tr>
+    <tr><td>Dados da Organização: razão social, CNPJ, e-mail, telefone, endereço, plano, membros e papéis</td><td>Gestão da conta multiusuário e controle de acesso</td><td>Execução de contrato (art. 7º, V)</td></tr>
+    <tr><td>Dados de faturamento e histórico de pagamentos</td><td>Cobrança, emissão de nota fiscal e obrigações fiscais</td><td>Execução de contrato (art. 7º, V) e obrigação legal (art. 7º, II)</td></tr>
+    <tr><td>Disponibilidade, bloqueios e tipos de atendimento</td><td>Operação da agenda</td><td>Execução de contrato (art. 7º, V)</td></tr>
+    <tr><td>Endereço IP, data, hora, navegador e dispositivo</td><td>Guarda de registros de acesso (Marco Civil, art. 15)</td><td>Obrigação legal (art. 7º, II)</td></tr>
+    <tr><td>Trilha de auditoria de ações sobre prontuários</td><td>Rastreabilidade, investigação de incidentes, defesa de direitos</td><td>Obrigação legal (art. 7º, II) e exercício regular de direitos (art. 7º, VI)</td></tr>
+    <tr><td>Métricas de uso de funcionalidades e da LUMI, sem conteúdo clínico</td><td>Controle de limites do plano, melhoria do produto</td><td>Execução de contrato (art. 7º, V) e legítimo interesse (art. 7º, IX)</td></tr>
+    <tr><td>Avaliações e comentários sobre a Plataforma</td><td>Melhoria contínua</td><td>Legítimo interesse (art. 7º, IX)</td></tr>
+    <tr><td>Interação com o canal comercial (WhatsApp)</td><td>Atendimento comercial solicitado por você</td><td>Procedimentos preliminares a contrato (art. 7º, V)</td></tr>
+    <tr><td>E-mail para novidades da Plataforma</td><td>Comunicação sobre recursos e conteúdos</td><td>Legítimo interesse (art. 7º, IX), com opção de descadastro em cada mensagem</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>18. Compartilhamento dos seus dados</h3>
+<p>18.1. <strong>Com pacientes:</strong> nome, profissão, especialidade, registro profissional e informações da agenda são exibidos aos pacientes para agendamento e identificação do atendimento.</p>
+<p>18.2. <strong>Com a sua Organização:</strong> administradores da Organização visualizam seus dados de membro, papéis e atividades na Plataforma.</p>
+<p>18.3. <strong>Com fornecedores:</strong> os mesmos Operadores listados na seção 24, sob as mesmas garantias.</p>
+<p>18.4. <strong>Com autoridades e conselhos profissionais:</strong> mediante requisição legal, ordem judicial ou processo ético-profissional.</p>
+<p>18.5. A LIDDIS não vende nem comercializa seus dados.</p>
+
+<h3>19. Retenção dos seus dados</h3>
+<div class="tabela-wrap">
+<table>
+  <thead><tr><th>Categoria</th><th>Prazo</th></tr></thead>
+  <tbody>
+    <tr><td>Dados cadastrais e profissionais</td><td>Vigência da conta + 90 dias do período de exportação</td></tr>
+    <tr><td>Dados de faturamento e fiscais</td><td>5 anos após o exercício fiscal (CTN, art. 173)</td></tr>
+    <tr><td>Registros de acesso</td><td>6 meses (Marco Civil, art. 15)</td></tr>
+    <tr><td>Trilha de auditoria</td><td>5 anos após o evento</td></tr>
+    <tr><td>Cadastros não verificados</td><td>Excluídos automaticamente em até 48 horas</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>20. Cookies</h3>
+<p>A Plataforma utiliza apenas cookies estritamente necessários (sessão, proteção CSRF e segurança), com atributos <em>Secure</em> e <em>HttpOnly</em>. Não há cookies de publicidade ou rastreamento entre sites.</p>
+
+<h3>21. Seus direitos como titular</h3>
+<p>Você pode exercer os direitos do art. 18 da LGPD — confirmação, acesso, correção, anonimização, bloqueio, eliminação, portabilidade, informação sobre compartilhamento, revogação de consentimento, revisão de decisões automatizadas e petição à ANPD — pelo painel ou pelo e-mail <a href="mailto:{{ empresa.email_privacidade }}">{{ empresa.email_privacidade }}</a>. Respondemos em até 15 dias.</p>
+
+<h2>Parte III — Acordo de Tratamento de Dados de Pacientes (DPA)</h2>
+<p>Esta Parte integra o contrato entre você (<strong>Controlador</strong>) e a LIDDIS (<strong>Operadora</strong>), nos termos dos arts. 37 a 42 da LGPD, e se aplica aos dados de pacientes que você registra ou acessa na Plataforma.</p>
+
+<h3>22. Objeto e papéis</h3>
+<p>22.1. <strong>Controlador:</strong> o Profissional autônomo ou, quando houver, a Organização à qual o Profissional está vinculado.</p>
+<p>22.2. <strong>Operadora:</strong> a LIDDIS, em relação aos dados que o Controlador registra no prontuário, na agenda e no cadastro de pacientes externos.</p>
+<p>22.3. <strong>Exceção — Histórico de Saúde do paciente com conta:</strong> a LIDDIS é Controladora da cópia dos registros disponibilizada ao paciente em sua conta e dos Registros Auto-relatados, conforme a Política de Privacidade do Usuário. O acesso concedido ao Controlador por Código de Atendimento é regido por essa política e pelo consentimento do paciente.</p>
+
+<h3>23. Instruções de tratamento</h3>
+<p>23.1. A LIDDIS trata os dados de pacientes exclusivamente para:</p>
+<ol>
+  <li>armazenar, organizar, exibir e proteger o prontuário;</li>
+  <li>operar agenda, confirmações e lembretes;</li>
+  <li>gerar análises da LUMI quando acionada pelo Controlador;</li>
+  <li>realizar backup, recuperação, auditoria e segurança;</li>
+  <li>disponibilizar exportação e atender pedidos dos titulares encaminhados pelo Controlador;</li>
+  <li>cumprir obrigação legal ou ordem judicial, com aviso prévio ao Controlador quando legalmente permitido.</li>
+</ol>
+<p>23.2. A LIDDIS <strong>não utiliza</strong> dados de pacientes para finalidades próprias, publicidade, venda, perfilamento comercial ou treinamento de modelos de inteligência artificial.</p>
+<p>23.3. Métricas agregadas e <strong>anonimizadas de forma irreversível</strong>, sem possibilidade de reidentificação de pacientes ou profissionais, podem ser utilizadas para melhoria da Plataforma.</p>
+
+<h3>24. Suboperadores</h3>
+<p>24.1. O Controlador autoriza a contratação dos seguintes suboperadores:</p>
+<div class="tabela-wrap">
+<table>
+  <thead><tr><th>Suboperador</th><th>Serviço</th><th>Local de tratamento</th></tr></thead>
+  <tbody>
+    <tr><td>Google Cloud</td><td>Hospedagem da aplicação e armazenamento de arquivos (southamerica-east1)</td><td>Brasil</td></tr>
+    <tr><td>Supabase</td><td>Banco de dados PostgreSQL gerenciado</td><td>Brasil</td></tr>
+    <tr><td>Cloudflare</td><td>WAF, mitigação de ataques e criptografia de tráfego</td><td>Rede global, com prioridade para pontos no Brasil</td></tr>
+    <tr><td>OpenAI</td><td>Processamento de linguagem da LUMI</td><td>Estados Unidos</td></tr>
+    <tr><td>Resend</td><td>E-mails transacionais de agenda</td><td>Estados Unidos</td></tr>
+    <tr><td>Sentry</td><td>Monitoramento de erros, sem envio de dados pessoais</td><td>Estados Unidos</td></tr>
+  </tbody>
+</table>
+</div>
+<p>24.2. A LIDDIS mantém contrato com cada suboperador contendo obrigações de proteção de dados equivalentes às desta Parte e permanece responsável perante o Controlador pelo cumprimento dessas obrigações.</p>
+<p>24.3. A inclusão ou substituição de suboperador será comunicada com 30 dias de antecedência. O Controlador pode se opor fundamentadamente e, não havendo solução, cancelar a contratação sem ônus.</p>
+
+<h3>25. Transferência internacional</h3>
+<p>25.1. Os dados de pacientes são armazenados no Brasil. A transferência internacional ocorre apenas para os suboperadores indicados como &ldquo;Estados Unidos&rdquo;, com base nas cláusulas-padrão contratuais da ANPD (Resolução CD/ANPD nº 19/2024).</p>
+<p>25.2. <strong>Salvaguardas da LUMI:</strong> antes do envio ao provedor de IA, a LIDDIS remove dados de identificação direta do paciente (nome, CPF, e-mail, telefone, contato de emergência e número do plano de saúde). O provedor não utiliza os dados para treinamento e os elimina conforme o contrato de processamento de dados firmado com a LIDDIS.</p>
+
+<h3>26. Retenção, devolução e eliminação</h3>
+<p>26.1. Durante a contratação, os dados de pacientes são mantidos enquanto o Controlador não os excluir.</p>
+<p>26.2. A exclusão de registros clínicos pelo Controlador fica sujeita às normas do seu conselho; a Plataforma registra na trilha de auditoria toda exclusão, retificação e o respectivo responsável.</p>
+<p>26.3. Encerrada a contratação, a LIDDIS:</p>
+<ol>
+  <li>disponibiliza <strong>exportação completa</strong> do prontuário, agenda e anexos por <strong>90 dias</strong>, em formatos estruturados (JSON/CSV) e documentos legíveis (PDF);</li>
+  <li>após esse prazo, <strong>elimina</strong> os dados de pacientes dos ambientes de produção em até 30 dias e das cópias de segurança no ciclo regular de backups, em até 35 dias adicionais;</li>
+  <li>emite, a pedido, declaração de eliminação.</li>
+</ol>
+<p>26.4. A trilha de auditoria é mantida por 5 anos, sem conteúdo clínico, para fins de defesa de direitos.</p>
+<p>26.5. Mediante contratação específica, a LIDDIS pode manter a guarda do prontuário após o encerramento pelo prazo legal de 20 anos, em ambiente de acesso restrito.</p>
+
+<h3>27. Direitos dos titulares</h3>
+<p>27.1. Pedidos de pacientes relacionados ao prontuário são de responsabilidade do Controlador. Ao recebê-los diretamente, a LIDDIS os encaminha ao Controlador em até 2 dias úteis.</p>
+<p>27.2. A LIDDIS disponibiliza funcionalidades de acesso, correção, exportação e consulta da trilha de acesso para que o Controlador atenda aos pedidos no prazo legal.</p>
+
+<h3>28. Segurança</h3>
+<p>A LIDDIS mantém, no mínimo, as seguintes medidas:</p>
+<ul>
+  <li>criptografia em trânsito (TLS com HSTS) e em repouso;</li>
+  <li>firewall de aplicação (WAF) e proteção contra ataques de negação de serviço;</li>
+  <li>senhas com Argon2, verificação de e-mail e bloqueio após 5 tentativas de login malsucedidas;</li>
+  <li>controle de acesso por papéis e por Vínculo, com isolamento de dados entre Organizações;</li>
+  <li>trilha de auditoria de visualização, criação, edição, exportação, exclusão e acesso negado a dados de saúde, com ator, paciente, IP, dispositivo e data;</li>
+  <li>sessões com expiração automática e cookies <em>Secure</em> e <em>HttpOnly</em>;</li>
+  <li>credenciais de infraestrutura em cofre de segredos;</li>
+  <li>identificadores públicos aleatórios (UUID);</li>
+  <li>backups periódicos e testes de restauração;</li>
+  <li>revisões de segurança e correção de vulnerabilidades em prazos compatíveis com a criticidade.</li>
+</ul>
+
+<h3>29. Confidencialidade da equipe LIDDIS</h3>
+<p>29.1. Colaboradores e prestadores da LIDDIS com acesso técnico aos sistemas estão vinculados a termo de confidencialidade.</p>
+<p>29.2. O acesso da equipe LIDDIS ao conteúdo clínico ocorre somente quando indispensável para suporte solicitado pelo Controlador, investigação de incidente ou cumprimento legal, sempre registrado na trilha de auditoria.</p>
+
+<h3>30. Incidentes de segurança</h3>
+<p>30.1. A LIDDIS notificará o Controlador <strong>em até 48 horas</strong> após tomar conhecimento de incidente que envolva dados de pacientes sob seu controle, informando: natureza e categorias dos dados afetados; número aproximado de titulares; medidas técnicas adotadas; riscos identificados; e contato para acompanhamento.</p>
+<p>30.2. A LIDDIS prestará apoio para que o Controlador comunique a ANPD e os titulares no prazo de 3 dias úteis previsto na Resolução CD/ANPD nº 15/2024.</p>
+<p>30.3. Nos incidentes em que a LIDDIS atua como Controladora (Histórico de Saúde do paciente com conta), a própria LIDDIS realiza as comunicações legais.</p>
+
+<h3>31. Auditoria e demonstração de conformidade</h3>
+<p>31.1. Mediante solicitação, a LIDDIS disponibiliza ao Controlador informações sobre suas medidas de segurança, relatório de impacto à proteção de dados pessoais (RIPD) aplicável ao serviço e resumos de avaliações de segurança.</p>
+<p>31.2. Clientes Enterprise podem realizar auditoria, uma vez por ano, com aviso prévio de 30 dias, sob confidencialidade e sem acesso a dados de outros clientes.</p>
+
+<h3>32. Responsabilidade</h3>
+<p>Cada parte responde pelos danos a que der causa, nos termos do art. 42 da LGPD. A LIDDIS responde solidariamente quando descumprir a legislação ou as instruções lícitas do Controlador; o Controlador responde pelas decisões sobre finalidade e base legal do tratamento e pelos atos profissionais.</p>
+
+<h2>Parte IV — Disposições finais</h2>
+
+<h3>33. Alterações</h3>
+<p>Alterações relevantes nestes Termos são comunicadas por e-mail e no painel com antecedência mínima de 30 dias. O uso continuado após a vigência representa concordância; em caso de discordância, você pode cancelar sem ônus antes da data de vigência.</p>
+
+<h3>34. Anticorrupção</h3>
+<p>As partes se comprometem a cumprir a Lei nº 12.846/2013 e a não oferecer, prometer ou receber vantagem indevida relacionada a esta contratação.</p>
+
+<h3>35. Independência das cláusulas</h3>
+<p>A invalidade de qualquer cláusula não afeta as demais, que permanecem em vigor.</p>
+
+<h3>36. Legislação e foro</h3>
+<p>36.1. Estes Termos são regidos pela legislação brasileira.</p>
+<p>36.2. Fica eleito o foro da comarca de {{ empresa.comarca }}, ressalvado o foro do domicílio do Profissional quando aplicável o Código de Defesa do Consumidor.</p>
+
+<h3>37. Contato</h3>
+<ul>
+  <li><strong>Encarregado (DPO):</strong>{% if empresa.dpo_nome %} {{ empresa.dpo_nome }} —{% endif %} <a href="mailto:{{ empresa.email_privacidade }}">{{ empresa.email_privacidade }}</a></li>
+  <li><strong>Suporte e comercial:</strong> <a href="mailto:{{ empresa.email_suporte }}">{{ empresa.email_suporte }}</a></li>
+  <li><strong>Endereço:</strong> {{ empresa.endereco }}</li>
+</ul>
+
+<h2>Anexo A — Texto de aceite no cadastro profissional</h2>
+<p>Exibir em caixas de seleção separadas, desmarcadas por padrão:</p>
+<ul>
+  <li>Declaro ser profissional de saúde legalmente habilitado, com registro ativo no conselho informado. <em>(obrigatório)</em></li>
+  <li>Li e aceito os <strong>Termos de Uso</strong>, a <strong>Política de Privacidade</strong> e o <strong>Acordo de Tratamento de Dados</strong> da LIDDIS para Profissionais. <em>(obrigatório)</em></li>
+  <li>Desejo receber comunicações sobre novidades da LIDDIS. <em>(opcional)</em></li>
+</ul>
+
+<h2>Anexo B — Aviso exibido antes de acionar a LUMI</h2>
+<div class="aviso">
+  <p><strong>LUMI é uma ferramenta de apoio.</strong> O conteúdo gerado não é diagnóstico nem prescrição e pode conter imprecisões. Você é responsável pela revisão crítica, pela decisão clínica e pelo registro do uso de IA no prontuário. Dados clínicos, sem identificação direta do paciente, serão processados por provedor de IA nos Estados Unidos.</p>
+</div>
+
+<h2>Anexo C — Modelo de registro de uso de IA no prontuário</h2>
+<div class="destaque">
+  <p>Utilizada a ferramenta LUMI (LIDDIS) para [resumo do histórico / análise de exame / sugestão de CID] em [data/hora]. Conteúdo revisado criticamente pelo profissional. Paciente informado sobre o uso de IA como apoio [e concordou / e recusou]. Conduta definida pelo profissional: [descrição].</p>
+</div>
+
+<h2>Anexo D — Cláusula para informar pacientes externos</h2>
+<div class="destaque">
+  <p>Seus dados de saúde são registrados em prontuário eletrônico na plataforma LIDDIS, contratada por [NOME DO PROFISSIONAL/CLÍNICA], responsável pelo seu atendimento e pela guarda do prontuário. A LIDDIS armazena os dados no Brasil, com criptografia e controle de acesso. Para exercer seus direitos de titular, contate [CONTATO DO PROFISSIONAL/CLÍNICA].</p>
+</div>
