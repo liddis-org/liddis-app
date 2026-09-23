@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="LIDDIS — Plataforma de gestão clínica para consultórios e clínicas. Agendamento online, prontuário digital e LUMI, sua assistente clínica com inteligência artificial.">
+  <meta name="description" content="LIDDIS — seu Passaporte de Saúde Digital. Consultas, exames, receitas e documentos reunidos em um histórico que acompanha você, com a LUMI IA apoiando organização e prevenção.">
   <title>LIDDIS — Gestão Clínica Inteligente</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -569,6 +569,143 @@
       .tab-btn { padding: 8px 14px; font-size: 13px; }
       .pro-grid { grid-template-columns: 1fr; }
     }
+
+    /* ── Interoperabilidade / causa ─────────────────────────────────────── */
+    .interop { padding: 92px 0; background: var(--surface); border-top: 1px solid var(--border); }
+    .interop-head { max-width: 760px; margin: 0 auto 44px; text-align: center; }
+
+    .flow {
+      display: flex; align-items: stretch; justify-content: center;
+      gap: 14px; flex-wrap: wrap; margin-bottom: 44px;
+    }
+    .flow-col {
+      display: flex; flex-direction: column; gap: 10px;
+      align-items: center; justify-content: flex-start;
+      flex: 1 1 200px; min-width: 190px; max-width: 320px;
+    }
+    .flow-label {
+      font-size: 10.5px; font-weight: 700; letter-spacing: .9px;
+      text-transform: uppercase; color: var(--muted-2); text-align: center;
+    }
+    .flow-sources { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; }
+    .src {
+      font-size: 12.5px; color: var(--text-2);
+      padding: 7px 12px; border-radius: 999px;
+      background: var(--surface-2); border: 1px solid var(--border);
+    }
+    .flow-arrow {
+      display: flex; align-items: center; color: var(--teal);
+      align-self: center; opacity: .65;
+    }
+    .flow-node {
+      display: flex; align-items: center; gap: 9px;
+      padding: 14px 20px; border-radius: 12px;
+      font-size: 14.5px; font-weight: 700; color: var(--text);
+      background: var(--surface-2); border: 1px solid var(--border);
+    }
+    .flow-node svg, .flow-node img { flex-shrink: 0; }
+    .node-pac { border-color: rgba(74,222,128,.32); }
+    .node-pac svg { color: var(--green); }
+    .node-lid { border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-glow); }
+
+    .horizonte { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .hz-card {
+      padding: 26px; border-radius: 14px;
+      background: var(--surface-2); border: 1px solid var(--border);
+    }
+    .hz-card.hoje { border-left: 3px solid var(--green); }
+    .hz-card.futuro { border-left: 3px solid var(--teal); }
+    .hz-tag {
+      display: inline-block; font-size: 10.5px; font-weight: 700;
+      letter-spacing: .8px; text-transform: uppercase;
+      padding: 4px 11px; border-radius: 999px; margin-bottom: 12px;
+    }
+    .hz-hoje { background: rgba(74,222,128,.12); color: var(--green); }
+    .hz-futuro { background: var(--teal-glow); color: var(--teal); }
+    .hz-card h3 { font-size: 17px; margin-bottom: 12px; color: var(--text); }
+    .hz-card ul { margin: 0 0 0 18px; padding: 0; }
+    .hz-card li { font-size: 14px; color: var(--text-2); line-height: 1.6; margin-bottom: 7px; }
+    .hz-nota {
+      margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border);
+      font-size: 12.5px; color: var(--muted-2); font-style: italic;
+    }
+
+    /* ── Toggle de planos ───────────────────────────────────────────────── */
+    .plan-toggle {
+      display: flex; gap: 8px; justify-content: center;
+      flex-wrap: wrap; margin-bottom: 34px;
+    }
+    .pt-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 22px; border-radius: 999px; cursor: pointer;
+      font-family: inherit; font-size: 14px; font-weight: 600;
+      color: var(--muted); background: var(--surface-2);
+      border: 1px solid var(--border); transition: all .15s;
+    }
+    .pt-btn:hover { border-color: var(--teal-border); color: var(--text); }
+    .pt-btn.active { background: var(--teal-glow); border-color: var(--teal); color: var(--teal); }
+    .pt-btn:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+    .pt-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+    .plan-group { display: none; }
+    .plan-group.active { display: block; }
+
+    .price-grid-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      max-width: 840px; margin-left: auto; margin-right: auto;
+    }
+
+    .plan-feat.na { opacity: .5; }
+    .plan-feat.na .feat-x {
+      display: inline-flex; width: 15px; justify-content: center;
+      color: var(--muted-2); font-weight: 700; flex-shrink: 0;
+    }
+    .plan-consulte {
+      font-family: var(--font-display); font-size: 25px;
+      font-weight: 800; color: var(--teal); line-height: 1.1;
+    }
+    .plan-price-ent { flex-direction: column; align-items: flex-start; gap: 2px; }
+    .plan-apartir { font-family: var(--font-display); font-size: 13px; color: var(--muted); }
+    .plan-ent-row { display: flex; align-items: baseline; }
+    .plan-consulte-sm { font-size: 13px; font-weight: 700; color: var(--teal); margin-top: 2px; }
+    .plan-limit {
+      font-size: 12px; color: var(--muted-2);
+      padding: 8px 12px; margin-top: 4px;
+      background: var(--surface-2); border-radius: 8px; text-align: center;
+    }
+
+    @media (max-width: 860px) {
+      .horizonte { grid-template-columns: 1fr; }
+      .price-grid-2 { grid-template-columns: 1fr; }
+      .flow-arrow { transform: rotate(90deg); }
+      .flow-col { max-width: 100%; }
+    }
+    @media (max-width: 480px) {
+      .interop { padding: 64px 0; }
+      .pt-btn { padding: 9px 16px; font-size: 13px; }
+      .hz-card { padding: 20px; }
+    }
+
+    /* ── LUMI: dois publicos ────────────────────────────────────────────── */
+    .lumi-publicos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 22px 0; }
+    .lp-card {
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 16px 18px; border-radius: 12px;
+      background: rgba(255,255,255,.03); border: 1px solid var(--border);
+    }
+    .lp-ic {
+      width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .lp-pac { background: rgba(74,222,128,.12); color: var(--green); }
+    .lp-pro { background: var(--teal-glow); color: var(--teal); }
+    .lp-tit {
+      font-size: 11px; font-weight: 700; letter-spacing: .7px;
+      text-transform: uppercase; color: var(--muted-2); margin-bottom: 5px;
+    }
+    .lp-sub { font-size: 13.5px; line-height: 1.6; color: var(--text-2); }
+    .lp-sub strong { color: var(--text); display: block; margin-bottom: 3px; }
+    @media (max-width: 860px) { .lumi-publicos { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -643,7 +780,7 @@
       LIDDIS
     </a>
     <div class="nav-links">
-      <a href="#funcionalidades">Funcionalidades</a>
+      <a href="#como-funciona">Como funciona</a>
       <a href="#lumi">LUMI IA</a>
       <a href="#planos">Planos</a>
       <a href="#faq">FAQ</a>
@@ -661,7 +798,7 @@
 
 <!-- Mobile menu -->
 <div id="mob-menu" role="dialog" aria-label="Menu mobile">
-  <a href="#funcionalidades">Funcionalidades</a>
+  <a href="#como-funciona">Como funciona</a>
   <a href="#lumi">LUMI IA</a>
   <a href="#planos">Planos</a>
   <a href="#faq">FAQ</a>
@@ -677,15 +814,15 @@
   <div class="hero-grid"></div>
   <div class="hero-inner">
     <div class="hero-content">
-      <div class="tag"><span class="tag-dot"></span> Plataforma HealthTech Brasileira</div>
-      <h1 class="hero-title">Gestão clínica para quem <em>cuida de vidas</em></h1>
-      <p class="hero-sub">Agendamento online, prontuário digital e LUMI — sua assistente com IA — tudo em um só lugar. Para consultórios e clínicas que crescem sem perder o cuidado.</p>
+      <div class="tag"><span class="tag-dot"></span> Passaporte de Saúde Digital</div>
+      <h1 class="hero-title">Seu histórico de saúde <em>acompanha você</em></h1>
+      <p class="hero-sub">Seus dados de saúde devem acompanhar você, e não ficar presos em diferentes sistemas. A LIDDIS reúne consultas, exames, receitas, sinais vitais e documentos em um só lugar — alimentado por você e pelos profissionais que cuidam de você.</p>
       <div class="hero-actions">
         <a href="{% url 'register' %}" class="btn btn-primary">
-          Criar conta gratuita
+          Criar meu passaporte
           <svg width="16" height="16"><use href="#ic-arrow"/></svg>
         </a>
-        <a href="#funcionalidades" class="btn btn-ghost">Ver funcionalidades</a>
+        <a href="#como-funciona" class="btn btn-ghost">Como funciona</a>
       </div>
       <div class="hero-proof">
         <div class="hero-proof-item">
@@ -719,7 +856,7 @@
             <div class="mock-nav" title="Pacientes">
               <svg width="16" height="16"><use href="#ic-user"/></svg>
             </div>
-            <div class="mock-nav" title="Prontuários">
+            <div class="mock-nav" title="Histórico de Saúde">
               <svg width="16" height="16"><use href="#ic-file"/></svg>
             </div>
             <div class="mock-nav gn" title="LUMI IA">
@@ -781,45 +918,117 @@
   <div class="container">
     <div class="problem-head reveal">
       <div class="tag" style="margin-bottom:14px"><span class="tag-dot"></span> O Problema</div>
-      <h2 class="section-title">A saúde merece mais do que planilhas e grupos de WhatsApp</h2>
-      <p class="section-body">Profissionais de saúde perdem horas por dia com processos manuais. Pacientes ficam sem resposta. E os dados clínicos ficam espalhados — sem segurança, sem rastreabilidade.</p>
+      <h2 class="section-title">A saúde gera dados todos os dias. O problema é que eles nem sempre se conectam.</h2>
+      <p class="section-body">Ao longo da vida você passa por profissionais, clínicas, laboratórios, hospitais, SUS e planos de saúde. Cada um guarda um pedaço da sua história — em sistemas que raramente conversam entre si.</p>
     </div>
     <div class="problem-grid">
       <div class="prob-card reveal reveal-d1">
         <div class="prob-icon prob-icon-bl">
-          <svg width="22" height="22"><use href="#ic-clock"/></svg>
+          <svg width="22" height="22"><use href="#ic-server"/></svg>
         </div>
-        <h3>Agendamento que falha</h3>
-        <p>O paciente liga, manda mensagem, não recebe confirmação. Faltas aumentam, agenda fica desorganizada, receita cai.</p>
+        <h3>História repartida</h3>
+        <p>Um exame no laboratório, a consulta na clínica, a receita no consultório. Nenhum desses lugares enxerga o conjunto — e você repete a mesma história em cada atendimento.</p>
         <span class="prob-who w-pac">Paciente</span>
       </div>
       <div class="prob-card reveal reveal-d2">
         <div class="prob-icon prob-icon-gn">
           <svg width="22" height="22"><use href="#ic-file"/></svg>
         </div>
-        <h3>Prontuários sem gestão</h3>
-        <p>Anotações em papel, PDFs soltos, histórico clínico inacessível na hora que mais importa. Risco para o paciente e para o profissional.</p>
-        <span class="prob-who w-pro">Profissional</span>
+        <h3>Exames que se perdem</h3>
+        <p>PDFs no e-mail, fotos na galeria, papéis na gaveta. Na hora da consulta, o que faltou é justamente o exame que explicaria o quadro.</p>
+        <span class="prob-who w-pac">Paciente</span>
       </div>
       <div class="prob-card reveal reveal-d3">
         <div class="prob-icon prob-icon-vl">
-          <svg width="22" height="22"><use href="#ic-shield"/></svg>
+          <svg width="22" height="22"><use href="#ic-clock"/></svg>
         </div>
-        <h3>LGPD sem controle</h3>
-        <p>Dados sensíveis de saúde tratados sem conformidade. Sem auditoria, sem rastreabilidade, sem proteção — com risco real de sanção.</p>
-        <span class="prob-who w-sys">Conformidade</span>
+        <h3>Contexto que falta</h3>
+        <p>O profissional recebe alguém que já foi cuidado por outros, mas sem acesso ao que veio antes. Decidir sem o histórico custa tempo e repetição de exames.</p>
+        <span class="prob-who w-pro">Profissional</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Interoperabilidade / Causa -->
+<section class="interop" id="causa">
+  <div class="container">
+    <div class="interop-head reveal">
+      <div class="tag" style="margin-bottom:14px"><span class="tag-dot"></span> Por que existimos</div>
+      <h2 class="section-title">Um passaporte para a sua jornada de saúde</h2>
+      <p class="section-body">A fragmentação dos dados de saúde é um dos grandes problemas da saúde brasileira. A LIDDIS nasceu para criar uma camada de continuidade — onde o histórico acompanha a pessoa, não o sistema.</p>
+    </div>
+
+    <div class="flow reveal reveal-d1" role="img"
+         aria-label="Informações de SUS, planos, clínicas, laboratórios e profissionais chegam ao paciente e se reúnem na LIDDIS">
+      <div class="flow-col">
+        <div class="flow-label">Onde os dados nascem</div>
+        <div class="flow-sources">
+          <span class="src">SUS</span>
+          <span class="src">Planos de saúde</span>
+          <span class="src">Clínicas</span>
+          <span class="src">Laboratórios</span>
+          <span class="src">Profissionais</span>
+        </div>
+      </div>
+
+      <div class="flow-arrow" aria-hidden="true">
+        <svg width="22" height="22"><use href="#ic-arrow"/></svg>
+      </div>
+
+      <div class="flow-col">
+        <div class="flow-label">Quem vive a jornada</div>
+        <div class="flow-node node-pac">
+          <svg width="20" height="20"><use href="#ic-user"/></svg>
+          <span>Paciente</span>
+        </div>
+      </div>
+
+      <div class="flow-arrow" aria-hidden="true">
+        <svg width="22" height="22"><use href="#ic-arrow"/></svg>
+      </div>
+
+      <div class="flow-col">
+        <div class="flow-label">Onde a história se reúne</div>
+        <div class="flow-node node-lid">
+          <img src="{% static 'brand/liddis-mark.svg' %}" alt="" width="20" height="20" aria-hidden="true">
+          <span>LIDDIS</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="horizonte">
+      <div class="hz-card hoje reveal reveal-d2">
+        <div class="hz-tag hz-hoje">Hoje</div>
+        <h3>O que a LIDDIS já entrega</h3>
+        <ul>
+          <li>Histórico reunido em um só lugar, alimentado por você e pelos profissionais</li>
+          <li>Consultas, exames, receitas, sinais vitais e documentos organizados</li>
+          <li>Compartilhamento com profissionais por código autorizado, revogável a qualquer momento</li>
+          <li>LUMI IA para resumir e organizar o que já está registrado</li>
+        </ul>
+      </div>
+      <div class="hz-card futuro reveal reveal-d3">
+        <div class="hz-tag hz-futuro">Visão de futuro</div>
+        <h3>Onde queremos chegar</h3>
+        <ul>
+          <li>Interoperabilidade com outras fontes do ecossistema de saúde</li>
+          <li>Menos repetição de exames por falta de histórico acessível</li>
+          <li>Continuidade do cuidado ao longo de toda a vida</li>
+        </ul>
+        <p class="hz-nota">Estas são direções que perseguimos, não integrações já disponíveis.</p>
       </div>
     </div>
   </div>
 </section>
 
 <!-- Features / Tabs -->
-<section class="features" id="funcionalidades">
+<section class="features" id="como-funciona">
   <div class="container">
     <div class="feat-head reveal">
-      <div class="tag" style="margin-bottom:14px"><span class="tag-dot"></span> Funcionalidades</div>
-      <h2 class="section-title">Tudo que sua clínica precisa, integrado</h2>
-      <p class="section-body">Do agendamento ao prontuário, do paciente ao profissional — uma plataforma coesa que cresce com você.</p>
+      <div class="tag" style="margin-bottom:14px"><span class="tag-dot"></span> Como funciona</div>
+      <h2 class="section-title">Dois lados da mesma jornada</h2>
+      <p class="section-body">O paciente organiza e leva consigo. O profissional recebe contexto para cuidar melhor. Escolha o seu lado:</p>
     </div>
 
     <div class="tabs" role="tablist">
@@ -885,11 +1094,11 @@
     <div class="tab-panel" id="tab-profissional">
       <div class="feat-split">
         <div class="feat-content">
-          <h3 class="feat-title">Sua agenda e seus pacientes, sob controle</h3>
-          <p class="feat-desc">Visualize a agenda do dia, acesse prontuários, registre evoluções e acompanhe seus pacientes — tudo em um painel centralizado.</p>
+          <h3 class="feat-title">Mais contexto para cuidar melhor</h3>
+          <p class="feat-desc">Com o código autorizado pelo paciente, você acessa o histórico que veio antes — e registra o atendimento no mesmo lugar, somando à jornada em vez de recomeçar do zero.</p>
           <div class="feat-list">
             <div class="feat-item"><svg width="16" height="16"><use href="#ic-check"/></svg> Agenda visual por dia, semana ou mês</div>
-            <div class="feat-item"><svg width="16" height="16"><use href="#ic-check"/></svg> Prontuário digital por paciente</div>
+            <div class="feat-item"><svg width="16" height="16"><use href="#ic-check"/></svg> Histórico do paciente autorizado por código</div>
             <div class="feat-item"><svg width="16" height="16"><use href="#ic-check"/></svg> Registro de evoluções clínicas</div>
             <div class="feat-item"><svg width="16" height="16"><use href="#ic-check"/></svg> Lista de pacientes com busca rápida</div>
             <div class="feat-item"><svg width="16" height="16"><use href="#ic-check"/></svg> Gestão de disponibilidade e bloqueios</div>
@@ -1012,11 +1221,29 @@
   <div class="lumi-inner">
     <div class="lumi-content reveal">
       <div class="tag tag-green"><span class="tag-dot"></span> LUMI · IA Clínica</div>
-      <h2 class="section-title lumi-title">Sua assistente que nunca dorme — e nunca <em>substitui você</em></h2>
-      <p class="lumi-desc">LUMI usa inteligência artificial para analisar exames, organizar dados clínicos e sugerir informações de apoio. Você mantém o controle clínico total.</p>
+      <h2 class="section-title lumi-title">A LUMI lê o histórico — e nunca <em>decide por você</em></h2>
+      <p class="lumi-desc">Um histórico extenso é difícil de acompanhar, seja para quem vive a jornada, seja para quem tem poucos minutos de consulta. A LUMI organiza e resume o que já está registrado.</p>
+
+      <div class="lumi-publicos">
+        <div class="lp-card">
+          <div class="lp-ic lp-pac"><svg width="17" height="17"><use href="#ic-user"/></svg></div>
+          <div class="lp-txt">
+            <div class="lp-tit">Para você, paciente</div>
+            <div class="lp-sub"><strong>Entenda melhor sua jornada de saúde.</strong> A LUMI ajuda a organizar informações, acompanhar exames e identificar pontos importantes do histórico para prevenção e acompanhamento.</div>
+          </div>
+        </div>
+        <div class="lp-card">
+          <div class="lp-ic lp-pro"><svg width="17" height="17"><use href="#ic-steth"/></svg></div>
+          <div class="lp-txt">
+            <div class="lp-tit">Para você, profissional</div>
+            <div class="lp-sub"><strong>Transforme histórico em contexto clínico.</strong> A LUMI resume as informações relevantes do paciente e ajuda a analisar um histórico extenso com mais rapidez.</div>
+          </div>
+        </div>
+      </div>
+
       <div class="lumi-disclaimer">
         <svg width="16" height="16"><use href="#ic-info"/></svg>
-        <span><strong style="color:var(--text)">Importante:</strong> LUMI é uma ferramenta de apoio ao trabalho clínico. Não realiza diagnóstico médico, não prescreve tratamentos e não substitui a avaliação e o julgamento do profissional de saúde habilitado.</span>
+        <span><strong style="color:var(--text)">Importante:</strong> LUMI é uma ferramenta de apoio. Não realiza diagnóstico, não prescreve tratamentos e não substitui a avaliação de um profissional de saúde habilitado. A decisão clínica é sempre do profissional.</span>
       </div>
       <div class="lumi-feats">
         <div class="lumi-feat">
@@ -1030,7 +1257,7 @@
           <div class="lumi-feat-ic"><svg width="16" height="16"><use href="#ic-spark"/></svg></div>
           <div>
             <div class="lumi-feat-name">Sugestão de CIDs</div>
-            <div class="lumi-feat-sub">Apoio na triagem com sugestões baseadas nos dados do prontuário</div>
+            <div class="lumi-feat-sub">Apoio à triagem com sugestões baseadas no histórico registrado</div>
           </div>
         </div>
         <div class="lumi-feat">
@@ -1119,101 +1346,134 @@
 <section class="pricing" id="planos">
   <div class="price-head reveal">
     <div class="container">
-      <div class="tag" style="margin-bottom:14px"><span class="tag-dot"></span> Planos &amp; Preços</div>
-      <h2 class="section-title">Comece grátis. Cresça no seu ritmo.</h2>
-      <p class="section-body">Sem contrato, sem fidelidade. Faça upgrade ou downgrade a qualquer momento.</p>
+      <div class="tag" style="margin-bottom:14px"><span class="tag-dot"></span> Planos</div>
+      <h2 class="section-title">Planos para quem cuida e para quem é cuidado</h2>
+      <p class="section-body">Pacientes e profissionais têm necessidades diferentes. Escolha o seu perfil:</p>
     </div>
   </div>
-  <div class="container" style="margin-top:48px;">
-    <div class="price-grid">
-      <!-- Free -->
-      <div class="plan reveal">
-        <div class="plan-name">Free</div>
-        <div class="plan-price">
-          <span class="plan-free-val">R$0</span>
-        </div>
-        <p class="plan-desc">Para conhecer a plataforma e testar todas as funcionalidades básicas.</p>
-        <div class="plan-feats">
-          <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Até 20 agendamentos/mês</div>
-          <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> 1 profissional</div>
-          <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Prontuário básico</div>
-          <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Confirmação por e-mail</div>
-          <div class="plan-feat na"><svg width="15" height="15"><use href="#ic-check"/></svg> <span style="color:var(--muted-2)">LUMI IA (não incluso)</span></div>
-        </div>
-        <div class="plan-cta">
-          <a href="{% url 'register' %}" class="plan-btn btn-outline">Criar conta grátis</a>
-        </div>
-      </div>
 
-      <!-- Premium -->
-      <div class="plan reveal reveal-d1">
-        <div class="plan-name">Premium</div>
-        <div class="plan-price">
-          <span class="plan-cur">R$</span>
-          <span class="plan-val">19</span>
-          <span class="plan-per">,90/mês</span>
-        </div>
-        <p class="plan-desc">Para profissionais autônomos que querem automação e LUMI IA no dia a dia.</p>
-        <div class="plan-feats">
-          <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Agendamentos ilimitados</div>
-          <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> 1 profissional</div>
-          <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Prontuário completo</div>
-          <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> LUMI IA · análise básica</div>
-          <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Relatórios de agenda</div>
-        </div>
-        <div class="plan-cta">
-          <a href="{% url 'register' %}" class="plan-btn btn-outline">Começar agora</a>
-        </div>
-      </div>
+  <div class="container" style="margin-top:34px;">
+    <div class="plan-toggle" role="tablist" aria-label="Escolha o perfil de plano">
+      <button class="pt-btn active" data-grupo="paciente" role="tab" aria-selected="true"
+              aria-controls="grupo-paciente" id="pt-paciente">
+        <svg width="15" height="15"><use href="#ic-user"/></svg> Para Pacientes
+      </button>
+      <button class="pt-btn" data-grupo="profissional" role="tab" aria-selected="false"
+              aria-controls="grupo-profissional" id="pt-profissional">
+        <svg width="15" height="15"><use href="#ic-steth"/></svg> Para Profissionais e Clínicas
+      </button>
+    </div>
 
-      <!-- Professional — featured -->
-      <div class="plan feat reveal reveal-d2">
-        <div class="plan-ribbon">Mais escolhido</div>
-        <div class="plan-name" style="color:var(--teal);">Professional</div>
-        <div class="plan-price">
-          <span class="plan-cur">R$</span>
-          <span class="plan-val tl">29</span>
-          <span class="plan-per">,90/mês</span>
-        </div>
-        <p class="plan-desc">Para clínicas em crescimento com múltiplos profissionais e maior uso da LUMI.</p>
-        <div class="plan-feats">
-          <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Agendamentos ilimitados</div>
-          <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Até 5 profissionais</div>
-          <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> LUMI IA · uso ampliado</div>
-          <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Relatórios avançados</div>
-          <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Suporte prioritário</div>
-        </div>
-        <div class="plan-cta">
-          <a href="{% url 'register' %}" class="plan-btn btn-solid">Escolher Professional</a>
-        </div>
-      </div>
+    <!-- ── Pacientes ── -->
+    <div class="plan-group active" id="grupo-paciente" role="tabpanel" aria-labelledby="pt-paciente">
+      <div class="price-grid price-grid-2">
 
-      <!-- Enterprise -->
-      <div class="plan reveal reveal-d3">
-        <div class="plan-name">Enterprise</div>
-        <div class="plan-price" style="flex-wrap:wrap;gap:6px;">
-          <span style="font-family:var(--font-display);font-size:13px;color:var(--muted);">A partir de</span>
-          <br>
-          <span class="plan-cur">R$</span>
-          <span class="plan-val">49</span>
-          <span class="plan-per">,90/usuário/mês</span>
+        <div class="plan reveal">
+          <div class="plan-name">Free</div>
+          <div class="plan-price"><span class="plan-free-val">R$0</span></div>
+          <p class="plan-desc">Para quem quer começar a organizar sua jornada de saúde.</p>
+          <div class="plan-feats">
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Passaporte de Saúde Digital</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Organização de exames e documentos</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Acompanhamento de até 2 profissionais</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Armazenamento limitado</div>
+            <div class="plan-feat na"><span class="feat-x" aria-hidden="true">—</span> <span>Agendamento de consultas</span></div>
+            <div class="plan-feat na"><span class="feat-x" aria-hidden="true">—</span> <span>LUMI IA</span></div>
+            <div class="plan-feat na"><span class="feat-x" aria-hidden="true">—</span> <span>Dashboard de acompanhamento</span></div>
+          </div>
+          <div class="plan-cta">
+            <a href="{% url 'register' %}" class="plan-btn btn-outline">Criar conta grátis</a>
+          </div>
         </div>
-        <p class="plan-desc">Para grandes clínicas e redes com necessidades customizadas. Fale conosco.</p>
-        <div class="plan-feats">
-          <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Profissionais ilimitados</div>
-          <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> LUMI IA · acesso total</div>
-          <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Integrações sob demanda</div>
-          <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> SLA e suporte dedicado</div>
-          <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Onboarding personalizado</div>
+
+        <div class="plan feat reveal reveal-d1">
+          <div class="plan-ribbon">Mais completo</div>
+          <div class="plan-name" style="color:var(--teal);">Premium</div>
+          <div class="plan-price">
+            <span class="plan-cur">R$</span>
+            <span class="plan-val tl">9</span>
+            <span class="plan-per">,90/mês</span>
+          </div>
+          <p class="plan-desc">Para acompanhar sua saúde de forma mais completa.</p>
+          <div class="plan-feats">
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Tudo do plano Free</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> LUMI IA</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Apoio na análise e organização de exames</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Apoio na compreensão de receitas</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Recursos de prevenção e acompanhamento</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Dashboard de acompanhamento clínico</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Profissionais ilimitados</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Maior capacidade de armazenamento</div>
+          </div>
+          <div class="plan-cta">
+            <a href="{% url 'register' %}" class="plan-btn btn-solid">Assinar Premium</a>
+          </div>
         </div>
-        <div class="plan-cta">
-          <a href="https://wa.me/message/4LPGRNYMM4EXF1" target="_blank" rel="noopener" class="plan-btn btn-wa">
-            Falar no WhatsApp
-          </a>
-        </div>
+
       </div>
     </div>
-    <p style="text-align:center;font-size:13px;color:var(--muted-2);margin-top:24px;">Todos os planos pagos com cancelamento a qualquer momento. Sem taxa de setup. Sem multa.</p>
+
+    <!-- ── Profissionais e Clínicas ── -->
+    <div class="plan-group" id="grupo-profissional" role="tabpanel" aria-labelledby="pt-profissional" hidden>
+      <div class="price-grid price-grid-2">
+
+        <div class="plan feat reveal">
+          <div class="plan-ribbon">Profissional autônomo</div>
+          <div class="plan-name" style="color:var(--teal);">Professional</div>
+          <div class="plan-price">
+            <span class="plan-consulte">Consulte valores</span>
+          </div>
+          <p class="plan-desc">Para <strong>1 profissional de saúde</strong> que quer contexto e organização no atendimento.</p>
+          <div class="plan-feats">
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Pacientes e atendimentos</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Consultas e agendamentos</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Histórico de saúde autorizado pelo paciente</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Exames e anexos</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> LUMI IA para análise do histórico</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Resumo clínico e apoio à análise</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Organização de agenda e atendimentos</div>
+          </div>
+          <div class="plan-limit">Limitado a 1 profissional</div>
+          <div class="plan-cta">
+            <a href="{% url 'register' %}" class="plan-btn btn-solid">Começar agora</a>
+          </div>
+        </div>
+
+        <div class="plan reveal reveal-d1">
+          <div class="plan-name">Enterprise</div>
+          <div class="plan-price plan-price-ent">
+            <span class="plan-apartir">A partir de</span>
+            <span class="plan-ent-row">
+              <span class="plan-cur">R$</span>
+              <span class="plan-val">49</span>
+              <span class="plan-per">,90</span>
+            </span>
+            <span class="plan-consulte-sm">Consulte-nos</span>
+          </div>
+          <p class="plan-desc">Para clínicas e empresas. O valor depende do número de profissionais, da quantidade de usuários, do tamanho da clínica, do volume de uso, dos recursos necessários e do suporte desejado.</p>
+          <div class="plan-feats">
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Múltiplos profissionais</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Gestão de equipe</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Recursos avançados da LUMI</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Pacientes e atendimentos</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Relatórios</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Maior capacidade de armazenamento</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Suporte diferenciado</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Integrações conforme o projeto</div>
+          </div>
+          <div class="plan-cta">
+            <a href="https://wa.me/message/4LPGRNYMM4EXF1" target="_blank" rel="noopener" class="plan-btn btn-wa">
+              Falar com a LIDDIS
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <p style="text-align:center;font-size:13px;color:var(--muted-2);margin-top:26px;">
+      Sem fidelidade, sem taxa de setup e sem multa. Cancele quando quiser.
+    </p>
   </div>
 </section>
 
@@ -1321,7 +1581,7 @@
     <div class="ft-col">
       <h4>Plataforma</h4>
       <div class="ft-links">
-        <a href="#funcionalidades">Funcionalidades</a>
+        <a href="#como-funciona">Como funciona</a>
         <a href="#lumi">LUMI IA</a>
         <a href="#planos">Planos</a>
         <a href="{% url 'register' %}">Criar conta</a>
@@ -1374,6 +1634,22 @@
   });
 
   // Feature tabs
+
+  /* Toggle de planos — escopo proprio para nao colidir com as abas de features */
+  const ptBtns   = document.querySelectorAll('.pt-btn');
+  const ptGrupos = document.querySelectorAll('.plan-group');
+  ptBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const alvo = btn.dataset.grupo;
+      ptBtns.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
+      ptGrupos.forEach(g => { g.classList.remove('active'); g.hidden = true; });
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+      const grupo = document.getElementById('grupo-' + alvo);
+      if (grupo) { grupo.classList.add('active'); grupo.hidden = false; }
+    });
+  });
+
   const tabBtns = document.querySelectorAll('.tab-btn');
   const tabPanels = document.querySelectorAll('.tab-panel');
   tabBtns.forEach(btn => {
