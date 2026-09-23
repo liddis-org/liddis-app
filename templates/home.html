@@ -375,20 +375,71 @@
     .lumi-online { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--green); margin-left: auto; }
     .lumi-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
-    .lumi-chat { padding: 18px; display: flex; flex-direction: column; gap: 10px; }
-    .chat-msg {
-      max-width: 88%; padding: 10px 14px; font-size: 13px; line-height: 1.5; border-radius: 12px;
+    /* ── LUMI: relatorio estruturado ────────────────────────────────────── */
+    .lumi-refresh {
+      margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border-radius: 999px; cursor: default;
+      font-family: inherit; font-size: 11.5px; font-weight: 600;
+      color: var(--green); background: rgba(74,222,128,.10);
+      border: 1px solid rgba(74,222,128,.28);
     }
-    .chat-user {
-      align-self: flex-end; background: var(--surface-2); color: var(--text);
-      border: 1px solid var(--surface-3); border-radius: 12px 12px 4px 12px;
+    .lumi-report { padding: 16px 18px 6px; display: flex; flex-direction: column; gap: 10px; }
+    .rep-sec-tit {
+      font-size: 10.5px; font-weight: 700; letter-spacing: .9px;
+      text-transform: uppercase; color: var(--muted-2); margin-top: 4px;
     }
-    .chat-lumi {
-      align-self: flex-start; color: var(--text);
-      background: linear-gradient(135deg, rgba(74,222,128,.12), rgba(0,212,255,.08));
-      border: 1px solid rgba(74,222,128,.2); border-radius: 12px 12px 12px 4px;
+    .rep-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .rep-stat {
+      display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: 7px;
+      padding: 9px 11px; border-radius: 9px;
+      background: var(--surface-2); border: 1px solid var(--border);
     }
-    .chat-lumi strong { color: var(--green); }
+    .rep-stat svg { color: var(--teal); }
+    .rs-num {
+      font-family: var(--font-display); font-size: 16px; font-weight: 800;
+      color: var(--text); font-variant-numeric: tabular-nums;
+    }
+    .rs-lab { font-size: 10.5px; color: var(--muted); line-height: 1.3; }
+
+    .rep-vitais {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 9px;
+      background: var(--surface-2); border: 1px solid var(--border);
+    }
+    .rv-lab { font-size: 11.5px; color: var(--text-2); white-space: nowrap; }
+    .rv-spark { flex: 1; height: 26px; color: var(--green); min-width: 60px; }
+    .rv-per { font-size: 10.5px; color: var(--muted-2); white-space: nowrap; }
+
+    .rep-atencao { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+    .rep-atencao li {
+      display: flex; align-items: flex-start; gap: 9px;
+      font-size: 12.5px; line-height: 1.5; color: var(--text-2);
+      padding: 9px 11px; border-radius: 9px;
+      background: var(--surface-2); border: 1px solid var(--border);
+    }
+    .ra-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
+    .ra-info { background: var(--teal); }
+    .ra-warn { background: #fbbf24; }
+
+    .rep-geral {
+      font-size: 12.5px; line-height: 1.65; color: var(--text-2);
+      padding: 12px 13px; border-radius: 9px;
+      background: linear-gradient(135deg, rgba(74,222,128,.07), rgba(0,212,255,.05));
+      border: 1px solid rgba(74,222,128,.18);
+    }
+    @media (max-width: 480px) { .rep-stats { grid-template-columns: 1fr; } }
+    .mini-rep {
+      display: flex; flex-direction: column; gap: 8px;
+      padding: 13px 14px; border-radius: 11px;
+      background: var(--surface-2); border: 1px solid rgba(74,222,128,.18);
+    }
+    .mini-stats { display: flex; flex-wrap: wrap; gap: 6px; }
+    .mini-chip {
+      font-size: 11.5px; color: var(--text-2);
+      padding: 5px 10px; border-radius: 999px;
+      background: var(--surface); border: 1px solid var(--border);
+    }
+    .mini-chip strong { color: var(--text); font-weight: 700; }
     .lumi-note { font-size: 11px; color: var(--muted-2); text-align: center; padding: 0 18px 14px; font-style: italic; }
 
     /* ── Security ── */
@@ -1158,13 +1209,23 @@
             </div>
             <div>
               <div style="font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--text);">LUMI</div>
-              <div style="font-size:11px;color:var(--green);">Assistente Clínica</div>
+              <div style="font-size:11px;color:var(--green);">Análise do histórico</div>
             </div>
           </div>
-          <div style="background:var(--surface-2);border-radius:12px 12px 12px 4px;border:1px solid rgba(74,222,128,.2);padding:10px 13px;font-size:13px;color:var(--text);line-height:1.5;align-self:flex-start;max-width:90%;">
-            Analisei o hemograma da Srª Ana Lima. Os valores de hemoglobina (<strong style="color:var(--green)">11,2 g/dL</strong>) estão abaixo da referência. Possível indicativo de anemia ferropriva — avaliação clínica recomendada.
+          <div class="mini-rep">
+            <div class="rep-sec-tit" style="margin-top:0">Resumo do paciente</div>
+            <div class="mini-stats">
+              <span class="mini-chip"><strong>6</strong> consultas</span>
+              <span class="mini-chip"><strong>9</strong> exames</span>
+              <span class="mini-chip"><strong>3</strong> medicamentos</span>
+            </div>
+            <div class="rep-sec-tit">Pontos de atenção</div>
+            <ul class="rep-atencao">
+              <li><span class="ra-dot ra-info"></span> Exame de acompanhamento sem registro recente</li>
+              <li><span class="ra-dot ra-warn"></span> Variação registrada entre as últimas medições</li>
+            </ul>
           </div>
-          <div style="font-size:11px;color:var(--muted-2);font-style:italic;margin-top:4px;">Esta análise é de apoio. Diagnóstico é responsabilidade exclusiva do profissional.</div>
+          <div style="font-size:11px;color:var(--muted-2);font-style:italic;margin-top:4px;">Conteúdo demonstrativo. A decisão clínica é sempre do profissional de saúde.</div>
         </div>
       </div>
     </div>
@@ -1276,24 +1337,66 @@
             <img src="{% static 'lumi/lumi-icon.svg' %}" alt="LUMI" onerror="this.style.display='none'">
           </div>
           <div>
-            <div class="lumi-card-name">LUMI</div>
-            <div class="lumi-card-role">Assistente Clínica com IA</div>
+            <div class="lumi-card-name">LUMI — Análise do Histórico</div>
+            <div class="lumi-card-role">Relatório gerado a partir dos dados registrados</div>
           </div>
-          <div class="lumi-online">
-            <div class="lumi-dot"></div>
-            Ativa
-          </div>
+          <button type="button" class="lumi-refresh" tabindex="-1" aria-hidden="true">
+            <svg width="13" height="13"><use href="#ic-spark"/></svg> Atualizar
+          </button>
         </div>
-        <div class="lumi-chat">
-          <div class="chat-msg chat-user">LUMI, pode analisar o hemograma da Ana Lima?</div>
-          <div class="chat-msg chat-lumi">
-            Claro. Analisando o hemograma recebido em 17/08...<br><br>
-            <strong>Hemoglobina:</strong> 11,2 g/dL (ref. &gt;12 g/dL) — abaixo da referência.<br>
-            <strong>VCM:</strong> 72 fL — microcitose compatível com anemia ferropriva.<br><br>
-            Recomendo avaliação clínica complementar para definir conduta.
+
+        <div class="lumi-report">
+          <div class="rep-sec-tit">Resumo do paciente</div>
+          <div class="rep-stats">
+            <div class="rep-stat">
+              <svg width="15" height="15"><use href="#ic-cal"/></svg>
+              <span class="rs-num">6</span>
+              <span class="rs-lab">Consultas recentes</span>
+            </div>
+            <div class="rep-stat">
+              <svg width="15" height="15"><use href="#ic-activity"/></svg>
+              <span class="rs-num">2</span>
+              <span class="rs-lab">Condições acompanhadas</span>
+            </div>
+            <div class="rep-stat">
+              <svg width="15" height="15"><use href="#ic-file"/></svg>
+              <span class="rs-num">9</span>
+              <span class="rs-lab">Exames disponíveis</span>
+            </div>
+            <div class="rep-stat">
+              <svg width="15" height="15"><use href="#ic-check"/></svg>
+              <span class="rs-num">3</span>
+              <span class="rs-lab">Medicamentos registrados</span>
+            </div>
           </div>
+
+          <div class="rep-vitais">
+            <span class="rv-lab">Sinais vitais registrados</span>
+            <svg class="rv-spark" viewBox="0 0 120 28" preserveAspectRatio="none" aria-hidden="true">
+              <polyline points="0,20 20,16 40,18 60,12 80,15 100,10 120,13"
+                        fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="120" cy="13" r="3" fill="currentColor"/>
+            </svg>
+            <span class="rv-per">últimos 6 meses</span>
+          </div>
+
+          <div class="rep-sec-tit">Pontos de atenção</div>
+          <ul class="rep-atencao">
+            <li><span class="ra-dot ra-info"></span> Exame de acompanhamento sem registro recente</li>
+            <li><span class="ra-dot ra-warn"></span> Variação registrada entre as últimas medições</li>
+            <li><span class="ra-dot ra-info"></span> Informações do histórico que merecem revisão</li>
+          </ul>
+
+          <div class="rep-sec-tit">Visão geral</div>
+          <p class="rep-geral">
+            Histórico com registros contínuos nos últimos meses, incluindo consultas,
+            exames e sinais vitais. A LUMI reuniu as informações disponíveis e destacou
+            os pontos acima para apoiar o acompanhamento.
+          </p>
         </div>
-        <div class="lumi-note">Esta análise é de apoio. O diagnóstico é responsabilidade exclusiva do profissional de saúde.</div>
+
+        <div class="lumi-note">Conteúdo demonstrativo. A LUMI apoia a análise; a decisão clínica é sempre do profissional de saúde.</div>
       </div>
     </div>
   </div>
@@ -1421,19 +1524,24 @@
           <div class="plan-ribbon">Profissional autônomo</div>
           <div class="plan-name" style="color:var(--teal);">Professional</div>
           <div class="plan-price">
-            <span class="plan-consulte">Consulte valores</span>
+            <span class="plan-cur">R$</span>
+            <span class="plan-val tl">29</span>
+            <span class="plan-per">,90/mês</span>
           </div>
           <p class="plan-desc">Para <strong>1 profissional de saúde</strong> que quer contexto e organização no atendimento.</p>
           <div class="plan-feats">
-            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Pacientes e atendimentos</div>
-            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Consultas e agendamentos</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Uso por 1 profissional</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Cadastro e acompanhamento de pacientes</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Consultas e atendimentos</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Agendamentos</div>
             <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Histórico de saúde autorizado pelo paciente</div>
             <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Exames e anexos</div>
-            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> LUMI IA para análise do histórico</div>
-            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Resumo clínico e apoio à análise</div>
-            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Organização de agenda e atendimentos</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> LUMI IA</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Resumo clínico gerado pela LUMI</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Apoio à análise do histórico do paciente</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Organização da rotina de atendimentos</div>
           </div>
-          <div class="plan-limit">Limitado a 1 profissional</div>
+          <div class="plan-limit">Plano individual · limitado a 1 profissional</div>
           <div class="plan-cta">
             <a href="{% url 'register' %}" class="plan-btn btn-solid">Começar agora</a>
           </div>
@@ -1450,16 +1558,20 @@
             </span>
             <span class="plan-consulte-sm">Consulte-nos</span>
           </div>
-          <p class="plan-desc">Para clínicas e empresas. O valor depende do número de profissionais, da quantidade de usuários, do tamanho da clínica, do volume de uso, dos recursos necessários e do suporte desejado.</p>
+          <p class="plan-desc">Para clínicas, empresas e equipes com múltiplos profissionais. O valor depende do número de profissionais, da quantidade de usuários, do tamanho da clínica, do volume de uso, dos recursos necessários e do suporte desejado.</p>
           <div class="plan-feats">
             <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Múltiplos profissionais</div>
             <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Gestão de equipe</div>
-            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Recursos avançados da LUMI</div>
             <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Pacientes e atendimentos</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Agendamentos</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Histórico de saúde</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Exames e anexos</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> LUMI IA</div>
             <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Relatórios</div>
             <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Maior capacidade de armazenamento</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Recursos empresariais</div>
             <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Suporte diferenciado</div>
-            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Integrações conforme o projeto</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Integrações avaliadas conforme necessidade</div>
           </div>
           <div class="plan-cta">
             <a href="https://wa.me/message/4LPGRNYMM4EXF1" target="_blank" rel="noopener" class="plan-btn btn-wa">

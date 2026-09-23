@@ -125,7 +125,7 @@ class TestPlanos:
     def test_professional_limitado_a_um_profissional(self, html):
         grupo = _bloco(html, 'grupo-profissional')
         assert 'Professional' in grupo
-        assert 'Limitado a 1 profissional' in grupo
+        assert 'limitado a 1 profissional' in grupo.lower()
 
     def test_enterprise_nao_apresenta_preco_fixo(self, html):
         grupo = _bloco(html, 'grupo-profissional')
@@ -133,9 +133,12 @@ class TestPlanos:
         assert 'Consulte-nos' in grupo
         assert 'Falar com a LIDDIS' in grupo
 
-    def test_precos_antigos_removidos(self, html):
-        for antigo in ('19,90', '29,90'):
-            assert antigo not in html, f'Preço antigo ainda na página: {antigo}'
+    def test_preco_antigo_removido(self, html):
+        assert '19,90' not in html, 'Preço antigo (R$19,90) ainda na página'
+
+    def test_professional_custa_29_90(self, html):
+        grupo = _bloco(html, 'grupo-profissional')
+        assert '29' in grupo and ',90/mês' in grupo, 'Professional sem o preço de R$29,90'
 
     def test_toggle_nao_colide_com_as_abas_de_funcionalidades(self, html):
         """
@@ -179,3 +182,43 @@ class TestIntegridade:
         for proibido in ('diagnóstico automático', 'substitui o médico',
                          'substitui o profissional', 'diagnostica por você'):
             assert proibido not in baixo, f'LUMI apresentada indevidamente: {proibido!r}'
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 5. LUMI — relatório, não conversa
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@pytest.mark.django_db
+class TestLumiRelatorio:
+
+    def test_nao_e_representada_como_chatbot(self, html):
+        """
+        A LUMI analisa o histórico e devolve um relatório estruturado. Mostrá-la
+        como chat sugere uma interação que o produto não tem e cria expectativa
+        de pergunta e resposta.
+        """
+        for marca in ('chat-msg', 'chat-user', 'chat-lumi',
+                      'Digite sua pergunta', 'lumi-chat'):
+            assert marca not in html, f'LUMI representada como chatbot: {marca!r}'
+
+    def test_apresenta_relatorio_estruturado(self, html):
+        for bloco in ('Análise do Histórico', 'Resumo do paciente',
+                      'Pontos de atenção', 'Visão geral'):
+            assert bloco in html, f'Bloco do relatório ausente: {bloco!r}'
+
+    def test_resumo_traz_os_indicadores_do_historico(self, html):
+        for indicador in ('Consultas recentes', 'Condições acompanhadas',
+                          'Exames disponíveis', 'Medicamentos registrados',
+                          'Sinais vitais'):
+            assert indicador in html, f'Indicador ausente do resumo: {indicador!r}'
+
+    def test_conteudo_demonstrativo_e_neutro(self, html):
+        """Nada de dado clínico alarmante ou diagnóstico num exemplo de vitrine."""
+        baixo = html.lower()
+        for termo in ('anemia', 'hemoglobina', 'ferropriva', 'microcitose',
+                      'diagnóstico:', 'g/dl'):
+            assert termo not in baixo, f'Dado clínico indevido no exemplo: {termo!r}'
+        assert 'demonstrativo' in baixo
+
+    def test_mantem_o_aviso_de_que_a_decisao_e_do_profissional(self, html):
+        assert 'decisão clínica é sempre do profissional' in html
