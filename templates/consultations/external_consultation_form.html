@@ -19,7 +19,8 @@
   </p>
 </div>
 
-<form method="post" enctype="multipart/form-data" novalidate>
+{% include "consultations/_rascunho.html" with rascunho_form="#external-form" rascunho_escopo="externo-nova" %}
+<form method="post" enctype="multipart/form-data" id="external-form" novalidate>
   {% csrf_token %}
 
   <!-- ── Dados do Paciente ── -->
@@ -88,17 +89,17 @@
         {% if consultation_form.date.errors %}<p class="field-error">{{ consultation_form.date.errors.0 }}</p>{% endif %}
       </div>
       <div class="form-group">
-        <label>{{ consultation_form.clinic_name.label }} <span style="color:var(--danger)">*</span></label>
+        <label>{{ consultation_form.clinic_name.label }} <span style="font-weight:400;font-size:11px;color:var(--muted-2)">(opcional)</span></label>
         {{ consultation_form.clinic_name }}
         {% if consultation_form.clinic_name.errors %}<p class="field-error">{{ consultation_form.clinic_name.errors.0 }}</p>{% endif %}
       </div>
       <div class="form-group">
-        <label>{{ consultation_form.clinic_neighborhood.label }} <span style="color:var(--danger)">*</span></label>
+        <label>{{ consultation_form.clinic_neighborhood.label }} <span style="font-weight:400;font-size:11px;color:var(--muted-2)">(opcional)</span></label>
         {{ consultation_form.clinic_neighborhood }}
         {% if consultation_form.clinic_neighborhood.errors %}<p class="field-error">{{ consultation_form.clinic_neighborhood.errors.0 }}</p>{% endif %}
       </div>
       <div class="form-group">
-        <label>{{ consultation_form.clinic_city.label }} <span style="color:var(--danger)">*</span></label>
+        <label>{{ consultation_form.clinic_city.label }} <span style="font-weight:400;font-size:11px;color:var(--muted-2)">(opcional)</span></label>
         {{ consultation_form.clinic_city }}
         {% if consultation_form.clinic_city.errors %}<p class="field-error">{{ consultation_form.clinic_city.errors.0 }}</p>{% endif %}
       </div>

@@ -136,14 +136,20 @@ class TestPacienteCriaConsulta:
         assert not Consultation.objects.filter(patient=patient_a).exists(), \
             'Consulta foi salva sem campo obrigatório specialty!'
 
-    def test_form_invalido_sem_clinic_name_nao_salva(self, client, patient_a):
+    def test_consulta_salva_sem_clinic_name(self, client, patient_a):
+        """
+        O local deixou de ser obrigatório: quem registra uma consulta antiga
+        nem sempre lembra o nome da clínica, e isso não pode impedir o
+        registro do que importa clinicamente.
+        """
         from consultations.models import Consultation
         client.force_login(patient_a)
         data = {k: v for k, v in self.BASE_DATA.items() if k != 'clinic_name'}
-        resp = client.post(reverse('consultation_create'), data)
-        assert resp.status_code == 200
-        assert not Consultation.objects.filter(patient=patient_a).exists(), \
-            'Consulta foi salva sem clinic_name!'
+        client.post(reverse('consultation_create'), data, follow=True)
+
+        consulta = Consultation.objects.filter(patient=patient_a).first()
+        assert consulta is not None, 'Consulta recusada por falta do nome do local'
+        assert consulta.clinic_name == ''
 
     def test_sinais_vitais_salvos_junto_com_consulta(self, client, patient_a):
         from consultations.models import Consultation, VitalSign

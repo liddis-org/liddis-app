@@ -14,22 +14,19 @@ _TA = lambda rows=3: {'class': 'input', 'rows': rows}
 class ConsultationForm(forms.ModelForm):
     # Campos obrigatórios que no model têm blank=True
     clinic_name = forms.CharField(
-        required=True,
+        required=False,
         widget=forms.TextInput(attrs={**_I, 'placeholder': 'Ex: Clínica São Lucas, Lab Fleury...'}),
         label='Nome do Local',
-        error_messages={'required': 'Informe o nome do local (clínica ou laboratório).'},
     )
     clinic_neighborhood = forms.CharField(
-        required=True,
+        required=False,
         widget=forms.TextInput(attrs={**_I, 'placeholder': 'Ex: Centro, Vila Mariana...'}),
         label='Bairro',
-        error_messages={'required': 'Informe o bairro do local.'},
     )
     clinic_city = forms.CharField(
-        required=True,
+        required=False,
         widget=forms.TextInput(attrs={**_I, 'placeholder': 'Ex: São Paulo, Belo Horizonte...'}),
         label='Cidade',
-        error_messages={'required': 'Informe a cidade do local.'},
     )
 
     class Meta:
@@ -147,7 +144,7 @@ class VitalSignProfessionalForm(forms.ModelForm):
             'temperature':       forms.NumberInput(attrs={**_I, 'placeholder': '°C', 'step': '0.1'}),
             'oxygen_saturation': forms.NumberInput(attrs={**_I, 'placeholder': '%'}),
             'glucose':           forms.NumberInput(attrs={**_I, 'placeholder': 'mg/dL', 'step': '0.1'}),
-            'notes':             forms.TextInput(attrs={**_I, 'placeholder': 'Observações clínicas'}),
+            'notes':             forms.TextInput(attrs={**_I, 'placeholder': 'Observações'}),
             'other_signs':       forms.Textarea(attrs={**_TA(3), 'placeholder': 'Outros sinais clínicos relevantes...'}),
         }
         labels = {
@@ -199,22 +196,19 @@ class PatientClinicalSummaryForm(forms.ModelForm):
 class AtendimentoForm(forms.ModelForm):
     """Formulário do profissional — campos de identidade são auto-preenchidos na view."""
     clinic_name = forms.CharField(
-        required=True,
+        required=False,
         widget=forms.TextInput(attrs={**_I, 'placeholder': 'Ex: Clínica São Lucas, Lab Fleury...'}),
         label='Nome do Local',
-        error_messages={'required': 'Informe o nome do local onde ocorreu o atendimento.'},
     )
     clinic_neighborhood = forms.CharField(
-        required=True,
+        required=False,
         widget=forms.TextInput(attrs={**_I, 'placeholder': 'Ex: Centro, Vila Mariana...'}),
         label='Bairro',
-        error_messages={'required': 'Informe o bairro do local.'},
     )
     clinic_city = forms.CharField(
-        required=True,
+        required=False,
         widget=forms.TextInput(attrs={**_I, 'placeholder': 'Ex: São Paulo, Belo Horizonte...'}),
         label='Cidade',
-        error_messages={'required': 'Informe a cidade do local.'},
     )
 
     class Meta:
@@ -303,7 +297,7 @@ class DiagnosisCIDForm(forms.ModelForm):
         widgets = {
             'icd_code':    forms.TextInput(attrs={**_I, 'placeholder': 'Ex: J18.9'}),
             'description': forms.TextInput(attrs={**_I, 'placeholder': 'Ex: Pneumonia não especificada'}),
-            'notes':       forms.Textarea(attrs={**_TA(3), 'placeholder': 'Observações clínicas adicionais...'}),
+            'notes':       forms.Textarea(attrs={**_TA(3), 'placeholder': 'Observações adicionais...'}),
             'certainty':   forms.Select(attrs=_I),
         }
         labels = {
@@ -444,7 +438,7 @@ class ExternalPatientForm(forms.ModelForm):
             'sex':        'Sexo',
             'phone':      'Telefone',
             'email':      'E-mail',
-            'notes':      'Observações clínicas',
+            'notes':      'Observações',
         }
 
     def clean_name(self):
@@ -458,22 +452,19 @@ class ExternalConsultationForm(forms.ModelForm):
     """Consulta para paciente externo — campos de identidade são auto-preenchidos na view."""
 
     clinic_name = forms.CharField(
-        required=True,
+        required=False,
         widget=forms.TextInput(attrs={**_I, 'placeholder': 'Ex: Clínica São Lucas, Consultório...'}),
         label='Nome do Local',
-        error_messages={'required': 'Informe o nome do local do atendimento.'},
     )
     clinic_neighborhood = forms.CharField(
-        required=True,
+        required=False,
         widget=forms.TextInput(attrs={**_I, 'placeholder': 'Ex: Centro, Vila Mariana...'}),
         label='Bairro',
-        error_messages={'required': 'Informe o bairro do local.'},
     )
     clinic_city = forms.CharField(
-        required=True,
+        required=False,
         widget=forms.TextInput(attrs={**_I, 'placeholder': 'Ex: São Paulo, Belo Horizonte...'}),
         label='Cidade',
-        error_messages={'required': 'Informe a cidade do local.'},
     )
 
     class Meta:

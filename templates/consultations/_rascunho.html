@@ -1,0 +1,156 @@
+{% comment %}
+Rascunho automático do formulário de consulta.
+
+Variáveis esperadas:
+  rascunho_form   — seletor do formulário, ex.: "#consultation-form"
+  rascunho_escopo — identidade do que está sendo preenchido, ex.: "consulta-nova",
+                    "consulta-<pk>", "atendimento-<token>", "externo-nova"
+
+Por que sessionStorage e não localStorage nem rascunho no servidor:
+
+São dados de saúde. localStorage sobrevive ao fechamento do navegador e ficaria
+no disco por tempo indeterminado, inclusive depois do logout. Rascunho no
+servidor resolveria a persistência, mas criaria linhas de consulta incompletas
+— exatamente os registros órfãos que queremos evitar — e faria dado clínico
+trafegar a cada tecla.
+
+sessionStorage cobre o caso real (recarregar a página por engano), morre junto
+com a aba e não sai da origem da aplicação. A chave carrega o id do usuário e o
+escopo, então o rascunho de uma consulta nunca é oferecido em outra, nem para
+outra pessoa que use o mesmo computador depois.
+{% endcomment %}
+
+<div class="rascunho-aviso" id="rascunho-aviso" role="status" hidden>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+    <path d="M3 3v5h5"/>
+  </svg>
+  <span class="rascunho-txt">Recuperamos o que você havia preenchido.</span>
+  <button type="button" class="rascunho-descartar" id="rascunho-descartar">Descartar</button>
+</div>
+
+<style>
+.rascunho-aviso {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 11px 14px; margin-bottom: 16px; border-radius: 10px;
+  font-size: 13px; color: var(--text, #e8f4ff);
+  background: var(--teal-glow, rgba(0,212,255,.08));
+  border: 1px solid var(--teal-border, rgba(0,212,255,.25));
+}
+.rascunho-aviso svg { width: 16px; height: 16px; color: var(--teal, #00d4ff); flex-shrink: 0; }
+.rascunho-txt { flex: 1; min-width: 160px; }
+.rascunho-descartar {
+  background: none; border: none; cursor: pointer; padding: 4px 8px;
+  font-family: inherit; font-size: 12.5px; font-weight: 600;
+  color: var(--muted, #6b8caa); text-decoration: underline; border-radius: 6px;
+}
+.rascunho-descartar:hover { color: var(--danger, #f87171); }
+.rascunho-descartar:focus-visible { outline: 2px solid var(--teal, #00d4ff); outline-offset: 1px; }
+</style>
+
+<script>
+(function () {
+  'use strict';
+
+  var form = document.querySelector('{{ rascunho_form }}');
+  if (!form || !window.sessionStorage) return;
+
+  // A chave amarra o rascunho a uma pessoa e a um preenchimento específico.
+  var CHAVE = 'liddis:rascunho:{{ request.user.pk }}:{{ rascunho_escopo }}';
+  var VALIDADE_MS = 12 * 60 * 60 * 1000;   // aba aberta por muito tempo
+
+  var aviso     = document.getElementById('rascunho-aviso');
+  var descartar = document.getElementById('rascunho-descartar');
+  var salvando  = null;
+
+  function relevante(campo) {
+    if (!campo.name) return false;
+    if (campo.disabled) return false;
+    // Arquivo não é serializável; csrf e hidden não são conteúdo digitado.
+    if (campo.type === 'file' || campo.type === 'password' || campo.type === 'hidden') return false;
+    if (campo.name === 'csrfmiddlewaretoken') return false;
+    return true;
+  }
+
+  function coletar() {
+    var dados = {};
+    form.querySelectorAll('input, select, textarea').forEach(function (campo) {
+      if (!relevante(campo)) return;
+      if (campo.type === 'checkbox' || campo.type === 'radio') {
+        if (campo.checked) dados[campo.name + '::' + campo.value] = true;
+      } else if (campo.value !== '') {
+        dados[campo.name] = campo.value;
+      }
+    });
+    return dados;
+  }
+
+  function guardar() {
+    try {
+      var dados = coletar();
+      if (!Object.keys(dados).length) { limpar(); return; }
+      sessionStorage.setItem(CHAVE, JSON.stringify({ em: Date.now(), dados: dados }));
+    } catch (e) {
+      // Cota cheia ou storage bloqueado: o formulário continua funcionando.
+    }
+  }
+
+  function limpar() {
+    try { sessionStorage.removeItem(CHAVE); } catch (e) {}
+  }
+
+  function restaurar() {
+    var bruto;
+    try { bruto = sessionStorage.getItem(CHAVE); } catch (e) { return false; }
+    if (!bruto) return false;
+
+    var pacote;
+    try { pacote = JSON.parse(bruto); } catch (e) { limpar(); return false; }
+    if (!pacote || !pacote.dados || (Date.now() - pacote.em) > VALIDADE_MS) { limpar(); return false; }
+
+    var repostos = 0;
+    Object.keys(pacote.dados).forEach(function (chave) {
+      var sep = chave.indexOf('::');
+      if (sep > -1) {
+        var nome = chave.slice(0, sep), valor = chave.slice(sep + 2);
+        var opc = form.querySelector('[name="' + CSS.escape(nome) + '"][value="' + CSS.escape(valor) + '"]');
+        if (opc) { opc.checked = true; repostos++; }
+        return;
+      }
+      var campo = form.querySelector('[name="' + CSS.escape(chave) + '"]');
+      // Não sobrescreve o que o servidor já devolveu preenchido (ex.: form com erro).
+      if (campo && relevante(campo) && campo.value === '') {
+        campo.value = pacote.dados[chave];
+        repostos++;
+      }
+    });
+
+    return repostos > 0;
+  }
+
+  if (restaurar() && aviso) aviso.hidden = false;
+
+  form.addEventListener('input', function () {
+    clearTimeout(salvando);
+    salvando = setTimeout(guardar, 600);
+  });
+  form.addEventListener('change', guardar);
+
+  // Enviou: o dado passa a viver no banco; manter cópia no navegador só cria risco.
+  form.addEventListener('submit', limpar);
+
+  // Saiu pelo botão de cancelar/voltar: a intenção foi abandonar o preenchimento.
+  form.querySelectorAll('a.btn-secondary, a[data-cancelar]').forEach(function (link) {
+    link.addEventListener('click', limpar);
+  });
+
+  if (descartar) {
+    descartar.addEventListener('click', function () {
+      limpar();
+      if (aviso) aviso.hidden = true;
+      form.reset();
+    });
+  }
+})();
+</script>

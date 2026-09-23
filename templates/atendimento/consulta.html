@@ -194,6 +194,7 @@
         </div>
       </div>
 
+{% include "consultations/_rascunho.html" with rascunho_form="#consultation-form" rascunho_escopo=session.token %}
       <form method="post" enctype="multipart/form-data" id="consultation-form">
         {% csrf_token %}
         <input type="hidden" name="active_tab" id="active_tab_input" value="{{ active_tab }}">
@@ -219,19 +220,19 @@
               {% if form.date.errors %}<ul class="errorlist">{% for e in form.date.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
             </div>
             <div class="form-group">
-              <label>Nome do Local *</label>
+              <label>Nome do Local <span style="font-weight:400;font-size:11px;color:var(--muted-2)">(opcional)</span></label>
               {{ form.clinic_name }}
               {{ form.clinic_name.errors }}
             </div>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label>Bairro *</label>
+              <label>Bairro <span style="font-weight:400;font-size:11px;color:var(--muted-2)">(opcional)</span></label>
               {{ form.clinic_neighborhood }}
               {{ form.clinic_neighborhood.errors }}
             </div>
             <div class="form-group">
-              <label>Cidade *</label>
+              <label>Cidade <span style="font-weight:400;font-size:11px;color:var(--muted-2)">(opcional)</span></label>
               {{ form.clinic_city }}
               {{ form.clinic_city.errors }}
             </div>

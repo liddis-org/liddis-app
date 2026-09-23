@@ -682,24 +682,18 @@
     }
 
     /* ── Toggle de planos ───────────────────────────────────────────────── */
-    .plan-toggle {
-      display: flex; gap: 8px; justify-content: center;
-      flex-wrap: wrap; margin-bottom: 34px;
+    /* ── Blocos de planos empilhados ────────────────────────────────────── */
+    .plan-bloco + .plan-bloco { margin-top: 8px; }
+    .plan-bloco-head { text-align: center; margin: 0 auto 26px; max-width: 620px; }
+    .plan-bloco-tit {
+      font-family: var(--font-display); font-size: clamp(20px, 3vw, 25px);
+      font-weight: 800; color: var(--text); line-height: 1.25; margin-bottom: 8px;
     }
-    .pt-btn {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 11px 22px; border-radius: 999px; cursor: pointer;
-      font-family: inherit; font-size: 14px; font-weight: 600;
-      color: var(--muted); background: var(--surface-2);
-      border: 1px solid var(--border); transition: all .15s;
+    .plan-bloco-sub { font-size: 14px; color: var(--muted); line-height: 1.6; }
+    .plan-sep {
+      height: 1px; margin: 52px auto; max-width: 560px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
     }
-    .pt-btn:hover { border-color: var(--teal-border); color: var(--text); }
-    .pt-btn.active { background: var(--teal-glow); border-color: var(--teal); color: var(--teal); }
-    .pt-btn:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
-    .pt-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
-
-    .plan-group { display: none; }
-    .plan-group.active { display: block; }
 
     .price-grid-2 {
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -733,7 +727,7 @@
     }
     @media (max-width: 480px) {
       .interop { padding: 64px 0; }
-      .pt-btn { padding: 9px 16px; font-size: 13px; }
+      .plan-sep { margin: 38px auto; }
       .hz-card { padding: 20px; }
     }
 
@@ -1451,73 +1445,16 @@
     <div class="container">
       <div class="tag" style="margin-bottom:14px"><span class="tag-dot"></span> Planos</div>
       <h2 class="section-title">Planos para quem cuida e para quem é cuidado</h2>
-      <p class="section-body">Pacientes e profissionais têm necessidades diferentes. Escolha o seu perfil:</p>
+      <p class="section-body">Profissionais e pacientes têm necessidades diferentes — e planos próprios.</p>
     </div>
   </div>
 
   <div class="container" style="margin-top:34px;">
-    <div class="plan-toggle" role="tablist" aria-label="Escolha o perfil de plano">
-      <button class="pt-btn active" data-grupo="paciente" role="tab" aria-selected="true"
-              aria-controls="grupo-paciente" id="pt-paciente">
-        <svg width="15" height="15"><use href="#ic-user"/></svg> Para Pacientes
-      </button>
-      <button class="pt-btn" data-grupo="profissional" role="tab" aria-selected="false"
-              aria-controls="grupo-profissional" id="pt-profissional">
-        <svg width="15" height="15"><use href="#ic-steth"/></svg> Para Profissionais e Clínicas
-      </button>
+    <div class="plan-bloco-head reveal">
+      <h3 class="plan-bloco-tit">Planos para Profissionais e Clínicas</h3>
+      <p class="plan-bloco-sub">Para quem atende: contexto do paciente, organização da rotina e a LUMI como apoio à análise.</p>
     </div>
-
-    <!-- ── Pacientes ── -->
-    <div class="plan-group active" id="grupo-paciente" role="tabpanel" aria-labelledby="pt-paciente">
-      <div class="price-grid price-grid-2">
-
-        <div class="plan reveal">
-          <div class="plan-name">Free</div>
-          <div class="plan-price"><span class="plan-free-val">R$0</span></div>
-          <p class="plan-desc">Para quem quer começar a organizar sua jornada de saúde.</p>
-          <div class="plan-feats">
-            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Passaporte de Saúde Digital</div>
-            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Organização de exames e documentos</div>
-            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Acompanhamento de até 2 profissionais</div>
-            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Armazenamento limitado</div>
-            <div class="plan-feat na"><span class="feat-x" aria-hidden="true">—</span> <span>Agendamento de consultas</span></div>
-            <div class="plan-feat na"><span class="feat-x" aria-hidden="true">—</span> <span>LUMI IA</span></div>
-            <div class="plan-feat na"><span class="feat-x" aria-hidden="true">—</span> <span>Dashboard de acompanhamento</span></div>
-          </div>
-          <div class="plan-cta">
-            <a href="{% url 'register' %}" class="plan-btn btn-outline">Criar conta grátis</a>
-          </div>
-        </div>
-
-        <div class="plan feat reveal reveal-d1">
-          <div class="plan-ribbon">Mais completo</div>
-          <div class="plan-name" style="color:var(--teal);">Premium</div>
-          <div class="plan-price">
-            <span class="plan-cur">R$</span>
-            <span class="plan-val tl">9</span>
-            <span class="plan-per">,90/mês</span>
-          </div>
-          <p class="plan-desc">Para acompanhar sua saúde de forma mais completa.</p>
-          <div class="plan-feats">
-            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Tudo do plano Free</div>
-            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> LUMI IA</div>
-            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Apoio na análise e organização de exames</div>
-            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Apoio na compreensão de receitas</div>
-            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Recursos de prevenção e acompanhamento</div>
-            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Dashboard de acompanhamento clínico</div>
-            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Profissionais ilimitados</div>
-            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Maior capacidade de armazenamento</div>
-          </div>
-          <div class="plan-cta">
-            <a href="{% url 'register' %}" class="plan-btn btn-solid">Assinar Premium</a>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- ── Profissionais e Clínicas ── -->
-    <div class="plan-group" id="grupo-profissional" role="tabpanel" aria-labelledby="pt-profissional" hidden>
+<div class="plan-bloco" id="grupo-profissional">
       <div class="price-grid price-grid-2">
 
         <div class="plan feat reveal">
@@ -1577,6 +1514,60 @@
             <a href="https://wa.me/message/4LPGRNYMM4EXF1" target="_blank" rel="noopener" class="plan-btn btn-wa">
               Falar com a LIDDIS
             </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="plan-sep" role="presentation"></div>
+
+    <div class="plan-bloco-head reveal">
+      <h3 class="plan-bloco-tit">Planos para Pacientes</h3>
+      <p class="plan-bloco-sub">Para quem é cuidado: seu histórico reunido, organizado e sempre com você.</p>
+    </div>
+<div class="plan-bloco" id="grupo-paciente">
+      <div class="price-grid price-grid-2">
+
+        <div class="plan reveal">
+          <div class="plan-name">Free</div>
+          <div class="plan-price"><span class="plan-free-val">R$0</span></div>
+          <p class="plan-desc">Para quem quer começar a organizar sua jornada de saúde.</p>
+          <div class="plan-feats">
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Passaporte de Saúde Digital</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Organização de exames e documentos</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Acompanhamento de até 2 profissionais</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Armazenamento limitado</div>
+            <div class="plan-feat na"><span class="feat-x" aria-="true">—</span> <span>Agendamento de consultas</span></div>
+            <div class="plan-feat na"><span class="feat-x" aria-="true">—</span> <span>LUMI IA</span></div>
+            <div class="plan-feat na"><span class="feat-x" aria-="true">—</span> <span>Dashboard de acompanhamento</span></div>
+          </div>
+          <div class="plan-cta">
+            <a href="{% url 'register' %}" class="plan-btn btn-outline">Criar conta grátis</a>
+          </div>
+        </div>
+
+        <div class="plan feat reveal reveal-d1">
+          <div class="plan-ribbon">Mais completo</div>
+          <div class="plan-name" style="color:var(--teal);">Premium</div>
+          <div class="plan-price">
+            <span class="plan-cur">R$</span>
+            <span class="plan-val tl">9</span>
+            <span class="plan-per">,90/mês</span>
+          </div>
+          <p class="plan-desc">Para acompanhar sua saúde de forma mais completa.</p>
+          <div class="plan-feats">
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Tudo do plano Free</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> LUMI IA</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Apoio na análise e organização de exames</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Apoio na compreensão de receitas</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Recursos de prevenção e acompanhamento</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Dashboard de acompanhamento clínico</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Profissionais ilimitados</div>
+            <div class="plan-feat"><svg width="15" height="15"><use href="#ic-check"/></svg> Maior capacidade de armazenamento</div>
+          </div>
+          <div class="plan-cta">
+            <a href="{% url 'register' %}" class="plan-btn btn-solid">Assinar Premium</a>
           </div>
         </div>
 
@@ -1746,21 +1737,6 @@
   });
 
   // Feature tabs
-
-  /* Toggle de planos — escopo proprio para nao colidir com as abas de features */
-  const ptBtns   = document.querySelectorAll('.pt-btn');
-  const ptGrupos = document.querySelectorAll('.plan-group');
-  ptBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const alvo = btn.dataset.grupo;
-      ptBtns.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
-      ptGrupos.forEach(g => { g.classList.remove('active'); g.hidden = true; });
-      btn.classList.add('active');
-      btn.setAttribute('aria-selected', 'true');
-      const grupo = document.getElementById('grupo-' + alvo);
-      if (grupo) { grupo.classList.add('active'); grupo.hidden = false; }
-    });
-  });
 
   const tabBtns = document.querySelectorAll('.tab-btn');
   const tabPanels = document.querySelectorAll('.tab-panel');

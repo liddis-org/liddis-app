@@ -19,14 +19,10 @@ def html(client):
     return resp.content.decode('utf-8')
 
 
-def _bloco(html, id_inicio, id_fim=None):
-    """
-    Recorta do `id=` informado até o próximo — e não da primeira aparição do
-    nome, que também ocorre em aria-controls, nem até o fim da página, que
-    arrastaria o JS do rodapé para dentro da amostra.
-    """
-    ini = html.index(f'id="{id_inicio}"')
-    fim = html.index(f'id="{id_fim}"') if id_fim else len(html)
+def _bloco_planos(html, titulo, ate=None):
+    """Recorta um dos blocos de planos pelo título da seção."""
+    ini = html.index(titulo)
+    fim = html.index(ate) if ate else html.index('</section>', ini)
     return html[ini:fim]
 
 
@@ -104,14 +100,17 @@ class TestNarrativa:
 @pytest.mark.django_db
 class TestPlanos:
 
-    def test_publicos_separados_em_grupos(self, html):
-        assert 'grupo-paciente' in html
-        assert 'grupo-profissional' in html
-        assert 'Para Pacientes' in html
-        assert 'Para Profissionais e Clínicas' in html
+    def test_publicos_em_secoes_empilhadas_sem_toggle(self, html):
+        assert 'Planos para Profissionais e Clínicas' in html
+        assert 'Planos para Pacientes' in html
+        for marca in ('pt-btn', 'plan-toggle', 'plan-group'):
+            assert marca not in html, f'Toggle de planos ainda presente: {marca}'
+
+    def test_profissionais_aparecem_antes_de_pacientes(self, html):
+        assert html.index('Planos para Profissionais') < html.index('Planos para Pacientes'),             'Ordem invertida: profissionais devem vir primeiro' 
 
     def test_planos_do_paciente(self, html):
-        grupo = _bloco(html, 'grupo-paciente', 'grupo-profissional')
+        grupo = _bloco_planos(html, 'Planos para Pacientes')
         assert 'Free' in grupo and 'R$0' in grupo
         assert 'Premium' in grupo
         assert 'Passaporte de Saúde Digital' in grupo
@@ -119,16 +118,16 @@ class TestPlanos:
         assert 'Dashboard de acompanhamento' in grupo
 
     def test_free_declara_o_que_nao_inclui(self, html):
-        grupo = _bloco(html, 'grupo-paciente', 'grupo-profissional')
+        grupo = _bloco_planos(html, 'Planos para Pacientes')
         assert 'plan-feat na' in grupo, 'Plano Free não marca os recursos ausentes'
 
     def test_professional_limitado_a_um_profissional(self, html):
-        grupo = _bloco(html, 'grupo-profissional')
+        grupo = _bloco_planos(html, 'Planos para Profissionais', 'Planos para Pacientes')
         assert 'Professional' in grupo
         assert 'limitado a 1 profissional' in grupo.lower()
 
     def test_enterprise_nao_apresenta_preco_fixo(self, html):
-        grupo = _bloco(html, 'grupo-profissional')
+        grupo = _bloco_planos(html, 'Planos para Profissionais', 'Planos para Pacientes')
         assert 'A partir de' in grupo
         assert 'Consulte-nos' in grupo
         assert 'Falar com a LIDDIS' in grupo
@@ -137,19 +136,19 @@ class TestPlanos:
         assert '19,90' not in html, 'Preço antigo (R$19,90) ainda na página'
 
     def test_professional_custa_29_90(self, html):
-        grupo = _bloco(html, 'grupo-profissional')
+        grupo = _bloco_planos(html, 'Planos para Profissionais', 'Planos para Pacientes')
         assert '29' in grupo and ',90/mês' in grupo, 'Professional sem o preço de R$29,90'
 
-    def test_toggle_nao_colide_com_as_abas_de_funcionalidades(self, html):
+    def test_planos_nao_dependem_de_javascript(self, html):
         """
-        As abas de features usam .tab-btn e o JS delas é global. O seletor do
-        toggle de planos precisa ser distinto, senão clicar num grupo apaga o
-        painel do outro.
+        Os dois públicos são seções empilhadas, não abas. Sem alternância, nada
+        fica escondido atrás de clique — e não há risco de colidir com o JS
+        global das abas de funcionalidades.
         """
-        grupo_planos = _secao_planos(html)
-        assert 'tab-btn' not in grupo_planos, \
-            'Toggle de planos reutiliza a classe das abas e quebraria ambas'
-        assert 'pt-btn' in grupo_planos
+        secao = _secao_planos(html)
+        for marca in ('tab-btn', 'tab-panel', 'pt-btn', 'plan-group'):
+            assert marca not in secao, f'Seção de planos ainda usa alternância: {marca}'
+        assert 'plan-bloco' in secao
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
