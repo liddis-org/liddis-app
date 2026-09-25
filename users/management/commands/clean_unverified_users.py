@@ -48,6 +48,34 @@ class Command(BaseCommand):
             help='Salva relatório JSON em arquivo',
         )
 
+    @staticmethod
+    def _ids_com_dado_clinico(qs):
+        """
+        Ids das contas que produziram ou receberam registro clínico.
+
+        Cobre os dois lados: quem foi paciente de uma consulta e quem a criou,
+        além de sinais vitais e sessões de atendimento. Qualquer um desses
+        significa uso real, e a conta não deve ser removida por rotina.
+        """
+        from consultations.models import Consultation, ConsultationSession, VitalSign
+
+        ids = set(qs.values_list('pk', flat=True))
+        if not ids:
+            return set()
+
+        preservar = set()
+        preservar |= set(Consultation.objects.filter(patient_id__in=ids)
+                         .values_list('patient_id', flat=True))
+        preservar |= set(Consultation.objects.filter(created_by_id__in=ids)
+                         .values_list('created_by_id', flat=True))
+        preservar |= set(VitalSign.objects.filter(patient_id__in=ids)
+                         .values_list('patient_id', flat=True))
+        preservar |= set(ConsultationSession.objects.filter(patient_id__in=ids)
+                         .values_list('patient_id', flat=True))
+        preservar |= set(ConsultationSession.objects.filter(professional_id__in=ids)
+                         .values_list('professional_id', flat=True))
+        return preservar & ids
+
     def handle(self, *args, **options):
         execute    = options['execute']
         hours      = options['hours']
@@ -60,6 +88,22 @@ class Command(BaseCommand):
             date_joined__lt=cutoff,
             is_superuser=False,
         ).exclude(role='ADMIN').order_by('date_joined')
+
+        # Trava de segurança: apagar um usuário leva junto, por CASCADE, suas
+        # consultas, anexos e sinais vitais. Numa rotina automática isso não pode
+        # depender só do e-mail não verificado — se há registro clínico, houve uso
+        # real da plataforma, e a conta sai da lista independentemente do resto.
+        com_dados = self._ids_com_dado_clinico(qs)
+        if com_dados:
+            logger.warning(
+                'clean_unverified_users: %d conta(s) preservadas por terem dado clínico',
+                len(com_dados),
+            )
+            self.stdout.write(self.style.WARNING(
+                f'\n{len(com_dados)} conta(s) não verificada(s) preservada(s) '
+                f'por possuírem registro clínico.'
+            ))
+            qs = qs.exclude(pk__in=com_dados)
 
         total = qs.count()
 
